@@ -671,6 +671,101 @@ body {
       </div>
     </div>
 
+    <!-- ── SALARIOS DE LA CONSTRUCCIÓN ─────────────────── -->
+    <div id="sal-section">
+      <div class="sec-title">Salarios de la construcción</div>
+      <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
+        Básicos de convenio homologados. UOCRA es el jornal por hora de Zona A, que es la que
+        aplica en Córdoba. Los saltos grandes en meses de acuerdos chicos no son errores: son
+        sumas no remunerativas que se incorporan al básico, así que la variación del básico no
+        equivale al aumento real de bolsillo.
+      </div>
+
+      <div class="sub-title" style="margin-bottom:8px;">
+        UOCRA · jornal por hora
+        <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="sal-uocra-fecha"></span>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:16px;"
+           id="sal-uocra-kpis"></div>
+
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:18px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución del salario</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select class="period-select" id="sal-cat" onchange="renderSalChart()"></select>
+          <select class="period-select" id="sal-unidad" onchange="renderSalChart()">
+            <option value="ars">Pesos corrientes</option>
+            <option value="real">Pesos constantes (deflactado por IPC)</option>
+            <option value="usd">Dólares (blue)</option>
+            <option value="idx">Índice base 100</option>
+          </select>
+          <select class="period-select" id="sal-range" onchange="renderSalChart()">
+            <option value="12">Último año</option>
+            <option value="24">Últimos 2 años</option>
+            <option value="36" selected>Últimos 3 años</option>
+            <option value="0">Todo</option>
+          </select>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-sal" role="img" aria-label="Evolución de los salarios de la construcción"></canvas>
+      </div>
+      <div id="sal-nota" style="font-size:10px;color:var(--gris-txt);margin-top:8px;line-height:1.5;"></div>
+
+      <div class="sub-title" style="margin:22px 0 8px;">
+        UECARA · sueldo básico mensual
+        <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="sal-uecara-fecha"></span>
+      </div>
+      <div id="sal-uecara-tabla"></div>
+    </div>
+
+    <!-- ── AJUSTE DE CONTRATOS / REDETERMINACIÓN ───────── -->
+    <div id="ajuste-section">
+      <div class="sec-title">Ajuste de contratos y presupuestos</div>
+      <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
+        Cuánto vale hoy un monto pactado en otra fecha. Se arma un polinomio: se reparte el
+        100% del monto entre los índices que mejor representan la estructura de costos del
+        contrato y cada componente se ajusta por su propia variación.
+      </div>
+
+      <div class="card" style="margin-bottom:14px;">
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+          <div>
+            <div class="kpi-label" style="margin-bottom:5px;">Monto original</div>
+            <input type="number" id="aj-monto" value="10000000" min="0" step="1000"
+                   oninput="renderAjuste()" class="period-select" style="width:170px;">
+          </div>
+          <div>
+            <div class="kpi-label" style="margin-bottom:5px;">Desde</div>
+            <select class="period-select" id="aj-desde" onchange="renderAjuste()" style="width:150px;"></select>
+          </div>
+          <div>
+            <div class="kpi-label" style="margin-bottom:5px;">Hasta</div>
+            <select class="period-select" id="aj-hasta" onchange="renderAjuste()" style="width:150px;"></select>
+          </div>
+          <div>
+            <div class="kpi-label" style="margin-bottom:5px;">Polinomio armado</div>
+            <select class="period-select" id="aj-preset" onchange="aplicarPresetAjuste()" style="width:230px;">
+              <option value="obra">Obra completa (45 mat / 40 MO / 15 IPC)</option>
+              <option value="cac">Solo CAC general</option>
+              <option value="ipc">Solo IPC</option>
+              <option value="uva">Solo UVA</option>
+              <option value="usd">Solo dólar oficial</option>
+              <option value="libre">Personalizado</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sub-title" style="margin-bottom:10px;">Composición (%)</div>
+        <div id="aj-pesos" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:10px;"></div>
+        <div id="aj-suma" style="font-size:11px;margin-top:12px;"></div>
+      </div>
+
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:14px;"
+           id="aj-kpis"></div>
+
+      <div id="aj-detalle"></div>
+    </div>
+
     <!-- ── COMPARADOR DE ÍNDICES ──────────── -->
     <div class="sec-title">Comparador de índices</div>
     <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
@@ -719,6 +814,7 @@ body {
 <script src="uva_cache.js"></script>  <!-- generado por update_uva_cache.py -->
 <script src="merval_cache.js"></script>  <!-- generado por update_merval_cache.py -->
 <script src="rem_cache.js"></script>  <!-- generado por update_rem_cache.py -->
+<script src="salarios_cache.js"></script>  <!-- escalas UOCRA / UECARA, se edita a mano -->
 <!-- ══════════════════════════════════════
      JAVASCRIPT
 ══════════════════════════════════════ -->
@@ -751,6 +847,8 @@ function showScreen(id) {
   if (id === 'indicadores' && !indicadoresLoaded) {
     indicadoresLoaded = true;
     initCacFromEmbedded();
+    initSalarios();   // escalas de convenio (dato local, pinta al toque)
+    initAjuste();     // calculadora de redeterminacion
     loadSnapshot();   // datos guardados inmediatamente
     reloadAll();      // refrescar APIs en paralelo
   }
@@ -2501,6 +2599,442 @@ async function reloadAll() {
   // El comparador se arma al final: necesita saber que series terminaron
   // con datos para no ofrecer casillas que no dibujarian nada.
   initComparador();
+}
+
+/* ══════════════════════════════════════════
+   SALARIOS DE LA CONSTRUCCIÓN — UOCRA y UECARA
+   Los datos los deja salarios_cache.js, que se edita a mano cuando se
+   homologa una paritaria nueva (no hay API confiable de escalas).
+   Si el archivo no esta, toda la seccion queda oculta.
+══════════════════════════════════════════ */
+let salChart = null;
+
+/* +12,3% / -4,1% para las variaciones */
+function _signoPct(pct) {
+  if (pct == null || isNaN(pct)) return '—';
+  return (pct >= 0 ? '+' : '') + fmtN(pct, 1) + '%';
+}
+
+/* Serie de UOCRA como Map 'aaaa-mm' -> $/hora de una categoria */
+function salSerieUocra(cat) {
+  const u = window.SALARIOS_CACHE && window.SALARIOS_CACHE.uocra;
+  if (!u || !u.serie || !u.serie.length) return null;
+  const col = { oficialEsp: 1, oficial: 2, medioOficial: 3, ayudante: 4 }[cat];
+  if (!col) return null;
+  const m = new Map();
+  u.serie.forEach(r => { if (r[col] != null) m.set(r[0], Number(r[col])); });
+  return m.size ? m : null;
+}
+
+function _salCard(label, valor, sub, color) {
+  return '<div class="card">'
+       + '<div class="kpi-label">' + label + '</div>'
+       + '<div class="kpi-value"' + (color ? ' style="color:' + color + ';"' : '') + '>' + valor + '</div>'
+       + '<div class="kpi-sub">' + sub + '</div>'
+       + '</div>';
+}
+
+/* Tarjetas: jornal vigente de cada categoria + variacion mensual e interanual */
+function _pintarSalKpis() {
+  const u = window.SALARIOS_CACHE && window.SALARIOS_CACHE.uocra;
+  const cont = document.getElementById('sal-uocra-kpis');
+  if (!cont || !u || !u.serie || !u.serie.length) return false;
+
+  const ultima = u.serie[u.serie.length - 1];
+  const ym = ultima[0];
+  const prevMes = u.serie[u.serie.length - 2];
+  const ymIA = (+ym.slice(0, 4) - 1) + ym.slice(4);
+  const filaIA = u.serie.filter(r => r[0] <= ymIA).pop();
+
+  const fe = document.getElementById('sal-uocra-fecha');
+  if (fe) fe.textContent = '· ' + fmtMes(ym + '-01') + ' · ' + u.zona + ' · ' + u.cct;
+
+  cont.innerHTML = u.categorias.map(([clave, label], i) => {
+    const col = i + 1;
+    const v   = ultima[col];
+    const mm  = prevMes && prevMes[col] ? (v / prevMes[col] - 1) * 100 : null;
+    const ia  = filaIA  && filaIA[col]  ? (v / filaIA[col]  - 1) * 100 : null;
+    return _salCard(
+      label,
+      '$ ' + fmtN(v, 0) + '<span style="font-size:11px;color:var(--gris-txt);"> /h</span>',
+      (mm == null ? '' : 'Mes ' + _signoPct(mm) + ' · ')
+        + (ia == null ? '' : 'Año ' + _signoPct(ia)),
+      '');
+  }).join('');
+  return true;
+}
+
+/* Tabla de la escala vigente de UECARA */
+function _pintarUecara() {
+  const e = window.SALARIOS_CACHE && window.SALARIOS_CACHE.uecara;
+  const cont = document.getElementById('sal-uecara-tabla');
+  if (!cont || !e || !e.serie || !e.serie.length) return;
+
+  const ultima = e.serie[e.serie.length - 1];
+  const ym = ultima[0], vals = ultima[1], estimado = ultima[2];
+  const prev = e.serie.length > 1 ? e.serie[e.serie.length - 2][1] : null;
+
+  const fe = document.getElementById('sal-uecara-fecha');
+  if (fe) fe.textContent = '· ' + fmtMes(ym + '-01') + ' · ' + e.zona + ' · ' + e.cct
+                         + (estimado ? ' · valor estimado' : '');
+
+  /* La primera categoria (capataz de obra) queda siempre a la vista y el
+     resto se despliega con el boton: son 16 filas y ocupan media pantalla. */
+  const visibles = e.categorias.filter(([k]) => vals[k] != null);
+  const td = 'padding:6px 10px;border-bottom:1px solid var(--gris-brd);';
+
+  const fila = ([k, label], i) => {
+    const v  = vals[k];
+    const mm = prev && prev[k] ? (v / prev[k] - 1) * 100 : null;
+    return '<tr class="uec-fila"' + (i > 0 ? ' data-extra="1" style="display:none;"' : '') + '>'
+         + '<td style="' + td + (i === 0 ? 'font-weight:600;' : '') + '">' + label + '</td>'
+         + '<td style="' + td + 'text-align:right;font-variant-numeric:tabular-nums;">$ ' + fmtN(v, 0) + '</td>'
+         + '<td style="' + td + 'text-align:right;color:var(--gris-txt);">' + (mm == null ? '—' : _signoPct(mm)) + '</td>'
+         + '</tr>';
+  };
+
+  const ocultas = visibles.length - 1;
+
+  cont.innerHTML =
+      '<div style="overflow-x:auto;">'
+    + '<table style="width:100%;border-collapse:collapse;font-size:12px;">'
+    + '<thead><tr style="color:var(--gris-txt);font-size:10px;text-transform:uppercase;letter-spacing:.7px;">'
+    + '<th style="text-align:left;padding:6px 10px;">Categoría</th>'
+    + '<th style="text-align:right;padding:6px 10px;">Básico mensual</th>'
+    + '<th style="text-align:right;padding:6px 10px;">Var. mes</th>'
+    + '</tr></thead><tbody>' + visibles.map(fila).join('') + '</tbody></table></div>'
+    + (ocultas > 0
+        ? '<button type="button" id="uec-toggle" class="period-select" '
+          + 'onclick="toggleUecara()" style="margin-top:10px;cursor:pointer;">'
+          + 'Ver las otras ' + ocultas + ' categorías ▾</button>'
+        : '')
+    + '<div style="font-size:10px;color:var(--gris-txt);margin-top:10px;line-height:1.5;">'
+    + '⚠ Ojo: el CCT 660/13 rige en todo el país <b>menos Córdoba</b>. Acá aplica el '
+    + 'CCT 735/15 de UECARA Córdoba, que sigue los mismos porcentajes de paritaria pero '
+    + 'tiene básicos propios y no se publica online. Los valores de arriba son la '
+    + 'referencia nacional (Zona II); para tener la escala de Córdoba hay que cargarla '
+    + 'en <code>salarios_cache.js</code> desde las liquidaciones.'
+    + '</div>';
+}
+
+/* Muestra u oculta las categorias de UECARA que no son capataz de obra */
+function toggleUecara() {
+  const filas = document.querySelectorAll('#sal-uecara-tabla tr[data-extra]');
+  const btn   = document.getElementById('uec-toggle');
+  if (!filas.length || !btn) return;
+  const abierto = filas[0].style.display !== 'none';
+  filas.forEach(f => { f.style.display = abierto ? 'none' : ''; });
+  btn.innerHTML = abierto
+    ? 'Ver las otras ' + filas.length + ' categorías ▾'
+    : 'Ocultar categorías ▴';
+}
+
+
+function initSalarios() {
+  const sec = document.getElementById('sal-section');
+  const hay = window.SALARIOS_CACHE && window.SALARIOS_CACHE.uocra
+              && window.SALARIOS_CACHE.uocra.serie
+              && window.SALARIOS_CACHE.uocra.serie.length;
+  if (sec) sec.style.display = hay ? '' : 'none';
+  const secAj = document.getElementById('ajuste-section');
+  if (secAj) secAj.style.display = '';
+  if (!hay) return;
+
+  _pintarSalKpis();
+  _pintarUecara();
+
+  const sel = document.getElementById('sal-cat');
+  if (sel && !sel.options.length) {
+    sel.innerHTML = window.SALARIOS_CACHE.uocra.categorias
+      .map(([k, l]) => '<option value="' + k + '">UOCRA · ' + l + '</option>').join('');
+    sel.value = 'oficial';
+  }
+  renderSalChart();
+}
+
+async function renderSalChart() {
+  const ctx = document.getElementById('chart-sal');
+  if (!ctx || typeof Chart === 'undefined') return;
+
+  const cat    = (document.getElementById('sal-cat')   || {}).value || 'oficial';
+  const unidad = (document.getElementById('sal-unidad')|| {}).value || 'ars';
+  const meses  = parseInt((document.getElementById('sal-range') || {}).value || '36', 10);
+  const nota   = document.getElementById('sal-nota');
+
+  const base = salSerieUocra(cat);
+  if (!base) return;
+
+  /* Las unidades derivadas necesitan series que se bajan por API */
+  if (unidad === 'real') await loadIpcSerie();
+  if (unidad === 'usd')  await loadUsdSerie('blue');
+
+  const ipc  = unidad === 'real' ? compIpc() : null;
+  const usd  = unidad === 'usd'  ? compUsd('blue') : null;
+
+  if (unidad === 'real' && !ipc) { if (nota) nota.textContent = 'No se pudo bajar el IPC para deflactar. Probá de nuevo con el botón Actualizar.'; return; }
+  if (unidad === 'usd'  && !usd) { if (nota) nota.textContent = 'No se pudo bajar la serie del dólar blue. Probá de nuevo con el botón Actualizar.'; return; }
+
+  let ys = [...base.keys()].sort();
+  if (meses > 0) ys = ys.slice(-meses);
+
+  const ipcUlt = ipc ? ipc.get([...ipc.keys()].sort().pop()) : null;
+
+  let datos = ys.map(ym => {
+    const v = base.get(ym);
+    if (unidad === 'real') { const d = ipc.get(ym); return d ? v / d * ipcUlt : null; }
+    if (unidad === 'usd')  { const d = usd.get(ym); return d ? v / d : null; }
+    return v;
+  });
+
+  if (unidad === 'idx') {
+    const b0 = datos.find(v => v != null);
+    datos = datos.map(v => v == null ? null : v / b0 * 100);
+  }
+
+  const catLabel = (window.SALARIOS_CACHE.uocra.categorias.find(c => c[0] === cat) || [, cat])[1];
+  const sufijo = { ars: '$/hora corrientes',
+                   real: '$/hora de hoy (deflactado por IPC)',
+                   usd: 'USD/hora al blue',
+                   idx: 'índice base 100 = ' + fmtMes(ys[0] + '-01') }[unidad];
+
+  const decimales = unidad === 'usd' ? 2 : (unidad === 'idx' ? 0 : 0);
+
+  if (salChart) salChart.destroy();
+  salChart = new Chart(ctx.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: ys.map(ym => fmtMes(ym + '-01')),
+      datasets: [{
+        label: 'UOCRA · ' + catLabel + ' · ' + sufijo,
+        data: datos,
+        borderColor: '#38bdf8',
+        backgroundColor: 'rgba(56,189,248,.12)',
+        borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, tension: .2, fill: true,
+        spanGaps: true,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#888', boxWidth: 12, font: { size: 10 } } },
+        tooltip: { callbacks: { label: c => ' ' + (unidad === 'usd' ? 'USD ' : unidad === 'idx' ? '' : '$ ') + fmtN(c.parsed.y, decimales) } },
+      },
+      scales: {
+        x: { ticks: { color: '#888', maxTicksLimit: 12, font: { size: 9 } },
+             grid: { color: 'rgba(255,255,255,.04)' } },
+        y: { ticks: { color: '#888', font: { size: 9 }, callback: v => fmtN(v, decimales) },
+             grid: { color: 'rgba(255,255,255,.04)' } },
+      },
+    },
+  });
+
+  if (nota) {
+    const txt = {
+      ars:  'Valor nominal del básico de convenio. Incluye las sumas no remunerativas que se fueron incorporando, por eso hay saltos que no coinciden con el porcentaje del acuerdo.',
+      real: 'Cada mes convertido a pesos de hoy con el IPC del INDEC. Si la línea baja, el salario perdió contra la inflación.',
+      usd:  'Jornal dividido por el dólar blue de cierre de cada mes. Es la referencia útil cuando el ingreso de la obra está dolarizado.',
+      idx:  'Todo arranca en 100 en el primer mes del período elegido, para ver la variación acumulada.',
+    }[unidad];
+    nota.textContent = txt + ' Fuente: ' + window.SALARIOS_CACHE.uocra.fuente
+                     + ' · actualizado ' + window.SALARIOS_CACHE.actualizado + '.';
+  }
+}
+
+/* ══════════════════════════════════════════
+   AJUSTE DE CONTRATOS — polinomio multi-índice
+   Reparte el monto entre varios indices y ajusta cada parte por su
+   propia variacion entre las dos fechas. Es lo que se firma como
+   formula de redeterminacion en obra privada y publica.
+══════════════════════════════════════════ */
+const AJ_COMPONENTES = [
+  { id: 'cacMat', label: 'CAC · Materiales',   get: () => _serieCac('mat') },
+  { id: 'cacMo',  label: 'CAC · Mano de obra', get: () => _serieCac('mo')  },
+  { id: 'cacGen', label: 'CAC · General',      get: () => compCac()        },
+  { id: 'uocra',  label: 'UOCRA · Oficial',    get: () => salSerieUocra('oficial') },
+  { id: 'ipc',    label: 'IPC (INDEC)',        get: () => compIpc()        },
+  { id: 'uva',    label: 'UVA',                get: () => compUva()        },
+  { id: 'usdOf',  label: 'Dólar oficial',      get: () => compUsd('oficial') },
+  { id: 'usdBlue',label: 'Dólar blue',         get: () => compUsd('blue')  },
+];
+
+const AJ_PRESETS = {
+  obra: { cacMat: 45, cacMo: 40, ipc: 15 },
+  cac:  { cacGen: 100 },
+  ipc:  { ipc: 100 },
+  uva:  { uva: 100 },
+  usd:  { usdOf: 100 },
+};
+
+function _serieCac(campo) {
+  if (!cacData || !cacData.length) return null;
+  const m = new Map();
+  cacData.forEach(r => {
+    if (!r.fecha || r[campo] == null) return;
+    const ym = r.fecha.getFullYear() + '-' + String(r.fecha.getMonth() + 1).padStart(2, '0');
+    m.set(ym, Number(r[campo]));
+  });
+  return m.size ? m : null;
+}
+
+/* Valor del indice en un mes; si ese mes no existe toma el ultimo anterior */
+function _valorEn(serie, ym) {
+  if (!serie) return null;
+  if (serie.has(ym)) return serie.get(ym);
+  const previos = [...serie.keys()].filter(k => k <= ym).sort();
+  return previos.length ? serie.get(previos[previos.length - 1]) : null;
+}
+
+function _mesesDisponibles() {
+  const fin = new Date();
+  const out = [];
+  let y = fin.getFullYear(), m = fin.getMonth() + 1;
+  for (let i = 0; i < 72; i++) {
+    out.push(y + '-' + String(m).padStart(2, '0'));
+    m--; if (m === 0) { m = 12; y--; }
+  }
+  return out;
+}
+
+function initAjuste() {
+  const cont = document.getElementById('aj-pesos');
+  if (!cont) return;
+
+  if (!cont.children.length) {
+    cont.innerHTML = AJ_COMPONENTES.map(c =>
+        '<label style="display:flex;align-items:center;justify-content:space-between;gap:8px;'
+      + 'background:var(--gris-osc);border:1px solid var(--gris-brd);border-radius:6px;padding:8px 10px;">'
+      + '<span style="font-size:11px;">' + c.label + '</span>'
+      + '<input type="number" id="aj-w-' + c.id + '" value="0" min="0" max="100" step="1" '
+      + 'oninput="marcarPresetLibre();renderAjuste()" '
+      + 'style="width:62px;text-align:right;background:transparent;border:1px solid var(--gris-brd);'
+      + 'border-radius:4px;color:inherit;padding:3px 6px;font-size:12px;">'
+      + '</label>').join('');
+  }
+
+  const meses = _mesesDisponibles();
+  const opts  = meses.map(ym => '<option value="' + ym + '">' + fmtMes(ym + '-01') + '</option>').join('');
+  const sd = document.getElementById('aj-desde'), sh = document.getElementById('aj-hasta');
+  if (sd && !sd.options.length) { sd.innerHTML = opts; sd.value = meses[Math.min(12, meses.length - 1)]; }
+  if (sh && !sh.options.length) { sh.innerHTML = opts; sh.value = meses[0]; }
+
+  aplicarPresetAjuste();
+}
+
+function marcarPresetLibre() {
+  const p = document.getElementById('aj-preset');
+  if (p) p.value = 'libre';
+}
+
+function aplicarPresetAjuste() {
+  const clave = (document.getElementById('aj-preset') || {}).value;
+  const preset = AJ_PRESETS[clave];
+  if (preset) {
+    AJ_COMPONENTES.forEach(c => {
+      const el = document.getElementById('aj-w-' + c.id);
+      if (el) el.value = preset[c.id] || 0;
+    });
+  }
+  renderAjuste();
+}
+
+async function renderAjuste() {
+  const kpis = document.getElementById('aj-kpis');
+  const det  = document.getElementById('aj-detalle');
+  const sumaEl = document.getElementById('aj-suma');
+  if (!kpis) return;
+
+  const monto = Number((document.getElementById('aj-monto') || {}).value || 0);
+  const desde = (document.getElementById('aj-desde') || {}).value;
+  const hasta = (document.getElementById('aj-hasta') || {}).value;
+
+  const pesos = {};
+  let suma = 0;
+  AJ_COMPONENTES.forEach(c => {
+    const w = Number((document.getElementById('aj-w-' + c.id) || {}).value || 0);
+    pesos[c.id] = w; suma += w;
+  });
+
+  if (sumaEl) {
+    const ok = Math.abs(suma - 100) < 0.01;
+    sumaEl.innerHTML = '<span style="color:' + (ok ? '#22c55e' : '#f59e0b') + ';">'
+      + (ok ? '✓ ' : '⚠ ') + 'Suma: ' + fmtN(suma, 1) + '%'
+      + (ok ? '' : ' — tiene que dar 100% para que el ajuste tenga sentido') + '</span>';
+  }
+
+  /* Bajar lo que haga falta para los componentes con peso */
+  const tareas = [];
+  if (pesos.ipc > 0) tareas.push(loadIpcSerie());
+  if (pesos.usdOf > 0) tareas.push(loadUsdSerie('oficial'));
+  if (pesos.usdBlue > 0) tareas.push(loadUsdSerie('blue'));
+  if (tareas.length) await Promise.allSettled(tareas);
+
+  const filas = [];
+  let factor = 0, pesoValido = 0, faltantes = [];
+
+  AJ_COMPONENTES.forEach(c => {
+    const w = pesos[c.id];
+    if (!w) return;
+    const serie = c.get();
+    const v0 = _valorEn(serie, desde), v1 = _valorEn(serie, hasta);
+    if (!v0 || !v1) { faltantes.push(c.label); return; }
+    const varPct = (v1 / v0 - 1) * 100;
+    const aporte = (w / 100) * (v1 / v0);
+    factor += aporte; pesoValido += w;
+    filas.push({ label: c.label, w, varPct, aporte, montoParte: monto * (w / 100) * (v1 / v0) });
+  });
+
+  if (!filas.length) {
+    kpis.innerHTML = '<div class="card"><div class="kpi-label">Ajuste</div><div class="kpi-value">—</div>'
+      + '<div class="kpi-sub">Asigná un porcentaje a por lo menos un índice.</div></div>';
+    if (det) det.innerHTML = '';
+    return;
+  }
+
+  /* Si algun componente no tiene dato, se reescala sobre el peso que si lo tiene */
+  const factorNorm = pesoValido ? factor * (100 / pesoValido) : 0;
+  const ajustado = monto * factorNorm;
+
+  kpis.innerHTML =
+      _salCard('Factor de ajuste', fmtN(factorNorm, 4), fmtMes(desde + '-01') + ' → ' + fmtMes(hasta + '-01'), '')
+    + _salCard('Monto ajustado', '$ ' + fmtN(ajustado, 0), 'Original $ ' + fmtN(monto, 0), '#22c55e')
+    + _salCard('Diferencia', '$ ' + fmtN(ajustado - monto, 0), _signoPct((factorNorm - 1) * 100) + ' sobre el original', '')
+    + _salCard('Meses transcurridos',
+        String(_difMeses(desde, hasta)),
+        'Equivale a ' + fmtN((Math.pow(factorNorm, 1 / Math.max(_difMeses(desde, hasta), 1)) - 1) * 100, 2) + '% mensual', '');
+
+  if (det) {
+    det.innerHTML =
+        '<div style="overflow-x:auto;">'
+      + '<table style="width:100%;border-collapse:collapse;font-size:12px;">'
+      + '<thead><tr style="color:var(--gris-txt);font-size:10px;text-transform:uppercase;letter-spacing:.7px;">'
+      + '<th style="text-align:left;padding:6px 10px;">Componente</th>'
+      + '<th style="text-align:right;padding:6px 10px;">Peso</th>'
+      + '<th style="text-align:right;padding:6px 10px;">Variación</th>'
+      + '<th style="text-align:right;padding:6px 10px;">Monto ajustado</th>'
+      + '</tr></thead><tbody>'
+      + filas.map(f =>
+          '<tr>'
+        + '<td style="padding:6px 10px;border-bottom:1px solid var(--gris-brd);">' + f.label + '</td>'
+        + '<td style="padding:6px 10px;border-bottom:1px solid var(--gris-brd);text-align:right;">' + fmtN(f.w, 0) + '%</td>'
+        + '<td style="padding:6px 10px;border-bottom:1px solid var(--gris-brd);text-align:right;">' + _signoPct(f.varPct) + '</td>'
+        + '<td style="padding:6px 10px;border-bottom:1px solid var(--gris-brd);text-align:right;font-variant-numeric:tabular-nums;">$ ' + fmtN(f.montoParte, 0) + '</td>'
+        + '</tr>').join('')
+      + '</tbody></table></div>'
+      + (faltantes.length
+          ? '<div style="font-size:10px;color:#f59e0b;margin-top:10px;">⚠ Sin datos en el período para: '
+            + faltantes.join(', ') + '. El factor se recalculó sobre el resto.</div>'
+          : '')
+      + '<div style="font-size:10px;color:var(--gris-txt);margin-top:10px;line-height:1.5;">'
+      + 'El CAC y el IPC son mensuales y se publican con rezago: si el mes elegido todavía no salió, '
+      + 'se usa el último dato disponible anterior.</div>';
+  }
+}
+
+function _difMeses(a, b) {
+  const [ay, am] = a.split('-').map(Number);
+  const [by, bm] = b.split('-').map(Number);
+  return (by - ay) * 12 + (bm - am);
 }
 
 /* ═══════════════════════════════════════

@@ -34,6 +34,7 @@ CAC_JS = os.path.join(BASE_DIR, "cac_cache.js")
 UVA_JS = os.path.join(BASE_DIR, "uva_cache.js")
 MERVAL_JS = os.path.join(BASE_DIR, "merval_cache.js")
 REM_JS = os.path.join(BASE_DIR, "rem_cache.js")
+SAL_JS = os.path.join(BASE_DIR, "salarios_cache.js")
 
 DOCS_DIR = os.path.join(BASE_DIR, "docs")
 OUT_PAGES = os.path.join(DOCS_DIR, "index.html")
@@ -81,12 +82,14 @@ def main():
     uva = leer(UVA_JS, obligatorio=False)
     merval = leer(MERVAL_JS, obligatorio=False)
     rem = leer(REM_JS, obligatorio=False)
+    sal = leer(SAL_JS, obligatorio=False)
 
     html = inline(html, "bcra_cache.js", bcra, "BCRA_CACHE")
     html = inline(html, "cac_cache.js", cac, "CAC_CACHE")
     html = inline(html, "uva_cache.js", uva, "UVA_CACHE")
     html = inline(html, "merval_cache.js", merval, "MERVAL_CACHE")
     html = inline(html, "rem_cache.js", rem, "REM_CACHE")
+    html = inline(html, "salarios_cache.js", sal, "SALARIOS_CACHE")
 
     ts = datetime.now().strftime("%d/%m/%Y %H:%M")
     sello = (
@@ -144,6 +147,14 @@ def main():
           + " (relevamiento " + (re.search(r'relev:\s*"([^"]+)"', rem or "").group(1)
                                  if rem and re.search(r'relev:\s*"([^"]+)"', rem)
                                  else "sin datos") + ")")
+    print("")
+    def ultimo_salario(txt):
+        if not txt:
+            return "sin datos"
+        filas = re.findall(r'\["(\d{4}-\d{2})",\s*\d+', txt)
+        return "escala " + filas[-1] if filas else "sin datos"
+
+    print("       UOCRA : " + ultimo_salario(sal))
     print("")
     print("     Para publicar: hace commit y push de la carpeta docs/")
     print("     (ver PUBLICAR.txt para los pasos completos)")
