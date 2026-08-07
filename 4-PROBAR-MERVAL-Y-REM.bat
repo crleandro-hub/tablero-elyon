@@ -5,7 +5,7 @@ title GRUPO ELYON - Probar fuentes de datos
 cd /d "%~dp0"
 
 echo =====================================================
-echo  Prueba de las fuentes: MERVAL y REM
+echo  Prueba de las fuentes: MERVAL, REM y RIESGO PAIS
 echo =====================================================
 echo.
 echo  Este archivo NO publica nada en GitHub. Solo actualiza
@@ -31,6 +31,12 @@ echo -----------------------------------------------------
 echo  REM  (planilla oficial del BCRA)
 echo -----------------------------------------------------
 %PY% update_rem_cache.py
+echo.
+
+echo -----------------------------------------------------
+echo  RIESGO PAIS  (Rava Bursatil, con la API como respaldo)
+echo -----------------------------------------------------
+%PY% update_riesgo_cache.py
 echo.
 
 echo -----------------------------------------------------

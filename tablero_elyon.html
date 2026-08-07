@@ -814,6 +814,7 @@ body {
 <script src="uva_cache.js"></script>  <!-- generado por update_uva_cache.py -->
 <script src="merval_cache.js"></script>  <!-- generado por update_merval_cache.py -->
 <script src="rem_cache.js"></script>  <!-- generado por update_rem_cache.py -->
+<script src="riesgo_cache.js"></script>  <!-- generado por update_riesgo_cache.py -->
 <script src="salarios_cache.js"></script>  <!-- escalas UOCRA / UECARA, se edita a mano -->
 <!-- ══════════════════════════════════════
      JAVASCRIPT
@@ -1204,20 +1205,39 @@ async function loadREM() {
 }
 
 /* ── Riesgo País (ArgentinaDatos) ── */
+/* Riesgo pais: se queda con el dato mas fresco entre riesgo_cache.js
+   (Rava Bursatil, lo baja update_riesgo_cache.py) y la API publica de
+   argentinadatos. Rava suele ir 2 o 3 dias adelante, pero no habilita CORS,
+   asi que desde el navegador solo se puede leer el cache. */
 async function loadRiesgo() {
-  try {
-    const r = await fetch('https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais');
-    const arr = await r.json();
-    if (arr && arr.length) {
-      const last = arr[arr.length - 1];
-      setMacro('val-riesgo', 'src-riesgo',
-        fmtN(last.valor, 0) + ' pb',
-        fmtFecha(last.fecha) + ' · EMBI+',
-        '#f59e0b');
-    }
-  } catch (e) {
-    setMacro('val-riesgo', 'src-riesgo', 'N/D', 'Sin conexión', '');
+  let mejor = null;
+
+  const c = window.RIESGO_CACHE;
+  if (c && c.fecha && c.valor != null) {
+    mejor = { valor: c.valor, fecha: c.fecha, fuente: c.source || 'Rava Bursátil',
+              varDia: c.varDia };
   }
+
+  try {
+    const r = await fetch('https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais/ultimo');
+    const j = await r.json();
+    if (j && j.fecha && j.valor != null && (!mejor || j.fecha > mejor.fecha)) {
+      mejor = { valor: j.valor, fecha: j.fecha, fuente: 'argentinadatos · EMBI+', varDia: null };
+    }
+  } catch (e) { /* sin conexion: queda lo del cache */ }
+
+  if (!mejor) {
+    setMacro('val-riesgo', 'src-riesgo', 'N/D', 'Sin conexión', '');
+    return;
+  }
+
+  const varTxt = mejor.varDia != null
+    ? ' · ' + (mejor.varDia >= 0 ? '+' : '') + fmtN(mejor.varDia, 1) + '%'
+    : '';
+  setMacro('val-riesgo', 'src-riesgo',
+    fmtN(mejor.valor, 0) + ' pb',
+    fmtFecha(mejor.fecha) + ' · ' + mejor.fuente + varTxt,
+    '#f59e0b');
 }
 
 /* ── BADLAR (BCRA serie 7 — TNA bancos privados) ── */
