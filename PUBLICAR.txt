@@ -22,10 +22,11 @@ Una tarea del Programador de tareas de Windows llamada
 corre de lunes a viernes a las 8:30 y ejecuta actualizar_auto.bat,
 que hace todo el ciclo:
 
-  1. update_bcra_cache.py   -> TAMAR, BADLAR y UVA (API oficial BCRA)
-  2. update_cac_cache.py    -> indice CAC (Excel local de CAMARCO)
-  3. build_publicar.py      -> arma docs/index.html y el portable
-  4. git add / commit / push -> publica en GitHub Pages
+  1. update_bcra_cache.py   -> TAMAR, BADLAR y UVA del dia (API BCRA v4.0)
+  2. update_uva_cache.py    -> serie historica completa de UVA (v4.0)
+  3. update_cac_cache.py    -> indice CAC (Excel local de CAMARCO)
+  4. build_publicar.py      -> arma docs/index.html y el portable
+  5. git add / commit / push -> publica en GitHub Pages
 
 Si la PC estaba apagada a las 8:30, la tarea corre apenas la prendas.
 El link publico se refresca 1 o 2 minutos despues del push.
@@ -60,11 +61,15 @@ FUENTE
                                 el resto se actualiza solo.
 
 DATOS (se regeneran solos, no editar a mano)
-  bcra_cache.js                 TAMAR, BADLAR, UVA
-  cac_cache.js                  Serie CAC completa
+  bcra_cache.js                 TAMAR, BADLAR y UVA del dia
+  cac_cache.js                  Serie CAC completa (mensual, desde 2011)
+  uva_cache.js                  Serie UVA completa (diaria, desde 2016).
+                                Incluye los dias que el BCRA ya publico a
+                                futuro: la UVA se conoce por anticipado.
 
 SCRIPTS
-  update_bcra_cache.py          Baja los datos del BCRA
+  update_bcra_cache.py          Baja los valores del dia del BCRA
+  update_uva_cache.py           Baja la serie historica de UVA
   update_cac_cache.py           Parsea el Excel del CAC
   build_publicar.py             Embebe los datos en el HTML
 
@@ -103,8 +108,18 @@ El push pide usuario y contrasena
   navegador, autorizas, y queda guardado de nuevo.
 
 El link muestra datos viejos
-  Fijate en log_actualizacion.txt si el paso 4 dijo [OK] o [ERROR].
+  Fijate en log_actualizacion.txt si el paso 5 dijo [OK] o [ERROR].
   Tambien puede ser cache del navegador: Ctrl+F5.
+
+"[ATENCION] La serie termina el ... y hoy es ..." en el paso 2
+  El BCRA publica la UVA por anticipado, asi que lo normal es que la
+  serie llegue mas alla de hoy. Si no lo hace, cambio algo en la fuente.
+
+Las tarjetas de dolar de arriba no coinciden con la seccion de abajo
+  No es un error. Arriba va dolarapi.com, que da la cotizacion en vivo.
+  La serie historica sale de ArgentinaDatos, que publica el cierre con
+  un dia de rezago. Los KPIs de la seccion Blue usan la misma fuente en
+  vivo que el encabezado; el grafico y el consultor, la historica.
 
 
 =====================================================
