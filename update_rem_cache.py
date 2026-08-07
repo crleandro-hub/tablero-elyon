@@ -29,6 +29,7 @@ Ejecutar diariamente via tarea programada, antes de build_publicar.py.
 """
 
 import json
+import re
 import os
 import ssl
 import sys
@@ -42,6 +43,7 @@ from xlsx_lite import leer_hoja  # noqa: E402
 
 CACHE_PATH = os.path.join(BASE_DIR, "rem_cache.js")
 
+BCRA_PORTADA = "https://www.bcra.gob.ar/relevamiento-expectativas-mercado-rem/"
 BCRA_URL = ("https://www.bcra.gob.ar/archivos/Pdfs/PublicacionesEstadisticas/"
             "informes/tablas-relevamiento-expectativas-mercado-{mes}-{anio}.xlsx")
 MESES = ["ene", "feb", "mar", "abr", "may", "jun",
@@ -55,9 +57,17 @@ TIMEOUT = 45
 
 
 def _get(url, binario=False):
+    # Encabezados de navegador: el sitio del BCRA rechaza pedidos "pelados"
     r = req.Request(url, headers={
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        "Accept": "*/*",
+        "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                       "AppleWebKit/537.36 (KHTML, like Gecko) "
+                       "Chrome/126.0.0.0 Safari/537.36"),
+        "Accept": ("text/html,application/xhtml+xml,application/xml;q=0.9,"
+                   "application/vnd.openxmlformats-officedocument."
+                   "spreadsheetml.sheet,*/*;q=0.8"),
+        "Accept-Language": "es-AR,es;q=0.9,en;q=0.8",
+        "Referer": "https://www.bcra.gob.ar/",
+        "Connection": "close",
     })
     try:
         with req.urlopen(r, timeout=TIMEOUT) as resp:
@@ -154,8 +164,78 @@ def parsear_xlsx(contenido, anio):
     return res
 
 
+def _mes_de_url(url):
+    """'...-jul-2026.xlsx' -> '2026-07'."""
+    m = re.search(r"-([a-z]{3})-(\d{4})\.xlsx", url, re.I)
+    if not m:
+        return None
+    ab = m.group(1).lower()
+    if ab == "set":
+        ab = "sep"
+    if ab not in MESES:
+        return None
+    return "%s-%02d" % (m.group(2), MESES.index(ab) + 1)
+
+
+def _intentar_xlsx(url, etiqueta):
+    """Baja y parsea una planilla. Devuelve el dict de resultados o None."""
+    try:
+        contenido = _get(url, binario=True)
+    except Exception as e:
+        print("   [%s] no se pudo bajar: %s" % (etiqueta, e))
+        return None
+    if contenido[:2] != b"PK":
+        print("   [%s] la respuesta no es un xlsx (%d bytes)" % (etiqueta, len(contenido)))
+        return None
+    try:
+        res = parsear_xlsx(contenido, datetime.now().year)
+    except Exception as e:
+        print("   [%s] no se pudo parsear: %s" % (etiqueta, e))
+        return None
+    if res["m12"] is None and res["anual"] is None:
+        print("   [%s] la planilla no trae medianas de IPC" % etiqueta)
+        return None
+    return res
+
+
+def desde_portada():
+    """Lee el link a la planilla desde la pagina del REM.
+
+    Es el camino mas confiable: no depende de adivinar el nombre del archivo
+    ni de que el BCRA mantenga la convencion mes-anio."""
+    try:
+        html = _get(BCRA_PORTADA, binario=True).decode("utf-8", "replace")
+    except Exception as e:
+        print("   [portada] no se pudo abrir la pagina del REM: %s" % e)
+        return None
+
+    links = re.findall(
+        r'href="([^"]*tablas-relevamiento-expectativas-mercado[^"]*\.xlsx)"',
+        html, re.I)
+    if not links:
+        print("   [portada] la pagina no lista ninguna planilla .xlsx")
+        return None
+
+    for href in links[:3]:
+        url = href if href.startswith("http") else "https://www.bcra.gob.ar" + href
+        res = _intentar_xlsx(url, "portada")
+        if res:
+            res["relev"] = _mes_de_url(url)
+            res["fuente"] = "BCRA (planilla oficial)"
+            print("[OK] REM desde la planilla enlazada en la pagina del BCRA (%s)"
+                  % res["relev"])
+            return res
+    return None
+
+
 def desde_bcra():
     """Prueba los ultimos relevamientos hasta encontrar uno publicado."""
+    print("Buscando la planilla del REM en bcra.gob.ar ...")
+
+    res = desde_portada()
+    if res:
+        return res
+
     hoy = datetime.now()
     anio, mes = hoy.year, hoy.month
 
@@ -173,16 +253,20 @@ def desde_bcra():
             url = BCRA_URL.format(mes=ab, anio=anio)
             try:
                 contenido = _get(url, binario=True)
-            except Exception:
+            except Exception as e:
+                print("   [%s-%s] no se pudo bajar: %s" % (ab, anio, e))
                 continue
-            if not contenido[:2] == b"PK":     # no es un xlsx valido
+            if contenido[:2] != b"PK":     # no es un xlsx valido
+                print("   [%s-%s] la respuesta no es un xlsx (%d bytes)"
+                      % (ab, anio, len(contenido)))
                 continue
             try:
                 res = parsear_xlsx(contenido, datetime.now().year)
             except Exception as e:
-                print("[AVISO] No se pudo parsear %s-%s: %s" % (ab, anio, e))
+                print("   [%s-%s] no se pudo parsear: %s" % (ab, anio, e))
                 continue
             if res["m12"] is None and res["anual"] is None:
+                print("   [%s-%s] la planilla no trae medianas de IPC" % (ab, anio))
                 continue
             res["relev"] = "%04d-%02d" % (anio, mes)
             res["fuente"] = "BCRA (planilla oficial)"
@@ -194,19 +278,35 @@ def desde_bcra():
 # ─────────────────────────────────────────────────────────────
 #  Fuente 2: API abierta que normaliza la misma planilla
 # ─────────────────────────────────────────────────────────────
+def _relev_desde_referencia(datos):
+    """Deduce el mes del relevamiento de la fila 'proximos 12 meses'.
+
+    Su columna 'referencia' dice, por ejemplo, 'var. % i.a.; abr-27': el
+    horizonte es 12 meses despues del relevamiento, asi que restando un año
+    sale abr-26. Se usa para no gastar un segundo pedido en /metadata, que el
+    servicio rechaza por limitar a 1 llamada por minuto y por IP."""
+    abrev = {"ene": 1, "feb": 2, "mar": 3, "abr": 4, "may": 5, "jun": 6,
+             "jul": 7, "ago": 8, "sep": 9, "set": 9, "oct": 10, "nov": 11, "dic": 12}
+    for f in datos:
+        per = sin_tildes(f.get("período", f.get("periodo", "")))
+        if "12 meses" not in per:
+            continue
+        ref = sin_tildes(f.get("referencia", ""))
+        m = re.search(r"([a-z]{3})-(\d{2})", ref)
+        if m and m.group(1) in abrev:
+            return "%04d-%02d" % (2000 + int(m.group(2)) - 1, abrev[m.group(1)])
+    return None
+
+
 def desde_api():
+    print("Probando la API abierta de respaldo ...")
     try:
         datos = (_get(API + "/ipc_general") or {}).get("datos") or []
     except Exception as e:
-        print("[AVISO] API REM: " + str(e))
+        print("   API REM: " + str(e))
         return None
     if not datos:
         return None
-
-    try:
-        meta = _get(API + "/metadata") or {}
-    except Exception:
-        meta = {}
 
     anio = datetime.now().year
 
@@ -221,13 +321,23 @@ def desde_api():
         "m12":     mediana(lambda p: "12 meses" in p.lower()),
         "anual":   mediana(lambda p: p == str(anio)),
         "mensual": mediana(lambda p: p[:4].isdigit() and len(p) >= 7),
-        "relev":   meta.get("periodo"),
+        "relev":   _relev_desde_referencia(datos),
         "fuente":  "bcra-rem-api",
     }
     if res["m12"] is None and res["anual"] is None:
         return None
     print("[OK] REM desde la API abierta (relevamiento %s)" % res["relev"])
     return res
+
+
+def relev_actual():
+    """Relevamiento que ya esta guardado en rem_cache.js, si lo hay."""
+    try:
+        with open(CACHE_PATH, encoding="utf-8") as f:
+            m = re.search(r'relev:\s*"(\d{4}-\d{2})"', f.read())
+        return m.group(1) if m else None
+    except Exception:
+        return None
 
 
 def main():
@@ -237,6 +347,15 @@ def main():
     if not res:
         raise SystemExit("[ERROR] No se pudo obtener el REM. "
                          "Se conserva el cache anterior.")
+
+    # No pisar un relevamiento nuevo con uno mas viejo. La API de respaldo
+    # suele quedar atrasada varios meses; si el cache ya tiene algo mas
+    # reciente, se lo deja como esta.
+    previo = relev_actual()
+    if previo and res.get("relev") and res["relev"] < previo:
+        print("[SIN CAMBIOS] El cache ya tiene el relevamiento %s, mas nuevo "
+              "que el %s que devolvio %s." % (previo, res["relev"], res["fuente"]))
+        return
 
     anio = datetime.now().year
 

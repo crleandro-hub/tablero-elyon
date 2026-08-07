@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tablero de Gestión – Grupo Elyon</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 
 /* ─── RESET ─────────────────────────────── */
@@ -89,6 +88,22 @@ body {
 .kpi-sub { font-size: 10.5px; color: #8f8f8f; margin-top: 5px; }
 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 6px; }
 
+/* GRILLA DE INDICADORES MACRO
+   Son 9 tarjetas y algunas traen numeros largos (el Merval pasa el millon de
+   puntos). Con auto-fit entrarian las 9 en una sola fila y quedan apretadas,
+   asi que se fija la cantidad de columnas por ancho de pantalla y se deja que
+   bajen a una segunda linea. */
+.kpi-macro { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 4px; }
+.kpi-macro .kpi-label { font-size: 10px; letter-spacing: .6px; margin-bottom: 7px; }
+.kpi-macro .kpi-value { font-size: 19px; }
+.kpi-macro .kpi-sub   { font-size: 10px; line-height: 1.35; }
+.kpi-macro .card      { padding: 13px 14px; min-width: 0; }
+
+@media (max-width: 1180px) { .kpi-macro { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 900px)  { .kpi-macro { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 620px)  { .kpi-macro { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 380px)  { .kpi-macro { grid-template-columns: 1fr; } }
+
 /* ─── SECCIÓN ─────────────────────────────── */
 .sec-title {
   font-size: 17px; font-weight: 800; letter-spacing: 1.8px; text-transform: uppercase;
@@ -162,12 +177,6 @@ body {
 .d-val.venta  { color: var(--rojo-txt); }
 
 /* UPLOAD */
-.upload-zone {
-  border: 2px dashed var(--gris-brd); border-radius: 10px; padding: 20px;
-  text-align: center; cursor: pointer; background: var(--gris-osc);
-  transition: border-color .2s, background .2s;
-}
-.upload-zone:hover { border-color: var(--rojo); background: rgba(204,0,0,.04); }
 
 /* CHART */
 .chart-wrap {
@@ -371,7 +380,7 @@ body {
 
     <!-- MACRO -->
     <div class="sec-title">Indicadores Macroeconómicos</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(126px,1fr));gap:12px;margin-bottom:4px;">
+    <div class="kpi-macro">
 
       <div class="card" id="card-inf-m">
         <div class="kpi-label">Inflación mensual</div>
@@ -436,7 +445,6 @@ body {
     <div id="cac-section">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
         <span style="font-size:10px;color:var(--gris-txt);" id="cac-datasource">📊 Datos embebidos · Serie ene-2011/abr-2026 · Cámara Argentina de la Construcción</span>
-        <button class="btn-link" onclick="document.getElementById('file-input').click()">📁 Actualizar con Excel más reciente</button>
       </div>
 
       <div class="kpi-grid">
@@ -493,20 +501,6 @@ body {
 
       <div id="cac-q-result">
         <div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">Cargando...</div>
-      </div>
-    </div>
-
-    <!-- Upload oculto para actualizar datos -->
-    <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none" onchange="loadExcel(this)">
-
-    <!-- Zona upload secundaria (siempre al pie del CAC) -->
-    <div class="upload-zone" style="margin-top:12px;"
-         onclick="document.getElementById('file-input').click()"
-         ondragover="event.preventDefault();this.style.borderColor='var(--rojo)'"
-         ondragleave="this.style.borderColor='var(--gris-brd)'"
-         ondrop="handleDrop(event)">
-      <div style="font-size:11px;color:var(--gris-txt);">
-        📂 Arrastrá o hacé clic para cargar una versión más reciente del Excel CAC
       </div>
     </div>
 
@@ -675,6 +669,44 @@ body {
       <div id="usd-q-result">
         <div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">Cargando cotizaciones...</div>
       </div>
+    </div>
+
+    <!-- ── COMPARADOR DE ÍNDICES ──────────── -->
+    <div class="sec-title">Comparador de índices</div>
+    <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
+      Variación interanual mes a mes de todos los índices, en una misma escala.
+      Sirve para ver cuál corrió más rápido en cada momento: si el costo de obra le ganó
+      a la inflación, si el dólar quedó atrasado contra el CAC, y así.
+    </div>
+
+    <div id="comp-section">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:0 0 10px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Variación interanual comparada</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+
+          <div class="multi-dd" id="comp-dd">
+            <button type="button" class="period-select multi-dd-btn" id="comp-dd-btn" onclick="toggleCompDD(event)">
+              <span id="comp-dd-label">Cargando…</span><span style="opacity:.55;font-size:9px;">▼</span>
+            </button>
+            <!-- Las opciones se arman por JS: solo se listan los índices con datos -->
+            <div class="multi-dd-panel" id="comp-dd-panel"></div>
+          </div>
+
+          <select class="period-select" id="comp-range" onchange="renderCompChart()">
+            <option value="24">Últimos 2 años</option>
+            <option value="36" selected>Últimos 3 años</option>
+            <option value="60">Últimos 5 años</option>
+            <option value="0">Histórico completo</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="chart-wrap" style="height:300px;">
+        <canvas id="chart-comp" role="img" aria-label="Variación interanual comparada de índices"></canvas>
+      </div>
+
+      <!-- Resumen: último dato de cada índice seleccionado -->
+      <div id="comp-resumen" style="margin-top:14px;"></div>
     </div>
 
   </div><!-- /content -->
@@ -942,14 +974,14 @@ async function loadInflacion() {
       const pctM = (data[0][1] / data[1][1] - 1) * 100;
       setMacro('val-inf-m', 'src-inf-m',
         fmtN(pctM, 1) + '%',
-        fmtMes(data[0][0]) + ' · INDEC · datos.gob.ar',
+        fmtMes(data[0][0]) + ' · INDEC',
         'var(--rojo-txt)');
     }
     if (data.length >= 13) {
       const pctIA = (data[0][1] / data[12][1] - 1) * 100;
       setMacro('val-inf-ia', 'src-inf-ia',
         fmtN(pctIA, 1) + '%',
-        'Interanual a ' + fmtMes(data[0][0]) + ' · INDEC · datos.gob.ar',
+        'Interanual a ' + fmtMes(data[0][0]) + ' · INDEC',
         'var(--rojo-txt)');
     }
 
@@ -963,7 +995,7 @@ async function loadInflacion() {
       const meses   = +String(data[0][0]).slice(5, 7);
       setMacro('val-inf-acum', 'src-inf-acum',
         fmtN(pctAcum, 1) + '%',
-        `${anioUlt} · ${meses} ${meses === 1 ? 'mes' : 'meses'} a ${fmtMes(data[0][0])} · INDEC`,
+        `${meses} ${meses === 1 ? 'mes' : 'meses'} a ${fmtMes(data[0][0])} · INDEC`,
         'var(--rojo-txt)');
     } else {
       setMacro('val-inf-acum', 'src-inf-acum', 'N/D', 'Sin base de diciembre', '');
@@ -1022,11 +1054,12 @@ function _pintarREM(res) {
   const valor  = usaM12 ? res.m12 : res.anual;
   const anio   = res.anio || new Date().getFullYear();
 
-  const partes = [usaM12 ? 'próx. 12 meses' : `dic-${String(anio).slice(2)} i.a.`];
-  if (usaM12 && res.anual != null) {
-    partes.push(`dic-${String(anio).slice(2)}: ` + fmtN(res.anual, 1) + '%');
-  }
-  partes.push(res.relev ? 'REM ' + fmtMes(res.relev + '-01') : 'BCRA');
+  const yy = String(anio).slice(2);
+  const partes = [usaM12 ? 'próx. 12 meses' : `dic-${yy} i.a.`];
+  if (usaM12 && res.anual != null) partes.push(`dic-${yy}: ` + fmtN(res.anual, 1) + '%');
+  // Mes del relevamiento en formato corto (07/26) para no romper la tarjeta
+  partes.push(res.relev ? 'REM ' + res.relev.slice(5, 7) + '/' + res.relev.slice(2, 4)
+                        : 'BCRA');
 
   setMacro('val-rem', 'src-rem', fmtN(valor, 1) + '%', partes.join(' · '), '#f59e0b');
 }
@@ -1081,7 +1114,7 @@ async function loadRiesgo() {
       const last = arr[arr.length - 1];
       setMacro('val-riesgo', 'src-riesgo',
         fmtN(last.valor, 0) + ' pb',
-        fmtFecha(last.fecha) + ' · EMBI+ · ArgentinaDatos',
+        fmtFecha(last.fecha) + ' · EMBI+',
         '#f59e0b');
     }
   } catch (e) {
@@ -1096,7 +1129,7 @@ async function loadBADLAR() {
     const c = window.BCRA_CACHE.badlar;
     setMacro('val-badlar', 'src-badlar',
       fmtN(c.valor, 4) + '% TNA',
-      fmtFecha(c.fecha) + ' · Bancos priv. · BCRA (serie 7)',
+      fmtFecha(c.fecha) + ' · Bancos priv. · BCRA',
       '#60a5fa');
     return;
   }
@@ -1107,7 +1140,7 @@ async function loadBADLAR() {
       const last = data[0];
       setMacro('val-badlar', 'src-badlar',
         fmtN(last[1], 4) + '% TNA',
-        fmtFecha(last[0]) + ' · Bancos priv. · datos.gob.ar',
+        fmtFecha(last[0]) + ' · Bancos priv. · BCRA',
         '#60a5fa');
       return;
     }
@@ -1122,7 +1155,7 @@ async function loadTAMAR() {
     const c = window.BCRA_CACHE.tamar;
     setMacro('val-tamar', 'src-tamar',
       fmtN(c.valor, 4) + '% TNA',
-      fmtFecha(c.fecha) + ' · Bancos priv. · BCRA (serie 44)',
+      fmtFecha(c.fecha) + ' · Bancos priv. · BCRA',
       '#a78bfa');
     return;
   }
@@ -1146,7 +1179,7 @@ async function loadTAMAR() {
       if (valor == null) continue;
       setMacro('val-tamar', 'src-tamar',
         fmtN(valor, 4) + '% TNA',
-        fecha + ' · Bancos priv. · BCRA API',
+        fecha + ' · Bancos priv. · BCRA',
         '#a78bfa');
       return;
     } catch (_) {}
@@ -1221,7 +1254,9 @@ function _pintarMerval(d) {
   const color = pct => pct == null ? '#e5e7eb'
     : pct >= 0 ? 'var(--verde)' : 'var(--rojo-txt)';
 
-  const pie = fmtFecha(d.fecha) + ' · ' + (d.fuente || 'S&P Merval · BYMA');
+  /* El subtitulo va corto a proposito: la tarjeta ya dice "MERVAL" y con
+     nueve KPIs en pantalla cualquier texto largo rompe la grilla. */
+  const pie = fmtFecha(d.fecha) + ' · BYMA';
 
   setMacro('val-merval', 'src-merval',
     fmtN(d.ars, 0) + ' pts', badge(d.arsVar) + pie, color(d.arsVar));
@@ -2196,6 +2231,255 @@ function loadSnapshot() {
   }
 }
 
+/* ══════════════════════════════════════════
+   COMPARADOR DE ÍNDICES — variación interanual
+   Cada fuente se normaliza a lo mismo: un Map 'aaaa-mm' -> nivel del indice.
+   Sobre eso se calcula la variacion interanual de manera uniforme, asi da
+   igual que el origen sea diario (dolares, UVA) o mensual (CAC, IPC).
+══════════════════════════════════════════ */
+let compChart = null;
+let ipcSerie  = [];   // [fecha, indice] descendente
+
+const COMP_SERIES = {
+  ipc:      { label: 'IPC (INDEC)',   color: '#f59e0b', get: () => compIpc() },
+  cac:      { label: 'CAC general',   color: '#ef4444', get: () => compCac() },
+  uva:      { label: 'UVA',           color: '#c084fc', get: () => compUva() },
+  oficial:  { label: 'Dólar oficial', color: '#60a5fa', get: () => compUsd('oficial') },
+  blue:     { label: 'Dólar blue',    color: '#22c55e', get: () => compUsd('blue') },
+  bolsa:    { label: 'Dólar MEP',     color: '#14b8a6', get: () => compUsd('bolsa') },
+  contadoconliqui: { label: 'Dólar CCL', color: '#f97316', get: () => compUsd('contadoconliqui') },
+};
+
+/* Los cuatro que mas se miran juntos en obra: costo, precios, indexacion y dolar */
+const COMP_DEFAULT = ['ipc', 'cac', 'uva', 'blue'];
+
+/* ── Normalizadores: cada uno devuelve Map 'aaaa-mm' -> nivel ── */
+
+/* De una serie diaria toma el ultimo valor de cada mes (cierre mensual) */
+function _mensualDesdeDiaria(pares) {
+  const ultimo = new Map();   // aaaa-mm -> [fecha, valor]
+  pares.forEach(([iso, v]) => {
+    if (v == null || isNaN(v)) return;
+    const ym = String(iso).slice(0, 7);
+    const prev = ultimo.get(ym);
+    if (!prev || iso > prev[0]) ultimo.set(ym, [iso, Number(v)]);
+  });
+  return new Map([...ultimo].map(([ym, par]) => [ym, par[1]]));
+}
+
+function compUsd(casa) {
+  const s = usdSeries[casa];
+  if (!s || !s.length) return null;
+  return _mensualDesdeDiaria(s.map(r => [r.fecha, r.venta]));
+}
+
+function compUva() {
+  if (!uvaApiData || !uvaApiData.length) return null;
+  return _mensualDesdeDiaria(uvaApiData.map(r => [String(r[0]).slice(0, 10), r[1]]));
+}
+
+function compCac() {
+  if (!cacData || !cacData.length) return null;
+  const m = new Map();
+  cacData.forEach(r => {
+    if (!r.fecha || r.cacGen == null) return;
+    const ym = r.fecha.getFullYear() + '-' + String(r.fecha.getMonth() + 1).padStart(2, '0');
+    m.set(ym, Number(r.cacGen));
+  });
+  return m.size ? m : null;
+}
+
+function compIpc() {
+  if (!ipcSerie.length) return null;
+  const m = new Map();
+  ipcSerie.forEach(([f, v]) => {
+    if (v != null) m.set(String(f).slice(0, 7), Number(v));
+  });
+  return m.size ? m : null;
+}
+
+/* ── Nivel -> variación interanual ── */
+function compVarIA(niveles) {
+  const out = new Map();
+  if (!niveles) return out;
+  niveles.forEach((v, ym) => {
+    const a = +ym.slice(0, 4), mm = ym.slice(5, 7);
+    const prev = niveles.get((a - 1) + '-' + mm);
+    if (prev && v != null && prev !== 0) out.set(ym, (v / prev - 1) * 100);
+  });
+  return out;
+}
+
+/* ── Descarga de lo que falte ── */
+async function loadIpcSerie() {
+  if (ipcSerie.length) return ipcSerie;
+  try {
+    // 1000 = toda la serie disponible (arranca en dic-2016)
+    ipcSerie = await fetchDG('148.3_INIVELNAL_DICI_M_26', 1000);
+  } catch (_) { ipcSerie = []; }
+  return ipcSerie;
+}
+
+async function compAsegurarDatos(sel) {
+  const tareas = [];
+  if (sel.includes('ipc')) tareas.push(loadIpcSerie());
+  ['oficial', 'blue', 'bolsa', 'contadoconliqui'].forEach(k => {
+    if (sel.includes(k)) tareas.push(loadUsdSerie(k));
+  });
+  await Promise.allSettled(tareas);
+}
+
+/* ── Desplegable ── */
+function toggleCompDD(ev) {
+  if (ev) ev.stopPropagation();
+  const dd = document.getElementById('comp-dd');
+  if (dd) dd.classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  const dd = document.getElementById('comp-dd');
+  if (dd && dd.classList.contains('open') && !dd.contains(e.target)) dd.classList.remove('open');
+});
+
+function compSel() {
+  return [...document.querySelectorAll('#comp-dd-panel input[type=checkbox]')]
+    .filter(c => c.checked).map(c => c.value);
+}
+
+function compDDAll(marcar) {
+  document.querySelectorAll('#comp-dd-panel input[type=checkbox]')
+    .forEach(c => { c.checked = marcar; });
+  onCompSel();
+}
+
+/* Arma el panel dejando afuera los indices que todavia no tienen datos */
+function initComparador() {
+  const panel = document.getElementById('comp-dd-panel');
+  if (!panel) return;
+
+  const filas = Object.entries(COMP_SERIES).map(([k, s]) => {
+    const hay = s.get() !== null || k === 'ipc';   // el IPC se baja al vuelo
+    if (!hay) return '';
+    const tildado = COMP_DEFAULT.includes(k) ? ' checked' : '';
+    return `<label><input type="checkbox" value="${k}"${tildado} onchange="onCompSel()">`
+         + `<span class="dd-dot" style="background:${s.color}"></span>${s.label}</label>`;
+  }).join('');
+
+  panel.innerHTML = filas
+    + '<div class="multi-dd-actions">'
+    + '<button type="button" onclick="compDDAll(true)">Todos</button>'
+    + '<button type="button" onclick="compDDAll(false)">Ninguno</button>'
+    + '</div>';
+
+  onCompSel();
+}
+
+async function onCompSel() {
+  const sel = compSel();
+  const lbl = document.getElementById('comp-dd-label');
+  if (lbl) {
+    const total = document.querySelectorAll('#comp-dd-panel input[type=checkbox]').length;
+    lbl.textContent = !sel.length ? 'Ninguno'
+                    : sel.length === total ? 'Todos'
+                    : sel.length <= 2 ? sel.map(k => COMP_SERIES[k].label).join(' · ')
+                    : sel.length + ' índices';
+  }
+  await compAsegurarDatos(sel);
+  renderCompChart();
+}
+
+/* ── Gráfico + resumen ── */
+function renderCompChart() {
+  const ctx = document.getElementById('chart-comp');
+  if (!ctx) return;
+
+  const sel     = compSel();
+  const rangeEl = document.getElementById('comp-range');
+  const meses   = rangeEl ? parseInt(rangeEl.value, 10) : 36;
+
+  // Cada serie ya convertida a variacion interanual
+  const series = sel.map(k => ({ k, cfg: COMP_SERIES[k], ia: compVarIA(COMP_SERIES[k].get()) }))
+                    .filter(s => s.ia.size);
+
+  // Eje X: union de meses, recortada al rango elegido
+  const todos = new Set();
+  series.forEach(s => s.ia.forEach((_, ym) => todos.add(ym)));
+  let labels = [...todos].sort();
+  if (meses > 0) labels = labels.slice(-meses);
+
+  if (!labels.length) {
+    if (compChart) { compChart.destroy(); compChart = null; }
+    const res = document.getElementById('comp-resumen');
+    if (res) res.innerHTML = '';
+    return;
+  }
+
+  const datasets = series.map(s => ({
+    label: s.cfg.label,
+    data: labels.map(ym => s.ia.has(ym) ? +s.ia.get(ym).toFixed(2) : null),
+    borderColor: s.cfg.color,
+    backgroundColor: s.cfg.color + '1A',
+    borderWidth: 2, pointRadius: 0, tension: .25, fill: false, spanGaps: true,
+  }));
+
+  if (compChart) compChart.destroy();
+  compChart = new Chart(ctx.getContext('2d'), {
+    type: 'line',
+    data: { labels: labels.map(ym => ym.slice(5) + '/' + ym.slice(2, 4)), datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#aaa', boxWidth: 12, font: { size: 10 }, usePointStyle: true } },
+        tooltip: {
+          callbacks: {
+            label: c => c.parsed.y == null ? null
+              : ` ${c.dataset.label}: ${fmtN(c.parsed.y, 1)}%`,
+          },
+        },
+      },
+      scales: {
+        x: { ticks: { color: '#888', maxTicksLimit: 12, font: { size: 9 } },
+             grid: { color: 'rgba(255,255,255,.04)' } },
+        y: { ticks: { color: '#888', font: { size: 9 }, callback: v => fmtN(v, 0) + '%' },
+             grid: { color: 'rgba(255,255,255,.04)' } },
+      },
+    },
+  });
+
+  renderCompResumen(series);
+}
+
+/* Tabla chica con el último dato de cada índice, ordenada de mayor a menor */
+function renderCompResumen(series) {
+  const cont = document.getElementById('comp-resumen');
+  if (!cont) return;
+  if (!series.length) { cont.innerHTML = ''; return; }
+
+  const filas = series.map(s => {
+    const ym = [...s.ia.keys()].sort().pop();
+    return { label: s.cfg.label, color: s.cfg.color, ym, valor: s.ia.get(ym) };
+  }).sort((a, b) => b.valor - a.valor);
+
+  cont.innerHTML =
+    '<div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:8px;">'
+    + 'ÚLTIMA VARIACIÓN INTERANUAL DISPONIBLE</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:8px;">'
+    + filas.map(f => `
+      <div style="display:flex;align-items:center;gap:8px;background:var(--gris-med);
+                  border:1px solid var(--gris-brd);border-radius:8px;padding:8px 11px;">
+        <span class="dd-dot" style="background:${f.color}"></span>
+        <div style="min-width:0;flex:1;">
+          <div style="font-size:10.5px;color:#ccc;white-space:nowrap;overflow:hidden;
+                      text-overflow:ellipsis;">${f.label}</div>
+          <div style="font-size:9.5px;color:var(--gris-txt);">${f.ym.slice(5)}/${f.ym.slice(0, 4)}</div>
+        </div>
+        <div style="font-size:14px;font-weight:700;color:${f.color};white-space:nowrap;">
+          ${fmtN(f.valor, 1)}%
+        </div>
+      </div>`).join('')
+    + '</div>';
+}
+
 /* ── Carga todo en paralelo ── */
 async function reloadAll() {
   const ts = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
@@ -2213,6 +2497,10 @@ async function reloadAll() {
     loadUVA(),
     loadBlue(),
   ]);
+
+  // El comparador se arma al final: necesita saber que series terminaron
+  // con datos para no ofrecer casillas que no dibujarian nada.
+  initComparador();
 }
 
 /* ═══════════════════════════════════════
@@ -2274,124 +2562,6 @@ function renderCacKpis(data, sourceLabel) {
   if (sourceLabel) {
     document.getElementById('cac-datasource').textContent = sourceLabel;
   }
-}
-
-/* ── Drag & Drop / File Input ── */
-function handleDrop(event) {
-  event.preventDefault();
-  const file = event.dataTransfer.files[0];
-  if (file) readExcelFile(file);
-}
-
-function loadExcel(input) {
-  const file = input.files[0];
-  if (file) readExcelFile(file);
-}
-
-function readExcelFile(file) {
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    try {
-      // cellDates:true → SheetJS convierte seriales a Date objects automáticamente
-      const wb  = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: true });
-      const ws  = wb.Sheets[wb.SheetNames[0]];
-      const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
-      processExcel(raw, file.name);
-    } catch (ex) {
-      alert('Error al leer el archivo Excel: ' + ex.message);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-function processExcel(raw, fname) {
-  if (!raw || !raw.length) { alert('Archivo vacío o sin datos.'); return; }
-
-  /* ═══════════════════════════════════════════════════════════════════
-     ESTRUCTURA DEL EXCEL CAC (INDEC) — verificada sobre el XML real
-
-     Cada mes ocupa 3 filas consecutivas en este orden:
-       1) [vacío B] [D="Costo de Construcción"] [F=General del mes]
-       2) [B=fecha] [D="Materiales"]             [F=Materiales del mes]
-       3) [vacío B] [D="Mano de Obra"]           [F=MO del mes]
-
-     La fecha está en col B (índice 1) SOLO en la fila de Materiales,
-     guardada como número serial de Excel (ej: 40544 = 01/01/2011).
-     Con cellDates:true SheetJS la convierte a Date object.
-
-     Columnas (0-based): A=0  B=1  C=2  D=3  E=4  F=5  G=6
-  ═══════════════════════════════════════════════════════════════════ */
-
-  const toNum = v => {
-    if (v == null) return null;
-    if (typeof v === 'number') return isNaN(v) ? null : v;
-    const s = String(v).replace('%', '').replace(',', '.').trim();
-    const n = parseFloat(s);
-    return isNaN(n) ? null : n;
-  };
-
-  const normDen = v => String(v ?? '').toLowerCase().trim();
-
-  // Detectar filas de Materiales:
-  // col[3] contiene "materiales" Y col[1] es Date o número serial > 40000
-  const matRows = [];
-  raw.forEach((row, i) => {
-    if (!Array.isArray(row) || row.length < 4) return;
-    const den  = normDen(row[3]);
-    const bVal = row[1];
-    const hasDate = (bVal instanceof Date && !isNaN(bVal.getTime())) ||
-                    (typeof bVal === 'number' && bVal > 40000 && bVal < 60000);
-    if (/materiales/.test(den) && hasDate) matRows.push(i);
-  });
-
-  if (matRows.length < 3) {
-    alert('Estructura no reconocida. Verificar archivo CAC del INDEC. Filas detectadas: ' + matRows.length);
-    return;
-  }
-
-  const newData = [];
-
-  matRows.forEach(mi => {
-    const matRow = raw[mi];
-    const moRow  = raw[mi + 1] ?? [];  // Mano de Obra: fila +1
-    const genRow = raw[mi - 1] ?? [];  // General: fila -1 (Costo de Construcción)
-
-    // Convertir fecha
-    let fecha = null;
-    const bVal = matRow[1];
-    if (bVal instanceof Date) {
-      fecha = new Date(bVal.getFullYear(), bVal.getMonth(), 1);
-    } else if (typeof bVal === 'number' && bVal > 40000) {
-      // Fórmula: serial Excel → JS Date (corregir epoch)
-      const d = new Date(Math.round((bVal - 25569) * 86400000));
-      fecha = new Date(d.getUTCFullYear(), d.getUTCMonth(), 1);
-    }
-    if (!fecha || isNaN(fecha.getTime())) return;
-
-    // Verificar que las filas vecinas son las correctas
-    const moOk  = /mano/i.test(normDen(moRow[3]));
-    const genOk = /costo/i.test(normDen(genRow[3]));
-
-    const mat = toNum(matRow[5]);
-    const mo  = moOk  ? toNum(moRow[5])  : null;
-    const gen = genOk ? toNum(genRow[5]) : null;
-
-    newData.push({ fecha, cacGen: gen, mat, mo });
-  });
-
-  if (!newData.length) {
-    alert('Se detectaron filas de Materiales pero no se pudieron extraer datos.');
-    return;
-  }
-
-  newData.sort((a, b) => a.fecha - b.fecha);
-  cacData = newData;
-
-  const label = fname + ' - ' + newData.length + ' meses';
-  renderCacKpis(newData, label);
-  renderCacChart();
-  initCacConsulta();
-  document.getElementById('cac-datasource').textContent = label;
 }
 
 /* ── Gráfico CAC ── */

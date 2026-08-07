@@ -1,11 +1,11 @@
 @echo off
 setlocal
 chcp 65001 >nul
-title GRUPO ELYON - Probar MERVAL y REM
+title GRUPO ELYON - Probar fuentes de datos
 cd /d "%~dp0"
 
 echo =====================================================
-echo  Prueba de las fuentes de MERVAL y REM
+echo  Prueba de las fuentes: MERVAL y REM
 echo =====================================================
 echo.
 echo  Este archivo NO publica nada en GitHub. Solo actualiza
