@@ -1,4 +1,4 @@
-<!-- Version autocontenida generada por build_publicar.py el 06/08/2026 22:39 - datos embebidos, no depende de archivos externos -->
+<!-- Version autocontenida generada por build_publicar.py el 06/08/2026 22:56 - datos embebidos, no depende de archivos externos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -504,6 +504,87 @@ body {
 
       <div id="uva-q-result">
         <div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">Cargando serie UVA...</div>
+      </div>
+    </div>
+
+    <!-- ── DÓLAR BLUE ──────────────────── -->
+    <div class="sec-title">Dólar Blue</div>
+
+    <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(155px,1fr));margin-bottom:4px;">
+      <div class="card">
+        <div class="kpi-label">Compra</div>
+        <div class="kpi-value" id="val-blue-compra">—</div>
+        <div class="kpi-sub" id="src-blue">ArgentinaDatos</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Venta</div>
+        <div class="kpi-value" id="val-blue-venta">—</div>
+        <div class="kpi-sub" id="src-blue-fecha">—</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Variación mensual</div>
+        <div class="kpi-value" id="val-blue-m">—</div>
+        <div class="kpi-sub">venta vs. 30 días atrás</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Variación interanual</div>
+        <div class="kpi-value" id="val-blue-ia">—</div>
+        <div class="kpi-sub">venta vs. año anterior</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Brecha vs. oficial</div>
+        <div class="kpi-value" id="val-blue-brecha">—</div>
+        <div class="kpi-sub">sobre venta</div>
+      </div>
+    </div>
+
+    <!-- Gráfico dólar blue -->
+    <div id="blue-chart-section" style="margin-top:4px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:11px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;">EVOLUCIÓN DÓLAR BLUE</div>
+        <select class="period-select" id="blue-range" onchange="renderBlueChart()">
+          <option value="365">Último año</option>
+          <option value="1095">Últimos 3 años</option>
+          <option value="1825">Últimos 5 años</option>
+          <option value="0">Histórico completo</option>
+        </select>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-blue" role="img" aria-label="Evolución del dólar blue"></canvas>
+      </div>
+    </div>
+
+    <!-- ─── CONSULTA COTIZACIÓN POR FECHA ─── -->
+    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;">
+      <div style="font-size:10px;font-weight:700;color:var(--gris-txt);letter-spacing:1px;margin-bottom:12px;">CONSULTA POR FECHA</div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+        <div>
+          <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:4px;">COTIZACIÓN</div>
+          <select id="usd-q-casa" class="cac-q-select" onchange="onUsdQCasaChange()">
+            <option value="blue">Blue / Informal</option>
+            <option value="oficial">Oficial</option>
+            <option value="bolsa">MEP (Bolsa)</option>
+            <option value="contadoconliqui">CCL (Cable)</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:4px;">AÑO</div>
+          <select id="usd-q-anio" class="cac-q-select" onchange="onUsdQAnioChange()"></select>
+        </div>
+        <div>
+          <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:4px;">MES</div>
+          <select id="usd-q-mes" class="cac-q-select" onchange="onUsdQMesChange()"></select>
+        </div>
+        <div>
+          <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:4px;">DÍA</div>
+          <select id="usd-q-dia" class="cac-q-select" style="min-width:80px;" onchange="renderUsdConsulta()"></select>
+        </div>
+        <button type="button" class="cac-q-btn" onclick="usdQHoy()">Último disponible</button>
+      </div>
+
+      <div id="usd-q-result">
+        <div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">Cargando cotizaciones...</div>
       </div>
     </div>
 
@@ -1151,6 +1232,322 @@ function renderUvaConsulta() {
     ${aviso}`;
 }
 
+/* ══════════════════════════════════════════
+   DÓLAR — series historicas y consulta por fecha
+   Fuente: api.argentinadatos.com (compra y venta diarias)
+══════════════════════════════════════════ */
+const USD_CASAS = {
+  blue:            'Blue / Informal',
+  oficial:         'Oficial',
+  bolsa:           'MEP (Bolsa)',
+  contadoconliqui: 'CCL (Cable)',
+};
+
+/* En la consulta historica hacen falta los centavos: el blue de 2011
+   valia $4,50 y redondeado a pesos se vuelve inservible. */
+const fmtARS2 = v => v != null && !isNaN(v) ? '$ ' + fmtN(v, 2) : 'N/D';
+
+const usdSeries = {};   // casa -> [{fecha, compra, venta}] descendente
+const usdIndex  = {};   // casa -> Map 'aaaa-mm-dd' -> {compra, venta}
+let blueChart   = null;
+
+/* Descarga y cachea la serie completa de una casa. [] si falla. */
+async function loadUsdSerie(casa) {
+  if (usdSeries[casa]) return usdSeries[casa];
+  try {
+    const res = await fetch(`https://api.argentinadatos.com/v1/cotizaciones/dolares/${casa}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const raw = await res.json();
+    if (!Array.isArray(raw) || !raw.length) throw new Error('sin datos');
+
+    const serie = raw
+      .map(r => ({
+        fecha:  String(r.fecha || '').slice(0, 10),
+        compra: r.compra != null ? Number(r.compra) : null,
+        venta:  r.venta  != null ? Number(r.venta)  : null,
+      }))
+      .filter(r => /^\d{4}-\d{2}-\d{2}$/.test(r.fecha) && r.venta != null && !isNaN(r.venta))
+      .sort((a, b) => b.fecha.localeCompare(a.fecha));   // descendente
+
+    const idx = new Map();
+    serie.forEach(r => { if (!idx.has(r.fecha)) idx.set(r.fecha, r); });
+
+    usdSeries[casa] = serie;
+    usdIndex[casa]  = idx;
+    return serie;
+  } catch (_) {
+    usdSeries[casa] = [];
+    usdIndex[casa]  = new Map();
+    return [];
+  }
+}
+
+/* Cotizacion de una fecha; si ese dia no cotizo (finde, feriado),
+   toma el habil anterior mas cercano hasta 10 dias atras. */
+function buscarUsd(casa, iso) {
+  const idx = usdIndex[casa];
+  if (!idx || !idx.size) return null;
+  if (idx.has(iso)) return { ...idx.get(iso), exacta: true };
+  const d = new Date(iso + 'T00:00:00');
+  for (let i = 1; i <= 10; i++) {
+    d.setDate(d.getDate() - 1);
+    const f = uvaISO(d.getFullYear(), d.getMonth(), d.getDate());
+    if (idx.has(f)) return { ...idx.get(f), exacta: false };
+  }
+  return null;
+}
+
+/* ── KPIs y grafico del blue ── */
+async function loadBlue() {
+  const serie = await loadUsdSerie('blue');
+  if (!serie.length) {
+    document.getElementById('val-blue-compra').textContent = 'N/D';
+    document.getElementById('val-blue-venta').textContent  = 'N/D';
+    document.getElementById('src-blue').textContent        = 'Sin conexión';
+    return;
+  }
+  const hoy = serie[0];
+  document.getElementById('val-blue-compra').textContent = fmtARS(hoy.compra);
+  document.getElementById('val-blue-venta').textContent  = fmtARS(hoy.venta);
+  document.getElementById('src-blue').textContent        = 'ArgentinaDatos';
+  document.getElementById('src-blue-fecha').textContent  = fmtFecha(hoy.fecha);
+
+  const pintarVar = (id, ref) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (!ref || !ref.venta) { el.textContent = '—'; return; }
+    const pct = (hoy.venta / ref.venta - 1) * 100;
+    el.textContent  = (pct >= 0 ? '+' : '') + fmtN(pct, 1) + '%';
+    el.style.color  = pct >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+  };
+  pintarVar('val-blue-m',  buscarUsd('blue', uvaDesplazar(hoy.fecha, { meses: 1 })));
+  pintarVar('val-blue-ia', buscarUsd('blue', uvaDesplazar(hoy.fecha, { anios: 1 })));
+
+  // Brecha contra el oficial del mismo dia
+  await loadUsdSerie('oficial');
+  const of = buscarUsd('oficial', hoy.fecha);
+  const elB = document.getElementById('val-blue-brecha');
+  if (elB) {
+    if (of && of.venta) {
+      const br = (hoy.venta / of.venta - 1) * 100;
+      elB.textContent = (br >= 0 ? '+' : '') + fmtN(br, 1) + '%';
+      elB.style.color = br >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+    } else {
+      elB.textContent = '—';
+    }
+  }
+
+  renderBlueChart();
+  initUsdConsulta();
+}
+
+function renderBlueChart() {
+  const serie = usdSeries['blue'];
+  if (!serie || !serie.length) return;
+  const rangeEl = document.getElementById('blue-range');
+  const days    = rangeEl ? parseInt(rangeEl.value, 10) : 365;
+  const raw     = days > 0 ? serie.slice(0, days) : serie;
+  const datos   = [...raw].reverse();   // ascendente para el grafico
+
+  const ctx = document.getElementById('chart-blue');
+  if (!ctx) return;
+  if (blueChart) blueChart.destroy();
+  blueChart = new Chart(ctx.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: datos.map(r => fmtFecha(r.fecha)),
+      datasets: [
+        { label: 'Venta',  data: datos.map(r => r.venta),
+          borderColor: '#CC0000', backgroundColor: 'rgba(204,0,0,.10)',
+          borderWidth: 2, pointRadius: 0, tension: .25, fill: true },
+        { label: 'Compra', data: datos.map(r => r.compra),
+          borderColor: '#888', borderWidth: 1.5, pointRadius: 0,
+          tension: .25, fill: false, borderDash: [4, 3] },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#888', boxWidth: 12, font: { size: 10 } } },
+        tooltip: {
+          callbacks: {
+            label: c => ` ${c.dataset.label}: $ ${Number(c.parsed.y)
+              .toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          },
+        },
+      },
+      scales: {
+        x: { ticks: { color: '#888', maxTicksLimit: 10, font: { size: 9 } },
+             grid: { color: 'rgba(255,255,255,.04)' } },
+        y: { ticks: { color: '#888', font: { size: 9 },
+                      callback: v => '$ ' + Number(v).toLocaleString('es-AR') },
+             grid: { color: 'rgba(255,255,255,.04)' } },
+      },
+    },
+  });
+}
+
+/* ── Consulta por fecha (casa + año + mes + día) ── */
+function usdCasaSel() {
+  const el = document.getElementById('usd-q-casa');
+  return el ? el.value : 'blue';
+}
+
+function initUsdConsulta() {
+  const casa = usdCasaSel();
+  const idx  = usdIndex[casa];
+  const selA = document.getElementById('usd-q-anio');
+  if (!selA || !idx || !idx.size) return;
+
+  const anios = [...new Set([...idx.keys()].map(f => +f.slice(0, 4)))].sort((a, b) => b - a);
+  selA.innerHTML = anios.map(a => `<option value="${a}">${a}</option>`).join('');
+
+  const ultima = [...idx.keys()].sort().pop();
+  selA.value = +ultima.slice(0, 4);
+  poblarUsdMeses(+ultima.slice(5, 7) - 1);
+  poblarUsdDias(+ultima.slice(8, 10));
+  renderUsdConsulta();
+}
+
+function poblarUsdMeses(mesPreferido) {
+  const idx  = usdIndex[usdCasaSel()];
+  const selA = document.getElementById('usd-q-anio');
+  const selM = document.getElementById('usd-q-mes');
+  if (!idx || !selA || !selM) return;
+
+  const anio  = parseInt(selA.value, 10);
+  const meses = [...new Set([...idx.keys()]
+    .filter(f => +f.slice(0, 4) === anio)
+    .map(f => +f.slice(5, 7) - 1))].sort((a, b) => a - b);
+
+  selM.innerHTML = meses.map(m => `<option value="${m}">${CAC_MESES_LARGOS[m]}</option>`).join('');
+  selM.value = (mesPreferido != null && meses.includes(mesPreferido))
+    ? mesPreferido : meses[meses.length - 1];
+}
+
+function poblarUsdDias(diaPreferido) {
+  const idx  = usdIndex[usdCasaSel()];
+  const selA = document.getElementById('usd-q-anio');
+  const selM = document.getElementById('usd-q-mes');
+  const selD = document.getElementById('usd-q-dia');
+  if (!idx || !selA || !selM || !selD) return;
+
+  const anio = parseInt(selA.value, 10);
+  const mes  = parseInt(selM.value, 10);
+  const dias = [...idx.keys()]
+    .filter(f => +f.slice(0, 4) === anio && +f.slice(5, 7) - 1 === mes)
+    .map(f => +f.slice(8, 10)).sort((a, b) => a - b);
+
+  selD.innerHTML = dias.map(d => `<option value="${d}">${d}</option>`).join('');
+  selD.value = (diaPreferido != null && dias.includes(diaPreferido))
+    ? diaPreferido : dias[dias.length - 1];
+}
+
+async function onUsdQCasaChange() {
+  const casa = usdCasaSel();
+  const cont = document.getElementById('usd-q-result');
+  if (!usdSeries[casa]) {
+    if (cont) cont.innerHTML = `<div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">Cargando ${USD_CASAS[casa]}...</div>`;
+    await loadUsdSerie(casa);
+  }
+  if (!usdIndex[casa] || !usdIndex[casa].size) {
+    if (cont) cont.innerHTML = `<div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">No se pudo cargar la serie de ${USD_CASAS[casa]}.</div>`;
+    return;
+  }
+  initUsdConsulta();
+}
+
+function onUsdQAnioChange() {
+  const selM = document.getElementById('usd-q-mes');
+  const selD = document.getElementById('usd-q-dia');
+  const mes = selM ? parseInt(selM.value, 10) : null;
+  const dia = selD ? parseInt(selD.value, 10) : null;
+  poblarUsdMeses(mes);
+  poblarUsdDias(dia);
+  renderUsdConsulta();
+}
+
+function onUsdQMesChange() {
+  const selD = document.getElementById('usd-q-dia');
+  poblarUsdDias(selD ? parseInt(selD.value, 10) : null);
+  renderUsdConsulta();
+}
+
+function usdQHoy() {
+  const idx = usdIndex[usdCasaSel()];
+  if (!idx || !idx.size) return;
+  const ultima = [...idx.keys()].sort().pop();
+  document.getElementById('usd-q-anio').value = +ultima.slice(0, 4);
+  poblarUsdMeses(+ultima.slice(5, 7) - 1);
+  poblarUsdDias(+ultima.slice(8, 10));
+  renderUsdConsulta();
+}
+
+function renderUsdConsulta() {
+  const cont = document.getElementById('usd-q-result');
+  const casa = usdCasaSel();
+  if (!cont || !usdIndex[casa] || !usdIndex[casa].size) return;
+
+  const anio = parseInt(document.getElementById('usd-q-anio').value, 10);
+  const mes  = parseInt(document.getElementById('usd-q-mes').value, 10);
+  const dia  = parseInt(document.getElementById('usd-q-dia').value, 10);
+  if (isNaN(anio) || isNaN(mes) || isNaN(dia)) return;
+
+  const iso = uvaISO(anio, mes, dia);
+  const c   = buscarUsd(casa, iso);
+
+  if (!c) {
+    cont.innerHTML = `<div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">
+      Sin cotización para el ${fmtFecha(iso)}.</div>`;
+    return;
+  }
+
+  // Brecha contra el oficial de la misma fecha (si la casa no es el oficial)
+  let brechaHtml = '';
+  if (casa !== 'oficial' && usdIndex['oficial'] && usdIndex['oficial'].size) {
+    const of = buscarUsd('oficial', c.fecha);
+    if (of && of.venta) {
+      const br    = (c.venta / of.venta - 1) * 100;
+      const color = br >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+      brechaHtml = `
+        <div style="flex:1 1 150px;background:var(--gris-osc);border:1px solid var(--gris-brd);border-radius:8px;padding:12px 14px;">
+          <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:6px;">BRECHA VS. OFICIAL</div>
+          <div style="font-size:22px;font-weight:700;color:${color};line-height:1;">${br >= 0 ? '+' : ''}${fmtN(br, 1)}%</div>
+          <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">oficial: ${fmtARS2(of.venta)}</div>
+        </div>`;
+    }
+  }
+
+  const spread = (c.compra != null && c.venta != null)
+    ? `<div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">spread ${fmtARS2(c.venta - c.compra)}</div>`
+    : '';
+
+  const aviso = c.exacta ? '' :
+    `<div style="font-size:10px;color:var(--gris-txt);margin-top:8px;">
+       El ${fmtFecha(iso)} no tuvo cotización (fin de semana o feriado). Se muestra el día hábil anterior.
+     </div>`;
+
+  cont.innerHTML = `
+    <div style="font-size:11px;color:var(--gris-txt);margin-bottom:10px;">
+      ${USD_CASAS[casa]} al <span style="color:#fff;font-weight:700;">${fmtFecha(c.fecha)}</span>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <div style="flex:1 1 150px;background:var(--gris-osc);border:1px solid var(--gris-brd);border-radius:8px;padding:12px 14px;">
+        <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:6px;">COMPRA</div>
+        <div style="font-size:22px;font-weight:700;color:#fff;line-height:1;">${fmtARS2(c.compra)}</div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">tipo comprador</div>
+      </div>
+      <div style="flex:1 1 150px;background:var(--gris-osc);border:1px solid var(--rojo);border-radius:8px;padding:12px 14px;">
+        <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:6px;">VENTA</div>
+        <div style="font-size:22px;font-weight:700;color:#fff;line-height:1;">${fmtARS2(c.venta)}</div>
+        ${spread}
+      </div>
+      ${brechaHtml}
+    </div>
+    ${aviso}`;
+}
+
 async function loadUVA() {
   // 1) Caché local: muestra el valor actualizado, luego carga histórico de API
   if (window.BCRA_CACHE?.uva?.valor != null) {
@@ -1231,6 +1628,8 @@ const SNAP_IDS = [
   'val-badlar','src-badlar',
   'val-tamar','src-tamar',
   'val-uva','src-uva','val-uva-m','val-uva-ia',
+  'val-blue-compra','val-blue-venta','src-blue','src-blue-fecha',
+  'val-blue-m','val-blue-ia','val-blue-brecha',
   'dolar-ts','refresh-ts',
   'kpi-cac-gen','kpi-cac-mat','kpi-cac-mo','kpi-cac-ia','kpi-cac-fecha',
 ];
@@ -1335,6 +1734,7 @@ async function reloadAll() {
     loadBADLAR(),
     loadTAMAR(),
     loadUVA(),
+    loadBlue(),
   ]);
 }
 
