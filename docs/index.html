@@ -1,0 +1,1401 @@
+<!-- Version autocontenida generada por build_publicar.py el 06/08/2026 08:50 - datos embebidos, no depende de archivos externos -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tablero de Gestión – Grupo Elyon</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+
+/* ─── RESET ─────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #111;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ─── COLORES ────────────────────────────── */
+:root {
+  --rojo:     #CC0000;
+  --rojo-txt: #FF5F5F;   /* rojo legible sobre gris/negro */
+  --gris-osc: #1C1C1C;
+  --gris-med: #2B2B2B;
+  --gris-brd: #383838;
+  --gris-txt: #888;
+  --verde:    #22C55E;
+}
+
+/* ─── PANTALLAS ──────────────────────────── */
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: flex; flex-direction: column; }
+
+/* ─── HEADER ─────────────────────────────── */
+.header {
+  background: #000;
+  border-bottom: 3px solid var(--rojo);
+  padding: 13px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.logo { font-size: 18px; font-weight: 800; letter-spacing: 3px; }
+.logo .r { color: var(--rojo-txt); }
+.header-sub { font-size: 10px; color: var(--gris-txt); letter-spacing: 1px; margin-left: 12px; }
+
+/* ─── BOTONES ────────────────────────────── */
+.btn { cursor: pointer; border: none; border-radius: 6px; padding: 8px 16px; font-size: 12px; font-weight: 700; letter-spacing: 1px; transition: opacity .15s; }
+.btn:hover { opacity: .85; }
+.btn-rojo { background: var(--rojo); color: #fff; }
+.btn-ghost { background: transparent; color: var(--gris-txt); border: 1px solid var(--gris-brd); }
+.btn-ghost:hover { border-color: var(--rojo-txt); color: var(--rojo-txt); }
+.btn-link { background: none; border: none; color: var(--rojo-txt); cursor: pointer; font-size: 12px; padding: 0; }
+
+/* ─── CARDS ──────────────────────────────── */
+.card { background: var(--gris-osc); border: 1px solid var(--gris-brd); border-radius: 10px; padding: 14px 16px; }
+.kpi-label { font-size: 10px; color: var(--gris-txt); letter-spacing: .8px; text-transform: uppercase; margin-bottom: 8px; }
+.kpi-value { font-size: 21px; font-weight: 700; color: #fff; line-height: 1.2; }
+.kpi-sub { font-size: 10px; color: var(--gris-txt); margin-top: 5px; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 6px; }
+
+/* ─── SECCIÓN ─────────────────────────────── */
+.sec-title {
+  font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+  color: #fff; border-left: 4px solid var(--rojo); padding-left: 10px;
+  margin: 26px 0 14px; line-height: 1;
+}
+
+/* ─── LOGIN ──────────────────────────────── */
+#screen-login {
+  align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at top, #1a0000 0%, #111 60%);
+}
+.login-box {
+  background: var(--gris-osc); border: 1px solid var(--gris-brd); border-top: 4px solid var(--rojo);
+  border-radius: 12px; padding: 48px 44px; width: 330px; text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+.login-logo { font-size: 24px; font-weight: 800; letter-spacing: 4px; margin-bottom: 4px; }
+.login-tag { font-size: 9px; color: var(--gris-txt); letter-spacing: 2.5px; margin-bottom: 36px; }
+.login-input {
+  width: 100%; background: var(--gris-med); border: 1px solid var(--gris-brd);
+  border-radius: 6px; color: #fff; padding: 12px 14px; font-size: 14px;
+  outline: none; margin-bottom: 12px; transition: border-color .2s;
+}
+.login-input:focus { border-color: var(--rojo); }
+.login-input::placeholder { color: var(--gris-txt); }
+
+/* ─── PANEL PRINCIPAL ────────────────────── */
+#screen-main .content { flex: 1; padding: 44px 32px; }
+.module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; max-width: 860px; }
+.module-card {
+  background: var(--gris-osc); border: 1px solid var(--gris-brd); border-radius: 12px;
+  padding: 34px 24px; text-align: center; cursor: pointer;
+  transition: border-color .2s, transform .15s, box-shadow .15s; position: relative; overflow: hidden;
+}
+.module-card::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--rojo); opacity: 0; transition: opacity .2s;
+}
+.module-card:hover { border-color: var(--rojo); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(204,0,0,.15); }
+.module-card:hover::after { opacity: 1; }
+.module-card.disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
+.module-icon { font-size: 38px; margin-bottom: 14px; }
+.module-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.module-desc { font-size: 11px; color: var(--gris-txt); }
+.soon-badge { display: inline-block; margin-top: 10px; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; background: var(--gris-med); color: var(--gris-txt); border-radius: 20px; padding: 3px 10px; }
+
+/* ─── INDICADORES ────────────────────────── */
+#screen-indicadores .content { flex: 1; padding: 20px 28px 48px; overflow-y: auto; }
+.ts-line { font-size: 9px; color: var(--gris-txt); text-align: right; margin: 2px 0 4px; }
+
+/* DÓLAR CARDS */
+.dolar-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 6px; gap: 6px; }
+.d-side-label { font-size: 9px; color: var(--gris-txt); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
+.d-val { font-size: 16px; font-weight: 700; line-height: 1; }
+.d-val.compra { color: var(--verde); }
+.d-val.venta  { color: var(--rojo-txt); }
+
+/* UPLOAD */
+.upload-zone {
+  border: 2px dashed var(--gris-brd); border-radius: 10px; padding: 20px;
+  text-align: center; cursor: pointer; background: var(--gris-osc);
+  transition: border-color .2s, background .2s;
+}
+.upload-zone:hover { border-color: var(--rojo); background: rgba(204,0,0,.04); }
+
+/* CHART */
+.chart-wrap {
+  background: var(--gris-osc); border: 1px solid var(--gris-brd);
+  border-radius: 10px; padding: 14px; margin-top: 12px;
+  position: relative; height: 240px;
+}
+.period-select {
+  background: var(--gris-med); border: 1px solid var(--gris-brd); border-radius: 5px;
+  color: #fff; padding: 5px 10px; font-size: 11px; cursor: pointer; outline: none;
+}
+.period-select:focus { border-color: var(--rojo); }
+
+/* FOOTER */
+.footer { text-align: center; padding: 18px; font-size: 10px; color: var(--gris-txt); border-top: 1px solid var(--gris-brd); flex-shrink: 0; }
+
+/* STATUS BADGE */
+.status-ok  { display: inline-block; width: 6px; height: 6px; background: var(--verde); border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.status-err { display: inline-block; width: 6px; height: 6px; background: var(--rojo);  border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+
+@media (max-width: 600px) {
+  .header { padding: 12px 16px; }
+  #screen-indicadores .content, #screen-main .content { padding: 18px 14px 40px; }
+  .login-box { width: 95vw; padding: 36px 22px; }
+}
+
+
+/* VARIACIONES DÓLAR */
+.dolar-vars { display:flex; align-items:center; gap:6px; margin-top:8px; font-size:10px; }
+.var-badge   { font-weight:700; color:var(--gris-txt); }
+.var-badge.up  { color:#22C55E; }
+.var-badge.dn  { color:var(--rojo-txt); }
+.var-badge.na  { color:var(--gris-txt); font-weight:400; }
+.var-sep     { color:var(--gris-brd); font-size:9px; }
+
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     LOGIN
+══════════════════════════════════════ -->
+<div id="screen-login" class="screen active">
+  <div class="login-box">
+    <div class="login-logo">GRUPO <span class="r">ELYON</span></div>
+    <div class="login-tag">TABLERO DE GESTIÓN</div>
+    <input class="login-input" type="password" id="pwd-input" placeholder="Contraseña"
+           autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn btn-rojo" style="width:100%;padding:12px;" onclick="doLogin()">INGRESAR</button>
+    <div id="login-err" style="color:var(--rojo-txt);font-size:12px;min-height:18px;margin-top:12px;"></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     PANEL PRINCIPAL
+══════════════════════════════════════ -->
+<div id="screen-main" class="screen">
+  <div class="header">
+    <div>
+      <span class="logo">GRUPO <span class="r">ELYON</span></span>
+      <span class="header-sub">TABLERO DE GESTIÓN</span>
+    </div>
+    <button class="btn btn-ghost" onclick="doLogout()">Salir</button>
+  </div>
+
+  <div class="content">
+    <p style="font-size:12px;color:var(--gris-txt);margin-bottom:24px;">Seleccioná un módulo:</p>
+    <div class="module-grid">
+      <div class="module-card" onclick="showScreen('indicadores')">
+        <div class="module-icon">📊</div>
+        <div class="module-title">Indicadores Generales</div>
+        <div class="module-desc">Tipo de cambio · Inflación · Riesgo País · BADLAR · TAMAR · CAC · UVA</div>
+      </div>
+      <div class="module-card disabled">
+        <div class="module-icon">💼</div>
+        <div class="module-title">Ventas</div>
+        <div class="module-desc">Seguimiento comercial y facturación</div>
+        <div class="soon-badge">Próximamente</div>
+      </div>
+      <div class="module-card disabled">
+        <div class="module-icon">🏗️</div>
+        <div class="module-title">Avance de Obra</div>
+        <div class="module-desc">Estado y progreso de proyectos</div>
+        <div class="soon-badge">Próximamente</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">© Grupo Elyon · Tablero de Gestión Interna</div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     INDICADORES GENERALES
+══════════════════════════════════════ -->
+<div id="screen-indicadores" class="screen">
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <button class="btn-link" onclick="showScreen('main')">← Panel principal</button>
+      <span class="logo" style="font-size:15px;">GRUPO <span class="r">ELYON</span>
+        <span class="header-sub">Indicadores Generales</span>
+      </span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span id="refresh-ts" style="font-size:9px;color:var(--gris-txt);"></span>
+      <button class="btn btn-ghost" onclick="reloadAll()">🔄 Actualizar</button>
+      <button class="btn btn-ghost" id="btn-guardar" onclick="saveSnapshot()" style="border-color:#22C55E;color:#22C55E;">💾 Guardar</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- TIPO DE CAMBIO -->
+    <div class="sec-title">Tipo de cambio</div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(155px,1fr));">
+
+      <div class="card" id="dolar-oficial">
+        <div class="kpi-label">Dólar Oficial</div>
+        <div class="dolar-row">
+          <div><div class="d-side-label">Compra</div><div class="d-val compra" data-f="compra">—</div></div>
+          <div style="text-align:right;"><div class="d-side-label">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
+        </div>
+        <div class="dolar-vars">
+          <span class="var-badge" id="var-oficial-dia">—</span>
+          <span class="var-sep">|</span>
+          <span class="var-badge" id="var-oficial-ia">—</span>
+        </div>
+      </div>
+
+      <div class="card" id="dolar-blue">
+        <div class="kpi-label">Dólar Blue</div>
+        <div class="dolar-row">
+          <div><div class="d-side-label">Compra</div><div class="d-val compra" data-f="compra">—</div></div>
+          <div style="text-align:right;"><div class="d-side-label">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
+        </div>
+        <div class="dolar-vars">
+          <span class="var-badge" id="var-blue-dia">—</span>
+          <span class="var-sep">|</span>
+          <span class="var-badge" id="var-blue-ia">—</span>
+        </div>
+      </div>
+
+      <div class="card" id="dolar-mep">
+        <div class="kpi-label">Dólar MEP (Bolsa)</div>
+        <div class="dolar-row">
+          <div><div class="d-side-label">Compra</div><div class="d-val compra" data-f="compra">—</div></div>
+          <div style="text-align:right;"><div class="d-side-label">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
+        </div>
+        <div class="dolar-vars">
+          <span class="var-badge" id="var-mep-dia">—</span>
+          <span class="var-sep">|</span>
+          <span class="var-badge" id="var-mep-ia">—</span>
+        </div>
+      </div>
+
+      <div class="card" id="dolar-ccl">
+        <div class="kpi-label">Dólar CCL (Cable)</div>
+        <div class="dolar-row">
+          <div><div class="d-side-label">Compra</div><div class="d-val compra" data-f="compra">—</div></div>
+          <div style="text-align:right;"><div class="d-side-label">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
+        </div>
+        <div class="dolar-vars">
+          <span class="var-badge" id="var-ccl-dia">—</span>
+          <span class="var-sep">|</span>
+          <span class="var-badge" id="var-ccl-ia">—</span>
+        </div>
+      </div>
+
+    </div>
+    <div class="ts-line" id="dolar-ts">Cargando...</div>
+
+    <!-- MACRO -->
+    <div class="sec-title">Indicadores Macroeconómicos</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(126px,1fr));gap:12px;margin-bottom:4px;">
+
+      <div class="card" id="card-inf-m">
+        <div class="kpi-label">Inflación mensual</div>
+        <div class="kpi-value" id="val-inf-m">—</div>
+        <div class="kpi-sub" id="src-inf-m">INDEC · datos.gob.ar</div>
+      </div>
+
+      <div class="card" id="card-inf-ia">
+        <div class="kpi-label">Inflación interanual</div>
+        <div class="kpi-value" id="val-inf-ia">—</div>
+        <div class="kpi-sub" id="src-inf-ia">Últ. 12 meses · INDEC</div>
+      </div>
+
+      <div class="card" id="card-riesgo">
+        <div class="kpi-label">Riesgo País</div>
+        <div class="kpi-value" id="val-riesgo">—</div>
+        <div class="kpi-sub" id="src-riesgo">EMBI+ · JP Morgan</div>
+      </div>
+
+      <div class="card" id="card-badlar">
+        <div class="kpi-label">Tasa BADLAR</div>
+        <div class="kpi-value" id="val-badlar">—</div>
+        <div class="kpi-sub" id="src-badlar">Bancos priv. · BCRA</div>
+      </div>
+
+      <div class="card" id="card-tamar">
+        <div class="kpi-label">Tasa TAMAR</div>
+        <div class="kpi-value" id="val-tamar">—</div>
+        <div class="kpi-sub" id="src-tamar">Bancos priv. · BCRA</div>
+      </div>
+
+    </div>
+
+    <!-- ── ÍNDICE CAC ──────────────────── -->
+    <div class="sec-title">Índice CAC</div>
+
+    <!-- KPIs CAC (siempre visibles con datos embebidos) -->
+    <div id="cac-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <span style="font-size:10px;color:var(--gris-txt);" id="cac-datasource">📊 Datos embebidos · Serie ene-2011/abr-2026 · Cámara Argentina de la Construcción</span>
+        <button class="btn-link" onclick="document.getElementById('file-input').click()">📁 Actualizar con Excel más reciente</button>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="card">
+          <div class="kpi-label">CAC General</div>
+          <div class="kpi-value" id="kpi-cac-gen">—</div>
+          <div class="kpi-sub" id="kpi-cac-fecha">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Materiales</div>
+          <div class="kpi-value" id="kpi-cac-mat">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Mano de Obra</div>
+          <div class="kpi-value" id="kpi-cac-mo">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Var. interanual CAC</div>
+          <div class="kpi-value" id="kpi-cac-ia">—</div>
+          <div class="kpi-sub">vs. mismo mes año ant.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:11px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;">EVOLUCIÓN CAC GENERAL</div>
+        <select class="period-select" id="cac-range" onchange="renderCacChart()">
+          <option value="12">Último año</option>
+          <option value="36">Últimos 3 años</option>
+          <option value="60">Últimos 5 años</option>
+          <option value="0">Histórico completo</option>
+        </select>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-cac" role="img" aria-label="Evolución del índice CAC General"></canvas>
+      </div>
+    </div>
+
+
+    <!-- ─── TABLA CAC ÚLTIMO AÑO ─── -->
+    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;">
+      <div style="font-size:10px;font-weight:700;color:var(--gris-txt);letter-spacing:1px;margin-bottom:12px;">ÚLTIMOS 12 MESES — CAC GENERAL</div>
+      <div style="overflow-x:auto;">
+        <table id="cac-tabla-anual" style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--gris-brd);">
+              <th style="text-align:left;padding:6px 8px;color:var(--gris-txt);font-weight:600;font-size:10px;letter-spacing:.5px;">PERÍODO</th>
+              <th style="text-align:right;padding:6px 8px;color:var(--gris-txt);font-weight:600;font-size:10px;letter-spacing:.5px;">ÍNDICE</th>
+              <th style="text-align:right;padding:6px 8px;color:var(--gris-txt);font-weight:600;font-size:10px;letter-spacing:.5px;">VAR. MENSUAL</th>
+            </tr>
+          </thead>
+          <tbody id="cac-tabla-body">
+            <tr><td colspan="3" style="text-align:center;padding:12px;color:var(--gris-txt);">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Upload oculto para actualizar datos -->
+    <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none" onchange="loadExcel(this)">
+
+    <!-- Zona upload secundaria (siempre al pie del CAC) -->
+    <div class="upload-zone" style="margin-top:12px;"
+         onclick="document.getElementById('file-input').click()"
+         ondragover="event.preventDefault();this.style.borderColor='var(--rojo)'"
+         ondragleave="this.style.borderColor='var(--gris-brd)'"
+         ondrop="handleDrop(event)">
+      <div style="font-size:11px;color:var(--gris-txt);">
+        📂 Arrastrá o hacé clic para cargar una versión más reciente del Excel CAC
+      </div>
+    </div>
+
+    <!-- ── ÍNDICE UVA ──────────────────── -->
+    <div class="sec-title">Índice UVA</div>
+
+    <!-- UVA en tiempo real (datos.gob.ar / BCRA) -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(155px,1fr));margin-bottom:4px;">
+      <div class="card">
+        <div class="kpi-label">UVA (valor actual)</div>
+        <div class="kpi-value" id="val-uva">—</div>
+        <div class="kpi-sub" id="src-uva">BCRA · datos.gob.ar</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Variación mensual</div>
+        <div class="kpi-value" id="val-uva-m">—</div>
+        <div class="kpi-sub">vs. 30 días atrás</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Variación interanual</div>
+        <div class="kpi-value" id="val-uva-ia">—</div>
+        <div class="kpi-sub">vs. mismo día año ant.</div>
+      </div>
+    </div>
+
+    <!-- Gráfico UVA desde API -->
+    <div id="uva-chart-section" style="margin-top:4px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:11px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;">EVOLUCIÓN UVA</div>
+        <select class="period-select" id="uva-range" onchange="renderUvaChart()">
+          <option value="365">Último año</option>
+          <option value="1095">Últimos 3 años</option>
+          <option value="1825">Últimos 5 años</option>
+          <option value="0">Histórico completo</option>
+        </select>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-uva" role="img" aria-label="Evolución del índice UVA"></canvas>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+  <div class="footer">© Grupo Elyon · Tablero de Gestión Interna</div>
+</div>
+
+
+<script>
+/* === BCRA_CACHE embebido desde bcra_cache.js (build_publicar.py) === */
+/* -----------------------------------------------------------------
+   bcra_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
+   Generado: 2026-08-05T00:00:00   Fuente: API BCRA Estadisticas Monetarias v4.0
+   tamar = serie 44 (TNA, bancos privados)
+   badlar = serie 7 (TNA, bancos privados)
+   uva = serie 31
+----------------------------------------------------------------- */
+window.BCRA_CACHE = {
+  tamar:  { valor: 23.125, fecha: "2026-08-04" },
+  badlar: { valor: 22.3125, fecha: "2026-08-04" },
+  uva:    { valor: 2064.25, fecha: "2026-08-05" },
+  updated: "2026-08-05T00:00:00"
+};
+</script>
+<script>
+/* === CAC_CACHE embebido desde cac_cache.js (build_publicar.py) === */
+/* -----------------------------------------------------------------
+   cac_cache.js  -  Grupo Elyon  |  Generado automaticamente
+   Generado: 2026-08-06T08:34:28
+   Fuente: Indicador CAC_serie histórica.xls
+   Registros: 186  (2011-01-01 a 2026-06-01)
+   Formato por registro: [fecha, CAC General, Materiales, Mano de Obra]
+----------------------------------------------------------------- */
+window.CAC_CACHE = {
+  updated: "2026-08-06T08:34:28",
+  source: "Indicador CAC_serie histórica.xls",
+  serie: [["2011-01-01", 38.1, 37.5, 38.8], ["2011-02-01", 38.6, 38.2, 38.9], ["2011-03-01", 39.0, 39.0, 38.9], ["2011-04-01", 40.5, 39.6, 41.4], ["2011-05-01", 42.8, 40.3, 45.3], ["2011-06-01", 41.2, 41.0, 41.3], ["2011-07-01", 43.5, 41.6, 45.4], ["2011-08-01", 43.1, 42.2, 43.9], ["2011-09-01", 45.0, 42.5, 47.5], ["2011-10-01", 45.3, 43.1, 47.5], ["2011-11-01", 45.1, 43.7, 46.5], ["2011-12-01", 45.4, 44.3, 46.5], ["2012-01-01", 47.4, 44.8, 49.9], ["2012-02-01", 47.6, 45.3, 49.9], ["2012-03-01", 47.9, 45.8, 49.9], ["2012-04-01", 48.4, 46.6, 50.2], ["2012-05-01", 47.5, 47.4, 47.6], ["2012-06-01", 53.0, 48.1, 57.7], ["2012-07-01", 58.0, 48.8, 67.1], ["2012-08-01", 54.9, 49.6, 60.2], ["2012-09-01", 55.5, 50.1, 60.7], ["2012-10-01", 56.0, 51.1, 60.7], ["2012-11-01", 56.6, 52.4, 60.7], ["2012-12-01", 57.1, 53.0, 61.0], ["2013-01-01", 58.2, 54.0, 62.3], ["2013-02-01", 58.3, 54.6, 62.0], ["2013-03-01", 60.1, 55.6, 64.6], ["2013-04-01", 61.0, 56.8, 65.1], ["2013-05-01", 61.2, 58.0, 64.4], ["2013-06-01", 67.1, 58.9, 75.0], ["2013-07-01", 68.1, 59.9, 76.2], ["2013-08-01", 68.7, 61.1, 76.2], ["2013-09-01", 69.1, 62.2, 76.0], ["2013-10-01", 69.9, 63.8, 76.0], ["2013-11-01", 71.1, 66.2, 76.0], ["2013-12-01", 73.8, 69.2, 78.3], ["2014-01-01", 77.1, 74.9, 79.2], ["2014-02-01", 79.1, 79.1, 79.2], ["2014-03-01", 79.8, 81.33, 78.4], ["2014-04-01", 87.4, 84.2, 90.5], ["2014-05-01", 88.3, 86.4, 90.1], ["2014-06-01", 88.9, 87.7, 90.1], ["2014-07-01", 94.6, 89.5, 99.5], ["2014-08-01", 96.0, 92.3, 99.7], ["2014-09-01", 97.0, 94.4, 99.7], ["2014-10-01", 98.3, 96.7, 100.0], ["2014-11-01", 99.5, 98.9, 100.0], ["2014-12-01", 100.0, 100.0, 100.0], ["2015-01-01", 102.1, 101.6, 102.7], ["2015-02-01", 104.1, 103.7, 104.6], ["2015-03-01", 105.1, 104.4, 104.6], ["2015-04-01", 105.1, 107.2, 101.9], ["2015-05-01", 112.8, 109.2, 118.0], ["2015-06-01", 120.2, 110.7, 134.3], ["2015-07-01", 114.6, 112.2, 118.2], ["2015-08-01", 120.1, 114.4, 128.5], ["2015-09-01", 121.1, 116.1, 128.5], ["2015-10-01", 122.3, 117.9, 128.7], ["2015-11-01", 124.8, 122.1, 128.7], ["2015-12-01", 131.2, 132.3, 129.6], ["2016-01-01", 135.1, 137.4, 131.7], ["2016-02-01", 138.8, 141.8, 134.4], ["2016-03-01", 140.2, 144.1, 134.4], ["2016-04-01", 151.6, 146.8, 158.7], ["2016-05-01", 153.1, 149.1, 159.0], ["2016-06-01", 154.4, 150.6, 159.9], ["2016-07-01", 156.4, 153.2, 161.2], ["2016-08-01", 157.0, 154.2, 161.2], ["2016-09-01", 158.2, 156.2, 161.2], ["2016-10-01", 165.8, 158.4, 176.6], ["2016-11-01", 167.4, 161.1, 176.6], ["2016-12-01", 171.3, 163.6, 182.6], ["2017-01-01", 178.3, 167.8, 193.6], ["2017-02-01", 179.0, 169.0, 193.6], ["2017-03-01", 180.0, 170.7, 193.6], ["2017-04-01", 187.3, 173.2, 207.9], ["2017-05-01", 189.4, 176.0, 209.2], ["2017-06-01", 191.2, 179.0, 209.2], ["2017-07-01", 202.2, 184.5, 228.1], ["2017-08-01", 204.5, 188.4, 228.1], ["2017-09-01", 206.2, 191.3, 228.1], ["2017-10-01", 208.0, 194.2, 228.1], ["2017-11-01", 210.1, 197.8, 228.1], ["2017-12-01", 212.7, 202.2, 228.1], ["2018-01-01", 220.2, 209.4, 236.1], ["2018-02-01", 224.3, 214.1, 239.3], ["2018-03-01", 229.8, 220.7, 243.2], ["2018-04-01", 239.6, 227.7, 257.1], ["2018-05-01", 248.5, 242.7, 257.1], ["2018-06-01", 259.4, 260.6, 257.5], ["2018-07-01", 264.4, 268.4, 258.5], ["2018-08-01", 283.6, 291.1, 272.6], ["2018-09-01", 305.1, 319.4, 284.2], ["2018-10-01", 311.5, 330.0, 284.5], ["2018-11-01", 323.7, 338.7, 301.7], ["2018-12-01", 331.5, 344.5, 312.5], ["2019-01-01", 339.3, 353.6, 318.2], ["2019-02-01", 346.1, 364.3, 319.3], ["2019-03-01", 361.0, 382.0, 330.1], ["2019-04-01", 381.5, 394.8, 361.9], ["2019-05-01", 395.6, 404.8, 382.3], ["2019-06-01", 400.9, 413.5, 382.4], ["2019-07-01", 410.7, 418.7, 398.9], ["2019-08-01", 453.4, 480.9, 412.9], ["2019-09-01", 459.0, 490.5, 412.9], ["2019-10-01", 486.4, 515.1, 444.2], ["2019-11-01", 507.4, 532.8, 470.2], ["2019-12-01", 513.1, 542.4, 470.2], ["2020-01-01", 539.6, 552.4, 520.7], ["2020-02-01", 560.2, 564.6, 553.7], ["2020-03-01", 565.3, 572.9, 554.1], ["2020-04-01", 573.0, 584.6, 556.0], ["2020-05-01", 588.1, 606.9, 560.5], ["2020-06-01", 598.6, 624.0, 561.3], ["2020-07-01", 615.2, 651.8, 561.6], ["2020-08-01", 631.5, 679.3, 561.6], ["2020-09-01", 655.8, 717.6, 565.2], ["2020-10-01", 695.1, 780.7, 569.8], ["2020-11-01", 763.4, 833.0, 661.4], ["2020-12-01", 794.4, 884.8, 662.0], ["2021-01-01", 824.9, 936.1, 662.0], ["2021-02-01", 872.7, 987.4, 704.7], ["2021-03-01", 896.7, 1027.5, 704.9], ["2021-04-01", 959.1, 1074.2, 790.3], ["2021-05-01", 988.4, 1122.3, 792.2], ["2021-06-01", 1011.3, 1160.8, 792.3], ["2021-07-01", 1065.8, 1205.0, 861.4], ["2021-08-01", 1089.8, 1245.7, 861.4], ["2021-09-01", 1131.2, 1291.8, 895.9], ["2021-10-01", 1180.2, 1341.5, 943.6], ["2021-11-01", 1210.0, 1391.6, 943.6], ["2021-12-01", 1234.3, 1431.9, 944.9], ["2022-01-01", 1281.5, 1487.1, 980.2], ["2022-02-01", 1344.5, 1545.8, 1049.4], ["2022-03-01", 1416.2, 1624.6, 1110.7], ["2022-04-01", 1467.2, 1709.9, 1111.5], ["2022-05-01", 1563.9, 1801.7, 1215.2], ["2022-06-01", 1670.2, 1907.4, 1322.6], ["2022-07-01", 1784.0, 2098.7, 1322.6], ["2022-08-01", 1905.9, 2245.6, 1407.6], ["2022-09-01", 2051.9, 2399.4, 1541.9], ["2022-10-01", 2211.9, 2573.0, 1682.6], ["2022-11-01", 2369.7, 2747.7, 1815.7], ["2022-12-01", 2552.3, 2933.6, 1993.4], ["2023-01-01", 2713.1, 3113.8, 2125.6], ["2023-02-01", 2865.3, 3276.5, 2262.7], ["2023-03-01", 2998.7, 3482.1, 2290.2], ["2023-04-01", 3228.5, 3740.9, 2477.5], ["2023-05-01", 3448.3, 3985.6, 2660.9], ["2023-06-01", 3662.2, 4282.6, 2752.8], ["2023-07-01", 4001.9, 4678.3, 3010.5], ["2023-08-01", 4789.7, 5707.8, 3444.1], ["2023-09-01", 5215.9, 6219.5, 3744.9], ["2023-10-01", 5790.0, 6979.6, 4046.5], ["2023-11-01", 6785.2, 8345.6, 4498.0], ["2023-12-01", 9049.8, 11806.7, 5009.0], ["2024-01-01", 10331.0, 13277.8, 6011.7], ["2024-02-01", 11228.3, 14214.4, 6851.6], ["2024-03-01", 11669.0, 14955.8, 6851.6], ["2024-04-01", 12216.2, 15226.8, 7803.5], ["2024-05-01", 12747.4, 15537.5, 8657.9], ["2024-06-01", 13295.8, 15811.7, 9608.3], ["2024-07-01", 13574.8, 16281.0, 9608.3], ["2024-08-01", 14017.6, 16700.7, 10084.9], ["2024-09-01", 14366.9, 17016.6, 10483.3], ["2024-10-01", 14614.9, 17149.9, 10899.2], ["2024-11-01", 15043.0, 17375.7, 11624.1], ["2024-12-01", 15356.4, 17585.1, 12089.7], ["2025-01-01", 15592.5, 17825.2, 12319.9], ["2025-02-01", 15852.4, 17967.5, 12752.3], ["2025-03-01", 15995.4, 18122.5, 12877.8], ["2025-04-01", 16253.5, 18640.1, 12755.3], ["2025-05-01", 16521.3, 18695.2, 13334.9], ["2025-06-01", 16643.4, 18826.5, 13443.5], ["2025-07-01", 16939.5, 19141.7, 13711.8], ["2025-08-01", 17187.6, 19490.0, 13812.6], ["2025-09-01", 17762.3, 20187.5, 14207.5], ["2025-10-01", 18172.8, 20740.8, 14408.8], ["2025-11-01", 18534.9, 21055.9, 14839.9], ["2025-12-01", 18776.5, 21335.3, 15026.2], ["2026-01-01", 19209.4, 21778.0, 15444.4], ["2026-02-01", 19453.0, 22007.9, 15708.2], ["2026-03-01", 19771.2, 22204.2, 16205.2], ["2026-04-01", 20493.2, 22870.0, 17009.6], ["2026-05-01", 21035.6, 23500.2, 17423.2], ["2026-06-01", 21641.1, 23901.9, 18327.3]]
+};
+</script>
+<!-- ══════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════ -->
+<script>
+
+/* ═══════════════════════════════════════
+   CONFIGURACIÓN
+═══════════════════════════════════════ */
+const PASSWORD = 'elyon2024';   // ← Cambiá la contraseña aquí
+
+/* ═══════════════════════════════════════
+   DATOS CAC EMBEBIDOS (fallback si no carga cac_cache.js)
+   Fuente: Camara Argentina de la Construccion / INDEC
+   Base: Dic-2014 = 100
+   Serie corregida: ene-2011 a abr-2026 (184 registros)
+   Corregido el desfasaje de 1 mes que tenia 'CAC General' respecto de
+   Materiales y Mano de Obra (ver update_cac_cache.py).
+   Formato por registro: [fecha, CAC General, Materiales, Mano de Obra]
+═══════════════════════════════════════ */
+const CAC_EMBEDDED = [["2011-01-01",38.1,37.5,38.8],["2011-02-01",38.6,38.2,38.9],["2011-03-01",39.0,39.0,38.9],["2011-04-01",40.5,39.6,41.4],["2011-05-01",42.8,40.3,45.3],["2011-06-01",41.2,41.0,41.3],["2011-07-01",43.5,41.6,45.4],["2011-08-01",43.1,42.2,43.9],["2011-09-01",45.0,42.5,47.5],["2011-10-01",45.3,43.1,47.5],["2011-11-01",45.1,43.7,46.5],["2011-12-01",45.4,44.3,46.5],["2012-01-01",47.4,44.8,49.9],["2012-02-01",47.6,45.3,49.9],["2012-03-01",47.9,45.8,49.9],["2012-04-01",48.4,46.6,50.2],["2012-05-01",47.5,47.4,47.6],["2012-06-01",53.0,48.1,57.7],["2012-07-01",58.0,48.8,67.1],["2012-08-01",54.9,49.6,60.2],["2012-09-01",55.5,50.1,60.7],["2012-10-01",56.0,51.1,60.7],["2012-11-01",56.6,52.4,60.7],["2012-12-01",57.1,53.0,61.0],["2013-01-01",58.2,54.0,62.3],["2013-02-01",58.3,54.6,62.0],["2013-03-01",60.1,55.6,64.6],["2013-04-01",61.0,56.8,65.1],["2013-05-01",61.2,58.0,64.4],["2013-06-01",67.1,58.9,75.0],["2013-07-01",68.1,59.9,76.2],["2013-08-01",68.7,61.1,76.2],["2013-09-01",69.1,62.2,76.0],["2013-10-01",69.9,63.8,76.0],["2013-11-01",71.1,66.2,76.0],["2013-12-01",73.8,69.2,78.3],["2014-01-01",77.1,74.9,79.2],["2014-02-01",79.1,79.1,79.2],["2014-03-01",79.8,81.33,78.4],["2014-04-01",87.4,84.2,90.5],["2014-05-01",88.3,86.4,90.1],["2014-06-01",88.9,87.7,90.1],["2014-07-01",94.6,89.5,99.5],["2014-08-01",96.0,92.3,99.7],["2014-09-01",97.0,94.4,99.7],["2014-10-01",98.3,96.7,100.0],["2014-11-01",99.5,98.9,100.0],["2014-12-01",100.0,100.0,100.0],["2015-01-01",102.1,101.6,102.7],["2015-02-01",104.1,103.7,104.6],["2015-03-01",105.1,104.4,104.6],["2015-04-01",105.1,107.2,101.9],["2015-05-01",112.8,109.2,118.0],["2015-06-01",120.2,110.7,134.3],["2015-07-01",114.6,112.2,118.2],["2015-08-01",120.1,114.4,128.5],["2015-09-01",121.1,116.1,128.5],["2015-10-01",122.3,117.9,128.7],["2015-11-01",124.8,122.1,128.7],["2015-12-01",131.2,132.3,129.6],["2016-01-01",135.1,137.4,131.7],["2016-02-01",138.8,141.8,134.4],["2016-03-01",140.2,144.1,134.4],["2016-04-01",151.6,146.8,158.7],["2016-05-01",153.1,149.1,159.0],["2016-06-01",154.4,150.6,159.9],["2016-07-01",156.4,153.2,161.2],["2016-08-01",157.0,154.2,161.2],["2016-09-01",158.2,156.2,161.2],["2016-10-01",165.8,158.4,176.6],["2016-11-01",167.4,161.1,176.6],["2016-12-01",171.3,163.6,182.6],["2017-01-01",178.3,167.8,193.6],["2017-02-01",179.0,169.0,193.6],["2017-03-01",180.0,170.7,193.6],["2017-04-01",187.3,173.2,207.9],["2017-05-01",189.4,176.0,209.2],["2017-06-01",191.2,179.0,209.2],["2017-07-01",202.2,184.5,228.1],["2017-08-01",204.5,188.4,228.1],["2017-09-01",206.2,191.3,228.1],["2017-10-01",208.0,194.2,228.1],["2017-11-01",210.1,197.8,228.1],["2017-12-01",212.7,202.2,228.1],["2018-01-01",220.2,209.4,236.1],["2018-02-01",224.3,214.1,239.3],["2018-03-01",229.8,220.7,243.2],["2018-04-01",239.6,227.7,257.1],["2018-05-01",248.5,242.7,257.1],["2018-06-01",259.4,260.6,257.5],["2018-07-01",264.4,268.4,258.5],["2018-08-01",283.6,291.1,272.6],["2018-09-01",305.1,319.4,284.2],["2018-10-01",311.5,330.0,284.5],["2018-11-01",323.7,338.7,301.7],["2018-12-01",331.5,344.5,312.5],["2019-01-01",339.3,353.6,318.2],["2019-02-01",346.1,364.3,319.3],["2019-03-01",361.0,382.0,330.1],["2019-04-01",381.5,394.8,361.9],["2019-05-01",395.6,404.8,382.3],["2019-06-01",400.9,413.5,382.4],["2019-07-01",410.7,418.7,398.9],["2019-08-01",453.4,480.9,412.9],["2019-09-01",459.0,490.5,412.9],["2019-10-01",486.4,515.1,444.2],["2019-11-01",507.4,532.8,470.2],["2019-12-01",513.1,542.4,470.2],["2020-01-01",539.6,552.4,520.7],["2020-02-01",560.2,564.6,553.7],["2020-03-01",565.3,572.9,554.1],["2020-04-01",573.0,584.6,556.0],["2020-05-01",588.1,606.9,560.5],["2020-06-01",598.6,624.0,561.3],["2020-07-01",615.2,651.8,561.6],["2020-08-01",631.5,679.3,561.6],["2020-09-01",655.8,717.6,565.2],["2020-10-01",695.1,780.7,569.8],["2020-11-01",763.4,833.0,661.4],["2020-12-01",794.4,884.8,662.0],["2021-01-01",824.9,936.1,662.0],["2021-02-01",872.7,987.4,704.7],["2021-03-01",896.7,1027.5,704.9],["2021-04-01",959.1,1074.2,790.3],["2021-05-01",988.4,1122.3,792.2],["2021-06-01",1011.3,1160.8,792.3],["2021-07-01",1065.8,1205.0,861.4],["2021-08-01",1089.8,1245.7,861.4],["2021-09-01",1131.2,1291.8,895.9],["2021-10-01",1180.2,1341.5,943.6],["2021-11-01",1210.0,1391.6,943.6],["2021-12-01",1234.3,1431.9,944.9],["2022-01-01",1281.5,1487.1,980.2],["2022-02-01",1344.5,1545.8,1049.4],["2022-03-01",1416.2,1624.6,1110.7],["2022-04-01",1467.2,1709.9,1111.5],["2022-05-01",1563.9,1801.7,1215.2],["2022-06-01",1670.2,1907.4,1322.6],["2022-07-01",1784.0,2098.7,1322.6],["2022-08-01",1905.9,2245.6,1407.6],["2022-09-01",2051.9,2399.4,1541.9],["2022-10-01",2211.9,2573.0,1682.6],["2022-11-01",2369.7,2747.7,1815.7],["2022-12-01",2552.3,2933.6,1993.4],["2023-01-01",2713.1,3113.8,2125.6],["2023-02-01",2865.3,3276.5,2262.7],["2023-03-01",2998.7,3482.1,2290.2],["2023-04-01",3228.5,3740.9,2477.5],["2023-05-01",3448.3,3985.6,2660.9],["2023-06-01",3662.2,4282.6,2752.8],["2023-07-01",4001.9,4678.3,3010.5],["2023-08-01",4789.7,5707.8,3444.1],["2023-09-01",5215.9,6219.5,3744.9],["2023-10-01",5790.0,6979.6,4046.5],["2023-11-01",6785.2,8345.6,4498.0],["2023-12-01",9049.8,11806.7,5009.0],["2024-01-01",10331.0,13277.8,6011.7],["2024-02-01",11228.3,14214.4,6851.6],["2024-03-01",11669.0,14955.8,6851.6],["2024-04-01",12216.2,15226.8,7803.5],["2024-05-01",12747.4,15537.5,8657.9],["2024-06-01",13295.8,15811.7,9608.3],["2024-07-01",13574.8,16281.0,9608.3],["2024-08-01",14017.6,16700.7,10084.9],["2024-09-01",14366.9,17016.6,10483.3],["2024-10-01",14614.9,17149.9,10899.2],["2024-11-01",15043.0,17375.7,11624.1],["2024-12-01",15356.4,17585.1,12089.7],["2025-01-01",15592.5,17825.2,12319.9],["2025-02-01",15852.4,17967.5,12752.3],["2025-03-01",15995.4,18122.5,12877.8],["2025-04-01",16253.5,18640.1,12755.3],["2025-05-01",16521.3,18695.2,13334.9],["2025-06-01",16643.4,18826.5,13443.5],["2025-07-01",16939.5,19141.7,13711.8],["2025-08-01",17187.6,19490.0,13812.6],["2025-09-01",17762.3,20187.5,14207.5],["2025-10-01",18172.8,20740.8,14408.8],["2025-11-01",18534.9,21055.9,14839.9],["2025-12-01",18776.5,21335.3,15026.2],["2026-01-01",19209.4,21778.0,15444.4],["2026-02-01",19453.0,22007.9,15708.2],["2026-03-01",19771.2,22204.2,16205.2],["2026-04-01",20493.2,22870.0,17009.6]];
+
+/* ═══════════════════════════════════════
+   NAVEGACIÓN / SESSION
+═══════════════════════════════════════ */
+let indicadoresLoaded = false;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  if (id === 'indicadores' && !indicadoresLoaded) {
+    indicadoresLoaded = true;
+    initCacFromEmbedded();
+    loadSnapshot();   // datos guardados inmediatamente
+    reloadAll();      // refrescar APIs en paralelo
+  }
+}
+
+function doLogin() {
+  if (document.getElementById('pwd-input').value === PASSWORD) {
+    document.getElementById('login-err').textContent = '';
+    sessionStorage.setItem('elyon_ok', '1');
+    showScreen('main');
+  } else {
+    document.getElementById('login-err').textContent = '⚠ Contraseña incorrecta.';
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('elyon_ok');
+  indicadoresLoaded = false;
+  document.getElementById('pwd-input').value = '';
+  showScreen('login');
+}
+
+if (sessionStorage.getItem('elyon_ok') === '1') showScreen('main');
+
+/* ═══════════════════════════════════════
+   FORMATO NUMÉRICO
+═══════════════════════════════════════ */
+const fmtN   = (v, d = 2) => v != null && !isNaN(v)
+  ? Number(v).toLocaleString('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d })
+  : 'N/D';
+const fmtARS = v => v != null && !isNaN(v) ? '$ ' + fmtN(v, 0) : 'N/D';
+
+/* Fechas: dd/mm/aaaa y mm/aaaa */
+const fmtFecha = iso => {
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : (iso || 'N/D');
+};
+/* "aaaa-mm-dd" -> Date en hora LOCAL.
+   OJO: new Date("2026-06-01") se interpreta como medianoche UTC; en Argentina
+   (UTC-3) eso cae el 31/05 21:00 y los meses se muestran corridos uno atras. */
+const fechaLocal = iso => {
+  const p = String(iso).slice(0, 10).split('-');
+  return new Date(+p[0], +p[1] - 1, +p[2] || 1);
+};
+const isoHoy   = () => new Date().toISOString().slice(0, 10);
+const isoHace  = d => new Date(Date.now() - d * 864e5).toISOString().slice(0, 10);
+const fmtMes = iso => {
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})/);
+  return m ? `${m[2]}/${m[1]}` : (iso || 'N/D');
+};
+
+/* ═══════════════════════════════════════
+   TIPO DE CAMBIO — dolarapi.com
+   Claves API: oficial, blue, bolsa (MEP),
+               contadoconliqui (CCL)
+═══════════════════════════════════════ */
+async function loadDolar() {
+  const km = {
+    oficial:          'oficial',
+    blue:             'blue',
+    bolsa:            'mep',
+    contadoconliqui:  'ccl',
+  };
+
+  try {
+    const res = await fetch('https://dolarapi.com/v1/dolares');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+
+    let found = 0;
+    data.forEach(item => {
+      const k = km[(item.casa || '').toLowerCase()];
+      if (!k) return;
+      const card = document.getElementById('dolar-' + k);
+      if (!card) return;
+      card.querySelector('[data-f="compra"]').textContent = fmtARS(item.compra);
+      card.querySelector('[data-f="venta"]').textContent  = fmtARS(item.venta);
+      found++;
+    });
+
+    const ts = new Date().toLocaleString('es-AR', {
+      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+    });
+    document.getElementById('dolar-ts').textContent =
+      (found >= 3 ? '✔' : '⚠') + ' Actualizado ' + ts + ' · dolarapi.com';
+
+  } catch (e) {
+    ['oficial','blue','mep','ccl'].forEach(k => {
+      const c = document.getElementById('dolar-' + k);
+      if (c) {
+        c.querySelector('[data-f="compra"]').textContent = 'N/D';
+        c.querySelector('[data-f="venta"]').textContent  = 'N/D';
+      }
+    });
+    document.getElementById('dolar-ts').textContent = '⚠ Sin conexión — tipo de cambio no disponible';
+  }
+}
+
+/* ═══════════════════════════════════════
+   VARIACIONES DÓLAR — bluelytics.com.ar
+   Fuente: api.bluelytics.com.ar/v2/evolution.json
+   Oficial y Blue: variación diaria e interanual
+   MEP/CCL: sin fuente histórica pública disponible
+═══════════════════════════════════════ */
+function setVarBadge(id, pct, label) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (pct == null) {
+    el.textContent = label || 'N/D';
+    el.className = 'var-badge na';
+    return;
+  }
+  const sign  = pct >= 0 ? '+' : '';
+  const fmted = sign + pct.toFixed(1).replace('.', ',') + '%';
+  el.textContent = (label ? label + ' ' : '') + fmted;
+  el.className   = 'var-badge ' + (pct >= 0 ? 'up' : 'dn');
+}
+
+async function loadDolarVariaciones() {
+  try {
+    // Trae historial diario Oficial y Blue (pedimos 400 días para cubrir interanual)
+    const res  = await fetch('https://api.bluelytics.com.ar/v2/evolution.json?days=400');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json(); // desc: [0]=hoy, [1]=ayer, …
+
+    // Separar por fuente
+    const oficial = data.filter(d => d.source === 'Oficial');
+    const blue    = data.filter(d => d.source === 'Blue');
+
+    const calcVar = (arr, idx0, idx1) => {
+      if (idx1 >= arr.length) return null;
+      const now  = arr[idx0].value_sell;
+      const prev = arr[idx1].value_sell;
+      return (now - prev) / prev * 100;
+    };
+
+    // Variación diaria (hoy vs ayer = índices 0 y 1)
+    setVarBadge('var-oficial-dia', calcVar(oficial, 0, 1), '1d');
+    setVarBadge('var-blue-dia',    calcVar(blue,    0, 1), '1d');
+
+    // Variación interanual: buscar entrada con fecha ~365 días atrás
+    const hoy = new Date(oficial[0]?.date);
+    const objetivo = new Date(hoy);
+    objetivo.setFullYear(objetivo.getFullYear() - 1);
+
+    const findNearest = (arr) => {
+      if (!arr.length) return null;
+      return arr.reduce((best, d) => {
+        const diff  = Math.abs(new Date(d.date) - objetivo);
+        const bdiff = Math.abs(new Date(best.date) - objetivo);
+        return diff < bdiff ? d : best;
+      });
+    };
+
+    const ofIaRef = findNearest(oficial);
+    const blIaRef = findNearest(blue);
+
+    // Sólo mostrar interanual si la referencia es <= 30 días fuera del objetivo
+    const MAX_GAP_MS = 30 * 86400 * 1000;
+
+    if (ofIaRef && Math.abs(new Date(ofIaRef.date) - objetivo) <= MAX_GAP_MS) {
+      const ia = (oficial[0].value_sell - ofIaRef.value_sell) / ofIaRef.value_sell * 100;
+      setVarBadge('var-oficial-ia', ia, '1a');
+    } else {
+      setVarBadge('var-oficial-ia', null, '1a N/D');
+    }
+
+    if (blIaRef && Math.abs(new Date(blIaRef.date) - objetivo) <= MAX_GAP_MS) {
+      const ia = (blue[0].value_sell - blIaRef.value_sell) / blIaRef.value_sell * 100;
+      setVarBadge('var-blue-ia', ia, '1a');
+    } else {
+      setVarBadge('var-blue-ia', null, '1a N/D');
+    }
+
+    // MEP y CCL: sin fuente histórica
+    ['mep','ccl'].forEach(k => {
+      setVarBadge(`var-${k}-dia`, null, '1d N/D');
+      setVarBadge(`var-${k}-ia`,  null, '1a N/D');
+    });
+
+  } catch (e) {
+    ['oficial','blue','mep','ccl'].forEach(k => {
+      setVarBadge(`var-${k}-dia`, null, '1d');
+      setVarBadge(`var-${k}-ia`,  null, '1a');
+    });
+  }
+}
+
+/* ═══════════════════════════════════════
+   INDICADORES MACRO — datos.gob.ar
+   API gubernamental CORS-habilitada.
+   Fuente: INDEC (inflación) y BCRA (tasas/UVA)
+   a través de la plataforma datos.gob.ar.
+═══════════════════════════════════════ */
+const DGOB_BASE = 'https://apis.datos.gob.ar/series/api/series/';
+
+async function fetchDG(ids, limit = 5, sort = 'desc') {
+  const url = `${DGOB_BASE}?ids=${encodeURIComponent(ids)}&limit=${limit}&sort=${sort}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const json = await res.json();
+  return json.data || [];
+}
+
+/* ── Actualizar celda macro ── */
+function setMacro(valId, srcId, text, src, color) {
+  const vEl = document.getElementById(valId);
+  const sEl = document.getElementById(srcId);
+  if (vEl) { vEl.textContent = text; vEl.style.color = color || ''; }
+  if (sEl && src) sEl.textContent = src;
+}
+
+/* ── Inflación (INDEC vía datos.gob.ar) ── */
+async function loadInflacion() {
+  // Serie 148.3_INIVELNAL_DICI_M_26 = IPC Nacional nivel general
+  // Traemos 14 meses y calculamos variaciones manualmente
+  try {
+    const data = await fetchDG('148.3_INIVELNAL_DICI_M_26', 14);
+    if (data.length >= 2) {
+      const pctM = (data[0][1] / data[1][1] - 1) * 100;
+      setMacro('val-inf-m', 'src-inf-m',
+        fmtN(pctM, 1) + '%',
+        fmtMes(data[0][0]) + ' · INDEC · datos.gob.ar',
+        'var(--rojo-txt)');
+    }
+    if (data.length >= 13) {
+      const pctIA = (data[0][1] / data[12][1] - 1) * 100;
+      setMacro('val-inf-ia', 'src-inf-ia',
+        fmtN(pctIA, 1) + '%',
+        'Interanual a ' + fmtMes(data[0][0]) + ' · INDEC · datos.gob.ar',
+        'var(--rojo-txt)');
+    }
+  } catch (e) {
+    setMacro('val-inf-m',  'src-inf-m',  'N/D', 'Sin conexión', '');
+    setMacro('val-inf-ia', 'src-inf-ia', 'N/D', 'Sin conexión', '');
+  }
+}
+
+/* ── Riesgo País (ArgentinaDatos) ── */
+async function loadRiesgo() {
+  try {
+    const r = await fetch('https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais');
+    const arr = await r.json();
+    if (arr && arr.length) {
+      const last = arr[arr.length - 1];
+      setMacro('val-riesgo', 'src-riesgo',
+        fmtN(last.valor, 0) + ' pb',
+        fmtFecha(last.fecha) + ' · EMBI+ · ArgentinaDatos',
+        '#f59e0b');
+    }
+  } catch (e) {
+    setMacro('val-riesgo', 'src-riesgo', 'N/D', 'Sin conexión', '');
+  }
+}
+
+/* ── BADLAR (BCRA serie 7 — TNA bancos privados) ── */
+async function loadBADLAR() {
+  // 1) Caché local actualizado por tarea diaria (bcra_cache.js)
+  if (window.BCRA_CACHE?.badlar?.valor != null) {
+    const c = window.BCRA_CACHE.badlar;
+    setMacro('val-badlar', 'src-badlar',
+      fmtN(c.valor, 4) + '% TNA',
+      fmtFecha(c.fecha) + ' · Bancos priv. · BCRA (serie 7)',
+      '#60a5fa');
+    return;
+  }
+  // 2) datos.gob.ar (puede estar desactualizado)
+  try {
+    const data = await fetchDG('89.2_TS_INTELAR_0_D_20', 5);
+    if (data.length) {
+      const last = data[0];
+      setMacro('val-badlar', 'src-badlar',
+        fmtN(last[1], 4) + '% TNA',
+        fmtFecha(last[0]) + ' · Bancos priv. · datos.gob.ar',
+        '#60a5fa');
+      return;
+    }
+  } catch (_) {}
+  setMacro('val-badlar', 'src-badlar', 'N/D', 'Sin conexión', '');
+}
+
+/* ── TAMAR (BCRA API v4.0 · serie 44 — TNA bancos privados) ── */
+async function loadTAMAR() {
+  // 1) Caché local actualizado por tarea diaria (bcra_cache.js)
+  if (window.BCRA_CACHE?.tamar?.valor != null) {
+    const c = window.BCRA_CACHE.tamar;
+    setMacro('val-tamar', 'src-tamar',
+      fmtN(c.valor, 4) + '% TNA',
+      fmtFecha(c.fecha) + ' · Bancos priv. · BCRA (serie 44)',
+      '#a78bfa');
+    return;
+  }
+  // 2) BCRA API v3/v2 directa (funciona si el browser permite CORS)
+  const endpoints = [
+    'https://api.bcra.gob.ar/estadisticas/v4.0/monetarias/44?desde=' + isoHace(20) + '&hasta=' + isoHoy(),
+    'https://api.bcra.gob.ar/estadisticas/v3.0/monetarias/44?limit=5',
+  ];
+  for (const url of endpoints) {
+    try {
+      const res = await fetch(url, { mode: 'cors', headers: { Accept: 'application/json' } });
+      if (!res.ok) continue;
+      const json = await res.json();
+      let rows = json.results ?? json.data ?? [];
+      if (rows.length && rows[0].detalle) rows = rows[0].detalle;   // API v4.0
+      if (!rows.length) continue;
+      rows.sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+      const last  = rows[0];
+      const valor = last.valor ?? last.value ?? last.v;
+      const fecha = fmtFecha(last.fecha ?? last.date ?? '');
+      if (valor == null) continue;
+      setMacro('val-tamar', 'src-tamar',
+        fmtN(valor, 4) + '% TNA',
+        fecha + ' · Bancos priv. · BCRA API',
+        '#a78bfa');
+      return;
+    } catch (_) {}
+  }
+  // Sin fuente: referencia orientativa del caché o N/D
+  const ref = window.BCRA_CACHE?.tamar;
+  setMacro('val-tamar', 'src-tamar',
+    ref ? '~' + fmtN(ref.valor, 2) + '% TNA' : 'N/D',
+    ref ? ref.fecha + ' · Ref. bcra_cache.js (sin API)' : 'API BCRA no disponible · Ver bcra.gob.ar',
+    '');
+}
+
+/* ── UVA (BCRA vía datos.gob.ar) ── */
+let uvaApiData = []; // [fecha, valor] desc
+
+
+/* Carga el histórico UVA para variaciones y gráfico sin bloquear el valor del caché */
+async function _loadUvaHistorico(valorActual, srcLabel) {
+  // Intentar BCRA API v3
+  try {
+    const res = await fetch('https://api.bcra.gob.ar/estadisticas/v3.0/monetarias/7913?limit=1300', {
+      mode: 'cors', headers: { Accept: 'application/json' },
+    });
+    if (res.ok) {
+      const json = await res.json();
+      const rows = json.results ?? json.data ?? [];
+      if (rows.length) {
+        uvaApiData = rows.map(r => [r.fecha ?? r.date, r.valor ?? r.value ?? r.v]);
+        _calcUvaVariaciones(uvaApiData);
+        renderUvaChart();
+        return;
+      }
+    }
+  } catch (_) {}
+  // Fallback: datos.gob.ar (puede ser stale pero sirve para variaciones)
+  try {
+    const data = await fetchDG('94.2_UVAD_D_0_0_10', 1300);
+    if (data.length) {
+      uvaApiData = data;
+      _calcUvaVariaciones(data);
+      renderUvaChart();
+    }
+  } catch (_) {}
+}
+
+function _calcUvaVariaciones(data) {
+  if (!data.length) return;
+  const getVal = d => Array.isArray(d) ? (typeof d[1] === 'number' ? d[1] : parseFloat(d[1])) : (d.valor ?? d.value);
+  const v0 = getVal(data[0]);
+  if (data.length >= 30) {
+    const vm = (v0 / getVal(data[29]) - 1) * 100;
+    const elM = document.getElementById('val-uva-m');
+    if (elM) {
+      elM.textContent = (vm >= 0 ? '+' : '') + fmtN(vm, 1) + '%';
+      elM.style.color = vm >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+    }
+  }
+  if (data.length >= 365) {
+    const via = (v0 / getVal(data[364]) - 1) * 100;
+    const elIA = document.getElementById('val-uva-ia');
+    if (elIA) {
+      elIA.textContent = (via >= 0 ? '+' : '') + fmtN(via, 1) + '%';
+      elIA.style.color = via >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+    }
+  }
+}
+
+async function loadUVA() {
+  // 1) Caché local: muestra el valor actualizado, luego carga histórico de API
+  if (window.BCRA_CACHE?.uva?.valor != null) {
+    const c = window.BCRA_CACHE.uva;
+    document.getElementById('val-uva').textContent = fmtN(c.valor, 2);
+    document.getElementById('src-uva').textContent = c.fecha + ' · BCRA · bcra_cache.js';
+    // Cargar histórico desde BCRA para variaciones y gráfico (no bloquea el valor)
+    _loadUvaHistorico(c.valor, c.fecha + ' · BCRA · bcra_cache.js');
+    return;
+  }
+  // 2) BCRA API v3 (puede funcionar desde el browser)
+  try {
+    const res = await fetch('https://api.bcra.gob.ar/estadisticas/v3.0/monetarias/7913?limit=1300', {
+      mode: 'cors', headers: { Accept: 'application/json' },
+    });
+    if (res.ok) {
+      const json = await res.json();
+      const rows = json.results ?? json.data ?? [];
+      if (rows.length) {
+        uvaApiData = rows.map(r => [r.fecha ?? r.date, r.valor ?? r.value ?? r.v]);
+        const last = uvaApiData[0];
+        document.getElementById('val-uva').textContent = fmtN(last[1], 2);
+        document.getElementById('src-uva').textContent = last[0] + ' · BCRA API v3';
+        if (uvaApiData.length >= 30) {
+          const vm = (last[1] / uvaApiData[29][1] - 1) * 100;
+          const elM = document.getElementById('val-uva-m');
+          elM.textContent = (vm >= 0 ? '+' : '') + fmtN(vm, 1) + '%';
+          elM.style.color = vm >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+        }
+        if (uvaApiData.length >= 365) {
+          const via = (last[1] / uvaApiData[364][1] - 1) * 100;
+          const elIA = document.getElementById('val-uva-ia');
+          elIA.textContent = (via >= 0 ? '+' : '') + fmtN(via, 1) + '%';
+          elIA.style.color = via >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+        }
+        renderUvaChart();
+        return;
+      }
+    }
+  } catch (_) {}
+  // 3) Fallback datos.gob.ar (desactualizado — última actualización 11/03/2026)
+  try {
+    const data = await fetchDG('94.2_UVAD_D_0_0_10', 1300);
+    if (data.length) {
+      uvaApiData = data;
+      const last = data[0];
+      document.getElementById('val-uva').textContent = fmtN(last[1], 2);
+      document.getElementById('src-uva').textContent = last[0] + ' · datos.gob.ar (desactualizado)';
+      if (data.length >= 30) {
+        const vm = (last[1] / data[29][1] - 1) * 100;
+        const elM = document.getElementById('val-uva-m');
+        elM.textContent = (vm >= 0 ? '+' : '') + fmtN(vm, 1) + '%';
+        elM.style.color = vm >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+      }
+      if (data.length >= 365) {
+        const via = (last[1] / data[364][1] - 1) * 100;
+        const elIA = document.getElementById('val-uva-ia');
+        elIA.textContent = (via >= 0 ? '+' : '') + fmtN(via, 1) + '%';
+        elIA.style.color = via >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+      }
+      renderUvaChart();
+      return;
+    }
+  } catch (_) {}
+  document.getElementById('val-uva').textContent = 'N/D';
+  document.getElementById('src-uva').textContent = 'Sin conexión';
+}
+
+
+/* ══════════════════════════════════════════
+   PERSISTENCIA — localStorage snapshot
+══════════════════════════════════════════ */
+
+// IDs de elementos de texto a guardar/restaurar
+const SNAP_IDS = [
+  'val-inf-m','src-inf-m','val-inf-ia','src-inf-ia',
+  'val-riesgo','src-riesgo',
+  'val-badlar','src-badlar',
+  'val-tamar','src-tamar',
+  'val-uva','src-uva','val-uva-m','val-uva-ia',
+  'dolar-ts','refresh-ts',
+  'kpi-cac-gen','kpi-cac-mat','kpi-cac-mo','kpi-cac-ia','kpi-cac-fecha',
+];
+// IDs de las variation badges de dólar
+const SNAP_BADGE_IDS = [
+  'var-oficial-dia','var-oficial-ia',
+  'var-blue-dia','var-blue-ia',
+  'var-mep-dia','var-mep-ia',
+  'var-ccl-dia','var-ccl-ia',
+];
+// Cards de dólar (compra y venta)
+const DOLAR_CARDS = ['dolar-oficial','dolar-blue','dolar-mep','dolar-ccl'];
+
+function saveSnapshot() {
+  const snap = { ts: new Date().toISOString(), ids: {}, badges: {}, dolares: {} };
+
+  SNAP_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) snap.ids[id] = { text: el.textContent, color: el.style.color || '' };
+  });
+
+  SNAP_BADGE_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) snap.badges[id] = { text: el.textContent, cls: el.className };
+  });
+
+  DOLAR_CARDS.forEach(cardId => {
+    const card = document.getElementById(cardId);
+    if (!card) return;
+    const compra = card.querySelector('[data-f="compra"]');
+    const venta  = card.querySelector('[data-f="venta"]');
+    snap.dolares[cardId] = {
+      compra: compra ? compra.textContent : '—',
+      venta:  venta  ? venta.textContent  : '—',
+    };
+  });
+
+  try {
+    localStorage.setItem('elyon_snapshot', JSON.stringify(snap));
+    const btn = document.getElementById('btn-guardar');
+    if (btn) {
+      btn.textContent = '✓ Guardado';
+      setTimeout(() => { btn.textContent = '💾 Guardar'; }, 2000);
+    }
+  } catch(e) {
+    alert('Error al guardar: ' + e.message);
+  }
+}
+
+function loadSnapshot() {
+  try {
+    const raw = localStorage.getItem('elyon_snapshot');
+    if (!raw) return false;
+    const snap = JSON.parse(raw);
+
+    // Restaurar textos y colores
+    Object.entries(snap.ids || {}).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = val.text; if (val.color) el.style.color = val.color; }
+    });
+
+    // Restaurar badges de variación
+    Object.entries(snap.badges || {}).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = val.text; el.className = val.cls; }
+    });
+
+    // Restaurar valores de dólar
+    Object.entries(snap.dolares || {}).forEach(([cardId, vals]) => {
+      const card = document.getElementById(cardId);
+      if (!card) return;
+      const compra = card.querySelector('[data-f="compra"]');
+      const venta  = card.querySelector('[data-f="venta"]');
+      if (compra) compra.textContent = vals.compra;
+      if (venta)  venta.textContent  = vals.venta;
+    });
+
+    // Mostrar timestamp del guardado
+    if (snap.ts) {
+      const d = new Date(snap.ts);
+      const fmt = d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'})
+                + ' ' + d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+      const ts = document.getElementById('refresh-ts');
+      if (ts) ts.textContent = 'Guardado ' + fmt + ' · Actualizar para datos en tiempo real';
+    }
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+/* ── Carga todo en paralelo ── */
+async function reloadAll() {
+  const ts = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('refresh-ts').textContent = 'Actualizado ' + ts;
+
+  await Promise.allSettled([
+    loadDolar(),
+    loadDolarVariaciones(),
+    loadInflacion(),
+    loadRiesgo(),
+    loadBADLAR(),
+    loadTAMAR(),
+    loadUVA(),
+  ]);
+}
+
+/* ═══════════════════════════════════════
+   CAC — DATOS EMBEBIDOS + ACTUALIZACIÓN POR EXCEL
+═══════════════════════════════════════ */
+let cacData  = [];
+let cacChart = null;
+let uvaChart = null;
+
+/* Inicializar CAC: preferir cac_cache.js (generado por update_cac_cache.py) */
+function initCacFromEmbedded() {
+  const fromCache = window.CAC_CACHE && Array.isArray(window.CAC_CACHE.serie) && window.CAC_CACHE.serie.length;
+  const rawSerie  = fromCache ? window.CAC_CACHE.serie : CAC_EMBEDDED;
+
+  cacData = rawSerie.map(r => ({
+    fecha:  fechaLocal(r[0]),
+    cacGen: r[1],
+    mat:    r[2],
+    mo:     r[3],
+  }));
+
+  const label = fromCache
+    ? `📊 cac_cache.js · actualizado ${new Date(window.CAC_CACHE.updated).toLocaleDateString('es-AR')} · ${window.CAC_CACHE.source}`
+    : '📊 Datos embebidos (sin cac_cache.js) · CAC ene-2011/abr-2026';
+
+  renderCacKpis(cacData, label);
+  renderCacChart();
+  renderCacTablaAnual();
+}
+
+function renderCacKpis(data, sourceLabel) {
+  if (!data.length) return;
+  const last     = data[data.length - 1];
+  const prevYear = data.find(r =>
+    r.fecha.getFullYear() === last.fecha.getFullYear() - 1 &&
+    r.fecha.getMonth()    === last.fecha.getMonth()
+  );
+
+  document.getElementById('kpi-cac-gen').textContent =
+    last.cacGen != null ? fmtN(last.cacGen, 0) : 'N/D';
+  document.getElementById('kpi-cac-mat').textContent =
+    last.mat != null ? fmtN(last.mat, 0) : 'N/D';
+  document.getElementById('kpi-cac-mo').textContent =
+    last.mo  != null ? fmtN(last.mo,  0) : 'N/D';
+  document.getElementById('kpi-cac-fecha').textContent =
+    last.fecha.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+
+  if (prevYear && last.cacGen != null && prevYear.cacGen != null) {
+    const ia = (last.cacGen / prevYear.cacGen - 1) * 100;
+    const el = document.getElementById('kpi-cac-ia');
+    el.textContent = (ia >= 0 ? '+' : '') + fmtN(ia, 1) + '%';
+    el.style.color = ia >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+  } else if (last.cacGen == null) {
+    // General de abr-2026 aún no publicado por INDEC
+    const el = document.getElementById('kpi-cac-ia');
+    if (el) { el.textContent = 'Pend.'; el.style.color = 'var(--gris-txt)'; }
+  }
+
+  if (sourceLabel) {
+    document.getElementById('cac-datasource').textContent = sourceLabel;
+  }
+}
+
+/* ── Drag & Drop / File Input ── */
+function handleDrop(event) {
+  event.preventDefault();
+  const file = event.dataTransfer.files[0];
+  if (file) readExcelFile(file);
+}
+
+function loadExcel(input) {
+  const file = input.files[0];
+  if (file) readExcelFile(file);
+}
+
+function readExcelFile(file) {
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      // cellDates:true → SheetJS convierte seriales a Date objects automáticamente
+      const wb  = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: true });
+      const ws  = wb.Sheets[wb.SheetNames[0]];
+      const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+      processExcel(raw, file.name);
+    } catch (ex) {
+      alert('Error al leer el archivo Excel: ' + ex.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function processExcel(raw, fname) {
+  if (!raw || !raw.length) { alert('Archivo vacío o sin datos.'); return; }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     ESTRUCTURA DEL EXCEL CAC (INDEC) — verificada sobre el XML real
+
+     Cada mes ocupa 3 filas consecutivas en este orden:
+       1) [vacío B] [D="Costo de Construcción"] [F=General del mes]
+       2) [B=fecha] [D="Materiales"]             [F=Materiales del mes]
+       3) [vacío B] [D="Mano de Obra"]           [F=MO del mes]
+
+     La fecha está en col B (índice 1) SOLO en la fila de Materiales,
+     guardada como número serial de Excel (ej: 40544 = 01/01/2011).
+     Con cellDates:true SheetJS la convierte a Date object.
+
+     Columnas (0-based): A=0  B=1  C=2  D=3  E=4  F=5  G=6
+  ═══════════════════════════════════════════════════════════════════ */
+
+  const toNum = v => {
+    if (v == null) return null;
+    if (typeof v === 'number') return isNaN(v) ? null : v;
+    const s = String(v).replace('%', '').replace(',', '.').trim();
+    const n = parseFloat(s);
+    return isNaN(n) ? null : n;
+  };
+
+  const normDen = v => String(v ?? '').toLowerCase().trim();
+
+  // Detectar filas de Materiales:
+  // col[3] contiene "materiales" Y col[1] es Date o número serial > 40000
+  const matRows = [];
+  raw.forEach((row, i) => {
+    if (!Array.isArray(row) || row.length < 4) return;
+    const den  = normDen(row[3]);
+    const bVal = row[1];
+    const hasDate = (bVal instanceof Date && !isNaN(bVal.getTime())) ||
+                    (typeof bVal === 'number' && bVal > 40000 && bVal < 60000);
+    if (/materiales/.test(den) && hasDate) matRows.push(i);
+  });
+
+  if (matRows.length < 3) {
+    alert('Estructura no reconocida. Verificar archivo CAC del INDEC. Filas detectadas: ' + matRows.length);
+    return;
+  }
+
+  const newData = [];
+
+  matRows.forEach(mi => {
+    const matRow = raw[mi];
+    const moRow  = raw[mi + 1] ?? [];  // Mano de Obra: fila +1
+    const genRow = raw[mi - 1] ?? [];  // General: fila -1 (Costo de Construcción)
+
+    // Convertir fecha
+    let fecha = null;
+    const bVal = matRow[1];
+    if (bVal instanceof Date) {
+      fecha = new Date(bVal.getFullYear(), bVal.getMonth(), 1);
+    } else if (typeof bVal === 'number' && bVal > 40000) {
+      // Fórmula: serial Excel → JS Date (corregir epoch)
+      const d = new Date(Math.round((bVal - 25569) * 86400000));
+      fecha = new Date(d.getUTCFullYear(), d.getUTCMonth(), 1);
+    }
+    if (!fecha || isNaN(fecha.getTime())) return;
+
+    // Verificar que las filas vecinas son las correctas
+    const moOk  = /mano/i.test(normDen(moRow[3]));
+    const genOk = /costo/i.test(normDen(genRow[3]));
+
+    const mat = toNum(matRow[5]);
+    const mo  = moOk  ? toNum(moRow[5])  : null;
+    const gen = genOk ? toNum(genRow[5]) : null;
+
+    newData.push({ fecha, cacGen: gen, mat, mo });
+  });
+
+  if (!newData.length) {
+    alert('Se detectaron filas de Materiales pero no se pudieron extraer datos.');
+    return;
+  }
+
+  newData.sort((a, b) => a.fecha - b.fecha);
+  cacData = newData;
+
+  const label = fname + ' - ' + newData.length + ' meses';
+  renderCacKpis(newData, label);
+  renderCacChart();
+  renderCacTablaAnual();
+  document.getElementById('cac-datasource').textContent = label;
+}
+
+/* ── Gráfico CAC ── */
+
+/* ── Tabla CAC: últimos 12 meses ── */
+function renderCacTablaAnual() {
+  const tbody = document.getElementById('cac-tabla-body');
+  if (!tbody || !cacData.length) return;
+
+  const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+  // Tomar últimos 13 registros (12 períodos + 1 anterior para var. del primer mes)
+  const slice = cacData.slice(-13);
+  const rows  = slice.slice(1); // los 12 más recientes
+
+  tbody.innerHTML = rows.map((r, i) => {
+    const prev = slice[i]; // elemento anterior para calcular variación
+    const mes  = MESES[r.fecha.getMonth()] + '-' + r.fecha.getFullYear();
+
+    let varHtml = '<td style="text-align:right;padding:6px 8px;color:var(--gris-txt);">—</td>';
+    if (r.cacGen != null && prev && prev.cacGen != null) {
+      const pct   = (r.cacGen / prev.cacGen - 1) * 100;
+      const color = pct >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+      const sign  = pct >= 0 ? '+' : '';
+      varHtml = `<td style="text-align:right;padding:6px 8px;color:${color};font-weight:700;">${sign}${pct.toFixed(1).replace('.',',')}%</td>`;
+    }
+
+    const isLast = i === rows.length - 1;
+    const rowBg  = isLast ? 'background:rgba(204,0,0,.06);' : (i % 2 === 0 ? '' : 'background:rgba(255,255,255,.02);');
+    const genTxt = r.cacGen != null ? fmtN(r.cacGen, 0) : 'N/D';
+
+    return `<tr style="${rowBg}border-bottom:1px solid rgba(255,255,255,.04);">
+      <td style="padding:6px 8px;color:#fff${isLast?';font-weight:700':''};">${mes}</td>
+      <td style="text-align:right;padding:6px 8px;color:#fff${isLast?';font-weight:700':''};">${genTxt}</td>
+      ${varHtml}
+    </tr>`;
+  }).join('');
+}
+
+
+function renderCacChart() {
+  if (!cacData.length) return;
+  const rangeEl = document.getElementById('cac-range');
+  const months  = rangeEl ? parseInt(rangeEl.value) : 0;
+  const slice   = months > 0 ? cacData.slice(-months) : cacData;
+  const labels  = slice.map(r => r.fecha.toLocaleDateString('es-AR', { month: 'short', year: '2-digit' }));
+  const ctx = document.getElementById('chart-cac').getContext('2d');
+  if (cacChart) cacChart.destroy();
+  cacChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'CAC General', data: slice.map(r => r.cacGen),
+          borderColor: '#FF5F5F', backgroundColor: 'rgba(255,95,95,0.12)',
+          borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
+        { label: 'Materiales', data: slice.map(r => r.mat),
+          borderColor: '#60a5fa', backgroundColor: 'transparent',
+          borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false },
+        { label: 'Mano de Obra', data: slice.map(r => r.mo),
+          borderColor: '#4ade80', backgroundColor: 'transparent',
+          borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#aaa', font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: '#1C1C1C', borderColor: '#383838', borderWidth: 1,
+          titleColor: '#fff', bodyColor: '#aaa',
+          callbacks: {
+            label: c => ` ${c.dataset.label}: ${c.parsed.y != null
+              ? Number(c.parsed.y).toLocaleString('es-AR', { maximumFractionDigits: 0 }) : 'N/D'}`,
+          },
+        },
+      },
+      scales: {
+        x: { ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 10 }, grid: { color: '#222' } },
+        y: { ticks: { color: '#555', font: { size: 9 } }, grid: { color: '#222' } },
+      },
+    },
+  });
+}
+
+/* ── Gráfico UVA ── */
+function renderUvaChart() {
+  if (!uvaApiData.length) return;
+  const rangeEl = document.getElementById('uva-range');
+  const days    = rangeEl ? parseInt(rangeEl.value) : 365;
+  const raw     = days > 0 ? uvaApiData.slice(0, days) : uvaApiData;
+  const slice   = raw.slice().reverse();
+  // Normalizar a [[fecha, valor]] por si viene de BCRA API v3 como objetos
+  const getLabel = d => Array.isArray(d) ? d[0] : (d.fecha ?? d.date);
+  const getVal   = d => Array.isArray(d) ? d[1] : (d.valor ?? d.value);
+  const ctx = document.getElementById('chart-uva').getContext('2d');
+  if (uvaChart) uvaChart.destroy();
+  uvaChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: slice.map(getLabel),
+      datasets: [{
+        label: 'UVA (base 31-mar-2016 = $14,05)',
+        data: slice.map(getVal),
+        borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.08)',
+        borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#aaa', font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: '#1C1C1C', borderColor: '#383838', borderWidth: 1,
+          titleColor: '#fff', bodyColor: '#aaa',
+          callbacks: {
+            label: c => ` UVA: $${Number(c.parsed.y).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          },
+        },
+      },
+      scales: {
+        x: { ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 10 }, grid: { color: '#222' } },
+        y: { ticks: { color: '#555', font: { size: 9 } }, grid: { color: '#222' } },
+      },
+    },
+  });
+}
+
+</script>
+</body>
+</html>
