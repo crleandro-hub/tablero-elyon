@@ -32,7 +32,7 @@ try {
 
     Register-ScheduledTask -TaskName $nombre `
         -Action $accion -Trigger $trigger -Settings $settings `
-        -Description "Actualiza BCRA, CAC y UVA del Tablero Elyon, regenera docs\index.html y lo publica en GitHub Pages." `
+        -Description "Actualiza BCRA, UVA, CAC, MERVAL, REM y riesgo pais del Tablero Elyon, regenera docs\index.html y lo publica en GitHub Pages." `
         -Force | Out-Null
 
     Write-Host "[OK] Tarea creada: '$nombre'" -ForegroundColor Green

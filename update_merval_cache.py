@@ -33,7 +33,7 @@ import re
 import ssl
 import urllib.parse
 import urllib.request as req
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CACHE_PATH = os.path.join(BASE_DIR, "merval_cache.js")
@@ -91,7 +91,7 @@ def serie_yahoo():
                 v = close[i] if i < len(close) else None
                 if v is None:
                     continue
-                out[datetime.utcfromtimestamp(t).strftime("%Y-%m-%d")] = float(v)
+                out[datetime.fromtimestamp(t, timezone.utc).strftime("%Y-%m-%d")] = float(v)
             if out:
                 print("[OK] Merval desde " + host)
                 return sorted(out.items())

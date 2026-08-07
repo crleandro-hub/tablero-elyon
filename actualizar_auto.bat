@@ -8,6 +8,12 @@ setlocal
 cd /d "%~dp0"
 set "LOG=%~dp0log_actualizacion.txt"
 
+rem ---------- Rotar el registro si supera 1 MB ----------
+for %%F in ("%LOG%") do if %%~zF GTR 1048576 (
+  if exist "%LOG%.old" del /f /q "%LOG%.old"
+  move /y "%LOG%" "%LOG%.old" >nul
+)
+
 call :log "==================================================="
 call :log "Inicio: %date% %time%"
 

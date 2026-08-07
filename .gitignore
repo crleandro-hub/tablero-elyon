@@ -3,6 +3,7 @@
 
 # Registros de las corridas automaticas
 log_actualizacion.txt
+log_actualizacion.txt.old
 
 # Archivos derivados (los regenera build_publicar.py)
 tablero_elyon_portable.html

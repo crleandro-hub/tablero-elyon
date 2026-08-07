@@ -466,6 +466,11 @@ body {
           <div class="kpi-value" id="kpi-cac-ia">—</div>
           <div class="kpi-sub">vs. mismo mes año ant.</div>
         </div>
+        <div class="card">
+          <div class="kpi-label">Acum. en el año</div>
+          <div class="kpi-value" id="kpi-cac-ytd">—</div>
+          <div class="kpi-sub" id="kpi-cac-ytd-sub">vs. dic. año ant.</div>
+        </div>
       </div>
 
       <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 8px;flex-wrap:wrap;gap:8px;">
@@ -523,6 +528,11 @@ body {
         <div class="kpi-label">Variación interanual</div>
         <div class="kpi-value" id="val-uva-ia">—</div>
         <div class="kpi-sub">vs. mismo día año ant.</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Acum. en el año</div>
+        <div class="kpi-value" id="val-uva-ytd">—</div>
+        <div class="kpi-sub" id="val-uva-ytd-sub">vs. 31-dic año ant.</div>
       </div>
     </div>
 
@@ -590,6 +600,11 @@ body {
         <div class="kpi-label">Variación interanual</div>
         <div class="kpi-value" id="val-blue-ia">—</div>
         <div class="kpi-sub">venta vs. año anterior</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Acum. en el año</div>
+        <div class="kpi-value" id="val-blue-ytd">—</div>
+        <div class="kpi-sub" id="val-blue-ytd-sub">venta vs. 31-dic año ant.</div>
       </div>
       <div class="card">
         <div class="kpi-label">Brecha vs. oficial</div>
@@ -1546,6 +1561,12 @@ function _calcUvaVariaciones(data) {
 
   pintar('val-uva-m',  valorEn(uvaDesplazar(anclaF, { meses: 1 })));
   pintar('val-uva-ia', valorEn(uvaDesplazar(anclaF, { anios: 1 })));
+
+  // Acumulada en lo que va del año: contra el ultimo dato de diciembre anterior
+  const anioBase = +anclaF.slice(0, 4) - 1;
+  pintar('val-uva-ytd', valorEn(anioBase + '-12-31'));
+  const subYtd = document.getElementById('val-uva-ytd-sub');
+  if (subYtd) subYtd.textContent = 'vs. 31-dic-' + anioBase;
 }
 
 /* ══════════════════════════════════════════
@@ -1869,6 +1890,12 @@ async function loadBlue() {
   };
   pintarVar('val-blue-m',  buscarUsd('blue', uvaDesplazar(hoy.fecha, { meses: 1 })));
   pintarVar('val-blue-ia', buscarUsd('blue', uvaDesplazar(hoy.fecha, { anios: 1 })));
+
+  // Acumulada en lo que va del año: contra el cierre del 31-dic anterior
+  const blueAnioBase = +String(hoy.fecha).slice(0, 4) - 1;
+  pintarVar('val-blue-ytd', buscarUsd('blue', blueAnioBase + '-12-31'));
+  const subBlueYtd = document.getElementById('val-blue-ytd-sub');
+  if (subBlueYtd) subBlueYtd.textContent = 'venta vs. 31-dic-' + blueAnioBase;
 
   // Brecha contra el oficial. Si el blue salio en vivo, el oficial tambien,
   // para no mezclar una punta de hoy con otra de ayer.
@@ -2197,18 +2224,7 @@ async function loadUVA() {
         const last = uvaApiData[0];
         document.getElementById('val-uva').textContent = fmtN(last[1], 2);
         document.getElementById('src-uva').textContent = last[0] + ' · BCRA API v3';
-        if (uvaApiData.length >= 30) {
-          const vm = (last[1] / uvaApiData[29][1] - 1) * 100;
-          const elM = document.getElementById('val-uva-m');
-          elM.textContent = (vm >= 0 ? '+' : '') + fmtN(vm, 1) + '%';
-          elM.style.color = vm >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
-        }
-        if (uvaApiData.length >= 365) {
-          const via = (last[1] / uvaApiData[364][1] - 1) * 100;
-          const elIA = document.getElementById('val-uva-ia');
-          elIA.textContent = (via >= 0 ? '+' : '') + fmtN(via, 1) + '%';
-          elIA.style.color = via >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
-        }
+        _calcUvaVariaciones(uvaApiData);
         renderUvaChart(); initUvaConsulta();
         return;
       }
@@ -2222,18 +2238,7 @@ async function loadUVA() {
       const last = data[0];
       document.getElementById('val-uva').textContent = fmtN(last[1], 2);
       document.getElementById('src-uva').textContent = last[0] + ' · datos.gob.ar (desactualizado)';
-      if (data.length >= 30) {
-        const vm = (last[1] / data[29][1] - 1) * 100;
-        const elM = document.getElementById('val-uva-m');
-        elM.textContent = (vm >= 0 ? '+' : '') + fmtN(vm, 1) + '%';
-        elM.style.color = vm >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
-      }
-      if (data.length >= 365) {
-        const via = (last[1] / data[364][1] - 1) * 100;
-        const elIA = document.getElementById('val-uva-ia');
-        elIA.textContent = (via >= 0 ? '+' : '') + fmtN(via, 1) + '%';
-        elIA.style.color = via >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
-      }
+      _calcUvaVariaciones(data);
       renderUvaChart(); initUvaConsulta();
       return;
     }
@@ -2255,11 +2260,12 @@ const SNAP_IDS = [
   'val-badlar','src-badlar',
   'val-tamar','src-tamar',
   'val-merval','src-merval','val-merval-usd','src-merval-usd',
-  'val-uva','src-uva','val-uva-m','val-uva-ia',
+  'val-uva','src-uva','val-uva-m','val-uva-ia','val-uva-ytd','val-uva-ytd-sub',
   'val-blue-compra','val-blue-venta','src-blue','src-blue-fecha',
-  'val-blue-m','val-blue-ia','val-blue-brecha',
+  'val-blue-m','val-blue-ia','val-blue-ytd','val-blue-ytd-sub','val-blue-brecha',
   'dolar-ts','refresh-ts',
   'kpi-cac-gen','kpi-cac-mat','kpi-cac-mo','kpi-cac-ia','kpi-cac-fecha',
+  'kpi-cac-ytd','kpi-cac-ytd-sub',
 ];
 // IDs de las variation badges de dólar
 const SNAP_BADGE_IDS = [
@@ -3111,6 +3117,24 @@ function renderCacKpis(data, sourceLabel) {
     // General de abr-2026 aún no publicado por INDEC
     const el = document.getElementById('kpi-cac-ia');
     if (el) { el.textContent = 'Pend.'; el.style.color = 'var(--gris-txt)'; }
+  }
+
+  /* Acumulada en lo que va del año: último dato vs. diciembre del año anterior */
+  const elYtd  = document.getElementById('kpi-cac-ytd');
+  const subYtd = document.getElementById('kpi-cac-ytd-sub');
+  if (elYtd) {
+    const anioBase = last.fecha.getFullYear() - 1;
+    const dicAnt = data.find(r =>
+      r.fecha.getFullYear() === anioBase && r.fecha.getMonth() === 11
+    );
+    if (subYtd) subYtd.textContent = 'vs. dic-' + anioBase;
+    if (dicAnt && last.cacGen != null && dicAnt.cacGen != null) {
+      const ytd = (last.cacGen / dicAnt.cacGen - 1) * 100;
+      elYtd.textContent = (ytd >= 0 ? '+' : '') + fmtN(ytd, 1) + '%';
+      elYtd.style.color = ytd >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+    } else if (last.cacGen == null) {
+      elYtd.textContent = 'Pend.'; elYtd.style.color = 'var(--gris-txt)';
+    }
   }
 
   if (sourceLabel) {
