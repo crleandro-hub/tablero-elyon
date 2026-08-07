@@ -481,6 +481,31 @@ body {
       </div>
     </div>
 
+    <!-- ─── CONSULTA UVA POR FECHA ─── -->
+    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;">
+      <div style="font-size:10px;font-weight:700;color:var(--gris-txt);letter-spacing:1px;margin-bottom:12px;">CONSULTA POR FECHA</div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+        <div>
+          <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:4px;">AÑO</div>
+          <select id="uva-q-anio" class="cac-q-select" onchange="onUvaQAnioChange()"></select>
+        </div>
+        <div>
+          <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:4px;">MES</div>
+          <select id="uva-q-mes" class="cac-q-select" onchange="onUvaQMesChange()"></select>
+        </div>
+        <div>
+          <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:4px;">DÍA</div>
+          <select id="uva-q-dia" class="cac-q-select" style="min-width:80px;" onchange="renderUvaConsulta()"></select>
+        </div>
+        <button type="button" class="cac-q-btn" onclick="uvaQHoy()">Último disponible</button>
+      </div>
+
+      <div id="uva-q-result">
+        <div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">Cargando serie UVA...</div>
+      </div>
+    </div>
+
   </div><!-- /content -->
   <div class="footer">© Grupo Elyon · Tablero de Gestión Interna</div>
 </div>
@@ -849,33 +874,46 @@ async function loadTAMAR() {
 let uvaApiData = []; // [fecha, valor] desc
 
 
+/* Trae la serie UVA del BCRA paginando, para llegar al historico completo
+   (la serie arranca el 31/03/2016; con un solo pedido de 1300 dias solo
+   se cubren ~3 años y medio). Devuelve [] si la API no responde. */
+async function _fetchUvaBcraPaged(limit) {
+  const out = [];
+  for (let offset = 0; offset < 12000; offset += limit) {
+    let rows = [];
+    try {
+      const res = await fetch(
+        `https://api.bcra.gob.ar/estadisticas/v3.0/monetarias/7913?limit=${limit}&offset=${offset}`,
+        { mode: 'cors', headers: { Accept: 'application/json' } });
+      if (!res.ok) break;
+      const json = await res.json();
+      rows = json.results ?? json.data ?? [];
+    } catch (_) { break; }
+    if (!rows.length) break;
+    out.push(...rows.map(r => [r.fecha ?? r.date, r.valor ?? r.value ?? r.v]));
+    if (rows.length < limit) break;   // ultima pagina
+  }
+  return out;
+}
+
 /* Carga el histórico UVA para variaciones y gráfico sin bloquear el valor del caché */
 async function _loadUvaHistorico(valorActual, srcLabel) {
-  // Intentar BCRA API v3
-  try {
-    const res = await fetch('https://api.bcra.gob.ar/estadisticas/v3.0/monetarias/7913?limit=1300', {
-      mode: 'cors', headers: { Accept: 'application/json' },
-    });
-    if (res.ok) {
-      const json = await res.json();
-      const rows = json.results ?? json.data ?? [];
-      if (rows.length) {
-        uvaApiData = rows.map(r => [r.fecha ?? r.date, r.valor ?? r.value ?? r.v]);
-        _calcUvaVariaciones(uvaApiData);
-        renderUvaChart();
-        return;
-      }
-    }
-  } catch (_) {}
-  // Fallback: datos.gob.ar (puede ser stale pero sirve para variaciones)
-  try {
-    const data = await fetchDG('94.2_UVAD_D_0_0_10', 1300);
-    if (data.length) {
-      uvaApiData = data;
-      _calcUvaVariaciones(data);
-      renderUvaChart();
-    }
-  } catch (_) {}
+  // 1) BCRA API v3 paginado (historico completo)
+  let data = await _fetchUvaBcraPaged(3000);
+  // 2) Si el limite alto fue rechazado, reintentar con el limite original
+  if (!data.length) data = await _fetchUvaBcraPaged(1300);
+  // 3) Fallback: datos.gob.ar (puede ser stale pero sirve para variaciones)
+  if (!data.length) {
+    try { data = await fetchDG('94.2_UVAD_D_0_0_10', 1300); } catch (_) {}
+  }
+  if (!data.length) return;
+
+  // Orden descendente por fecha (el resto del codigo asume indice 0 = mas reciente)
+  data.sort((a, b) => String(b[0]).localeCompare(String(a[0])));
+
+  uvaApiData = data;
+  _calcUvaVariaciones(data);
+  renderUvaChart(); initUvaConsulta();
 }
 
 function _calcUvaVariaciones(data) {
@@ -898,6 +936,189 @@ function _calcUvaVariaciones(data) {
       elIA.style.color = via >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
     }
   }
+}
+
+/* ══════════════════════════════════════════
+   CONSULTA UVA POR FECHA (año + mes + día)
+══════════════════════════════════════════ */
+let uvaIndex = null;   // Map 'aaaa-mm-dd' -> valor
+
+/* Indexa uvaApiData por fecha para poder buscar un dia puntual */
+function buildUvaIndex() {
+  uvaIndex = new Map();
+  uvaApiData.forEach(d => {
+    const f = String(Array.isArray(d) ? d[0] : (d.fecha ?? d.date)).slice(0, 10);
+    const bruto = Array.isArray(d) ? d[1] : (d.valor ?? d.value);
+    const v = typeof bruto === 'number' ? bruto : parseFloat(bruto);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(f) && v != null && !isNaN(v) && !uvaIndex.has(f)) {
+      uvaIndex.set(f, v);
+    }
+  });
+}
+
+const uvaISO = (a, m, d) =>
+  `${a}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+/* Arma los desplegables y muestra la ultima fecha disponible */
+function initUvaConsulta() {
+  const selA = document.getElementById('uva-q-anio');
+  if (!selA || !uvaApiData.length) return;
+  buildUvaIndex();
+  if (!uvaIndex.size) return;
+
+  const anios = [...new Set([...uvaIndex.keys()].map(f => +f.slice(0, 4)))].sort((a, b) => b - a);
+  selA.innerHTML = anios.map(a => `<option value="${a}">${a}</option>`).join('');
+
+  const ultima = [...uvaIndex.keys()].sort().pop();   // aaaa-mm-dd mas reciente
+  selA.value = +ultima.slice(0, 4);
+  poblarUvaMeses(+ultima.slice(5, 7) - 1);
+  poblarUvaDias(+ultima.slice(8, 10));
+  renderUvaConsulta();
+}
+
+/* Solo los meses que existen para el año elegido */
+function poblarUvaMeses(mesPreferido) {
+  const selA = document.getElementById('uva-q-anio');
+  const selM = document.getElementById('uva-q-mes');
+  if (!selA || !selM || !uvaIndex) return;
+
+  const anio  = parseInt(selA.value, 10);
+  const meses = [...new Set([...uvaIndex.keys()]
+    .filter(f => +f.slice(0, 4) === anio)
+    .map(f => +f.slice(5, 7) - 1))].sort((a, b) => a - b);
+
+  selM.innerHTML = meses.map(m => `<option value="${m}">${CAC_MESES_LARGOS[m]}</option>`).join('');
+  selM.value = (mesPreferido != null && meses.includes(mesPreferido))
+    ? mesPreferido
+    : meses[meses.length - 1];
+}
+
+/* Solo los dias que existen para ese año y mes */
+function poblarUvaDias(diaPreferido) {
+  const selA = document.getElementById('uva-q-anio');
+  const selM = document.getElementById('uva-q-mes');
+  const selD = document.getElementById('uva-q-dia');
+  if (!selA || !selM || !selD || !uvaIndex) return;
+
+  const anio = parseInt(selA.value, 10);
+  const mes  = parseInt(selM.value, 10);
+  const dias = [...uvaIndex.keys()]
+    .filter(f => +f.slice(0, 4) === anio && +f.slice(5, 7) - 1 === mes)
+    .map(f => +f.slice(8, 10))
+    .sort((a, b) => a - b);
+
+  selD.innerHTML = dias.map(d => `<option value="${d}">${d}</option>`).join('');
+  selD.value = (diaPreferido != null && dias.includes(diaPreferido))
+    ? diaPreferido
+    : dias[dias.length - 1];
+}
+
+function onUvaQAnioChange() {
+  const selM = document.getElementById('uva-q-mes');
+  const selD = document.getElementById('uva-q-dia');
+  const mes = selM ? parseInt(selM.value, 10) : null;
+  const dia = selD ? parseInt(selD.value, 10) : null;
+  poblarUvaMeses(mes);   // conserva mes y dia si existen en el año nuevo
+  poblarUvaDias(dia);
+  renderUvaConsulta();
+}
+
+function onUvaQMesChange() {
+  const selD = document.getElementById('uva-q-dia');
+  poblarUvaDias(selD ? parseInt(selD.value, 10) : null);
+  renderUvaConsulta();
+}
+
+function uvaQHoy() {
+  if (!uvaIndex || !uvaIndex.size) return;
+  const ultima = [...uvaIndex.keys()].sort().pop();
+  document.getElementById('uva-q-anio').value = +ultima.slice(0, 4);
+  poblarUvaMeses(+ultima.slice(5, 7) - 1);
+  poblarUvaDias(+ultima.slice(8, 10));
+  renderUvaConsulta();
+}
+
+/* Valor de una fecha; si ese dia no esta publicado, toma el anterior mas
+   cercano (hasta 10 dias atras) y avisa cual uso. */
+function buscarUva(iso) {
+  if (!uvaIndex) return null;
+  if (uvaIndex.has(iso)) return { valor: uvaIndex.get(iso), fecha: iso, exacta: true };
+  const d = new Date(iso + 'T00:00:00');
+  for (let i = 1; i <= 10; i++) {
+    d.setDate(d.getDate() - 1);
+    const f = uvaISO(d.getFullYear(), d.getMonth(), d.getDate());
+    if (uvaIndex.has(f)) return { valor: uvaIndex.get(f), fecha: f, exacta: false };
+  }
+  return null;
+}
+
+/* Resta meses o años a una fecha ISO */
+function uvaDesplazar(iso, { meses = 0, anios = 0 }) {
+  const d = new Date(iso + 'T00:00:00');
+  if (anios) d.setFullYear(d.getFullYear() - anios);
+  if (meses) d.setMonth(d.getMonth() - meses);
+  return uvaISO(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function renderUvaConsulta() {
+  const cont = document.getElementById('uva-q-result');
+  if (!cont || !uvaIndex || !uvaIndex.size) return;
+
+  const anio = parseInt(document.getElementById('uva-q-anio').value, 10);
+  const mes  = parseInt(document.getElementById('uva-q-mes').value, 10);
+  const dia  = parseInt(document.getElementById('uva-q-dia').value, 10);
+  if (isNaN(anio) || isNaN(mes) || isNaN(dia)) return;
+
+  const iso = uvaISO(anio, mes, dia);
+  const act = buscarUva(iso);
+
+  if (!act) {
+    cont.innerHTML = `<div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">
+      Sin datos para el ${fmtFecha(iso)}.</div>`;
+    return;
+  }
+
+  const mesAnt  = buscarUva(uvaDesplazar(act.fecha, { meses: 1 }));
+  const anioAnt = buscarUva(uvaDesplazar(act.fecha, { anios: 1 }));
+
+  const tarjetaVar = (titulo, ref, etiqueta) => {
+    if (!ref || !ref.valor) {
+      return `<div style="flex:1 1 150px;background:var(--gris-osc);border:1px solid var(--gris-brd);border-radius:8px;padding:12px 14px;">
+        <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:6px;">${titulo}</div>
+        <div style="font-size:22px;font-weight:700;color:var(--gris-txt);line-height:1;">—</div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">fuera de la serie</div>
+      </div>`;
+    }
+    const pct   = (act.valor / ref.valor - 1) * 100;
+    const color = pct >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+    const signo = pct >= 0 ? '+' : '';
+    return `<div style="flex:1 1 150px;background:var(--gris-osc);border:1px solid var(--gris-brd);border-radius:8px;padding:12px 14px;">
+      <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:6px;">${titulo}</div>
+      <div style="font-size:22px;font-weight:700;color:${color};line-height:1;">${signo}${fmtN(pct, 1)}%</div>
+      <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">${etiqueta}: $ ${fmtN(ref.valor, 2)}</div>
+    </div>`;
+  };
+
+  const aviso = act.exacta ? '' :
+    `<div style="font-size:10px;color:var(--gris-txt);margin-top:8px;">
+       El ${fmtFecha(iso)} no tiene valor publicado. Se muestra el último anterior disponible.
+     </div>`;
+
+  cont.innerHTML = `
+    <div style="font-size:11px;color:var(--gris-txt);margin-bottom:10px;">
+      UVA al <span style="color:#fff;font-weight:700;">${fmtFecha(act.fecha)}</span>
+      <span> · base 31/03/2016 = $ 14,05</span>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <div style="flex:1 1 150px;background:var(--gris-osc);border:1px solid var(--rojo);border-radius:8px;padding:12px 14px;">
+        <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:6px;">VALOR UVA</div>
+        <div style="font-size:22px;font-weight:700;color:#fff;line-height:1;">$ ${fmtN(act.valor, 2)}</div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">${fmtFecha(act.fecha)}</div>
+      </div>
+      ${tarjetaVar('VAR. MENSUAL',    mesAnt,  'mes anterior')}
+      ${tarjetaVar('VAR. INTERANUAL', anioAnt, 'año anterior')}
+    </div>
+    ${aviso}`;
 }
 
 async function loadUVA() {
@@ -935,7 +1156,7 @@ async function loadUVA() {
           elIA.textContent = (via >= 0 ? '+' : '') + fmtN(via, 1) + '%';
           elIA.style.color = via >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
         }
-        renderUvaChart();
+        renderUvaChart(); initUvaConsulta();
         return;
       }
     }
@@ -960,7 +1181,7 @@ async function loadUVA() {
         elIA.textContent = (via >= 0 ? '+' : '') + fmtN(via, 1) + '%';
         elIA.style.color = via >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
       }
-      renderUvaChart();
+      renderUvaChart(); initUvaConsulta();
       return;
     }
   } catch (_) {}
