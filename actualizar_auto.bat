@@ -36,26 +36,34 @@ if exist ".git\index.lock"               del /f /q ".git\index.lock"
 if exist ".git\HEAD.lock"                del /f /q ".git\HEAD.lock"
 if exist ".git\objects\maintenance.lock" del /f /q ".git\objects\maintenance.lock"
 
-call :log "[1/5] BCRA - valores del dia (TAMAR / BADLAR / UVA)..."
+call :log "[1/7] BCRA - valores del dia (TAMAR / BADLAR / UVA)..."
 %PY% update_bcra_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_bcra_cache.py - se conservan los datos previos."
 
-call :log "[2/5] BCRA - serie historica UVA..."
+call :log "[2/7] BCRA - serie historica UVA..."
 %PY% update_uva_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_uva_cache.py - se conserva la serie previa."
 
-call :log "[3/5] Indice CAC..."
+call :log "[3/7] Indice CAC..."
 %PY% update_cac_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_cac_cache.py - se conservan los datos previos."
 
-call :log "[4/5] Generando docs\index.html y version portable..."
+call :log "[4/7] Indice MERVAL (pesos y dolares)..."
+%PY% update_merval_cache.py >> "%LOG%" 2>&1
+if errorlevel 1 call :log "[AVISO] Fallo update_merval_cache.py - se conservan los datos previos."
+
+call :log "[5/7] REM del BCRA (inflacion esperada)..."
+%PY% update_rem_cache.py >> "%LOG%" 2>&1
+if errorlevel 1 call :log "[AVISO] Fallo update_rem_cache.py - se conservan los datos previos."
+
+call :log "[6/7] Generando docs\index.html y version portable..."
 %PY% build_publicar.py >> "%LOG%" 2>&1
 if errorlevel 1 (
   call :log "[ERROR] Fallo build_publicar.py. No se publica."
   goto :fin
 )
 
-call :log "[5/5] Publicando en GitHub Pages..."
+call :log "[7/7] Publicando en GitHub Pages..."
 git add -A >> "%LOG%" 2>&1
 git commit -m "Actualizacion automatica de indicadores %date%" >> "%LOG%" 2>&1
 if errorlevel 1 (

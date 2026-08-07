@@ -32,6 +32,8 @@ SRC_HTML = os.path.join(BASE_DIR, "tablero_elyon.html")
 BCRA_JS = os.path.join(BASE_DIR, "bcra_cache.js")
 CAC_JS = os.path.join(BASE_DIR, "cac_cache.js")
 UVA_JS = os.path.join(BASE_DIR, "uva_cache.js")
+MERVAL_JS = os.path.join(BASE_DIR, "merval_cache.js")
+REM_JS = os.path.join(BASE_DIR, "rem_cache.js")
 
 DOCS_DIR = os.path.join(BASE_DIR, "docs")
 OUT_PAGES = os.path.join(DOCS_DIR, "index.html")
@@ -77,10 +79,14 @@ def main():
     bcra = leer(BCRA_JS, obligatorio=False)
     cac = leer(CAC_JS, obligatorio=False)
     uva = leer(UVA_JS, obligatorio=False)
+    merval = leer(MERVAL_JS, obligatorio=False)
+    rem = leer(REM_JS, obligatorio=False)
 
     html = inline(html, "bcra_cache.js", bcra, "BCRA_CACHE")
     html = inline(html, "cac_cache.js", cac, "CAC_CACHE")
     html = inline(html, "uva_cache.js", uva, "UVA_CACHE")
+    html = inline(html, "merval_cache.js", merval, "MERVAL_CACHE")
+    html = inline(html, "rem_cache.js", rem, "REM_CACHE")
 
     ts = datetime.now().strftime("%d/%m/%Y %H:%M")
     sello = (
@@ -123,6 +129,21 @@ def main():
     print("       BADLAR: " + val_bcra(bcra, "badlar"))
     print("       UVA   : " + val_bcra(bcra, "uva"))
     print("       CAC   : ultimo mes " + ultimo_cac(cac))
+
+    def val_simple(txt, clave, sufijo=""):
+        if not txt:
+            return "sin datos"
+        m = re.search(clave + r":\s*([-\d.]+|null)", txt)
+        if not m or m.group(1) == "null":
+            return "sin datos"
+        return m.group(1) + sufijo
+
+    print("       MERVAL: " + val_simple(merval, "ars", " pts")
+          + " / USD " + val_simple(merval, "usd"))
+    print("       REM   : " + val_simple(rem, "anual", "% i.a. dic")
+          + " (relevamiento " + (re.search(r'relev:\s*"([^"]+)"', rem or "").group(1)
+                                 if rem and re.search(r'relev:\s*"([^"]+)"', rem)
+                                 else "sin datos") + ")")
     print("")
     print("     Para publicar: hace commit y push de la carpeta docs/")
     print("     (ver PUBLICAR.txt para los pasos completos)")

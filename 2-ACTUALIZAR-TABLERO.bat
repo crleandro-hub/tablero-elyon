@@ -42,21 +42,31 @@ if exist ".git\index.lock"               del /f /q ".git\index.lock"
 if exist ".git\HEAD.lock"                del /f /q ".git\HEAD.lock"
 if exist ".git\objects\maintenance.lock" del /f /q ".git\objects\maintenance.lock"
 
-echo [1/5] Actualizando BCRA (TAMAR / BADLAR / UVA)...
+echo [1/7] Actualizando BCRA (TAMAR / BADLAR / UVA)...
 %PY% update_bcra_cache.py
 if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
 echo.
-echo [2/5] Actualizando serie historica UVA...
+echo [2/7] Actualizando serie historica UVA...
 %PY% update_uva_cache.py
 if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
 
 echo.
-echo [3/5] Actualizando indice CAC...
+echo [3/7] Actualizando indice CAC...
 %PY% update_cac_cache.py
 if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
 
 echo.
-echo [4/5] Generando docs\index.html y version portable...
+echo [4/7] Actualizando indice MERVAL (pesos y dolares)...
+%PY% update_merval_cache.py
+if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
+
+echo.
+echo [5/7] Actualizando REM del BCRA (inflacion esperada)...
+%PY% update_rem_cache.py
+if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
+
+echo.
+echo [6/7] Generando docs\index.html y version portable...
 %PY% build_publicar.py
 if errorlevel 1 (
   echo [ERROR] Fallo build_publicar.py. Cancelado.
@@ -65,7 +75,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo [5/5] Publicando en GitHub Pages...
+echo [7/7] Publicando en GitHub Pages...
 git add -A
 git commit -m "Actualizacion de indicadores %date% %time%" 2>nul
 if errorlevel 1 (

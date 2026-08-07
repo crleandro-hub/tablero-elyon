@@ -181,6 +181,35 @@ body {
 }
 .period-select:focus { border-color: var(--rojo); }
 
+/* DESPLEGABLE MULTI-SELECCIÓN (cotizaciones del gráfico) */
+.multi-dd { position: relative; display: inline-block; }
+.multi-dd-btn {
+  display: inline-flex; align-items: center; gap: 8px; justify-content: space-between;
+  min-width: 130px; font-family: inherit; text-align: left;
+}
+.multi-dd-panel {
+  display: none; position: absolute; right: 0; top: calc(100% + 5px); z-index: 60;
+  background: var(--gris-osc); border: 1px solid var(--gris-brd); border-radius: 8px;
+  padding: 8px; min-width: 195px; box-shadow: 0 10px 26px rgba(0,0,0,.55);
+}
+.multi-dd.open .multi-dd-panel { display: block; }
+.multi-dd-panel label {
+  display: flex; align-items: center; gap: 8px; padding: 6px 8px; font-size: 11px;
+  color: #ddd; cursor: pointer; border-radius: 5px; white-space: nowrap; user-select: none;
+}
+.multi-dd-panel label:hover { background: var(--gris-med); }
+.multi-dd-panel input[type=checkbox] { accent-color: var(--rojo); cursor: pointer; margin: 0; }
+.dd-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.multi-dd-actions {
+  display: flex; gap: 6px; border-top: 1px solid var(--gris-brd);
+  margin-top: 6px; padding-top: 7px;
+}
+.multi-dd-actions button {
+  flex: 1; background: var(--gris-med); border: 1px solid var(--gris-brd); color: var(--gris-txt);
+  border-radius: 5px; font-size: 10px; padding: 4px 6px; cursor: pointer; font-family: inherit;
+}
+.multi-dd-actions button:hover { color: #fff; border-color: var(--rojo); }
+
 /* FOOTER */
 .footer { text-align: center; padding: 18px; font-size: 10px; color: var(--gris-txt); border-top: 1px solid var(--gris-brd); flex-shrink: 0; }
 
@@ -356,6 +385,18 @@ body {
         <div class="kpi-sub" id="src-inf-ia">Últ. 12 meses · INDEC</div>
       </div>
 
+      <div class="card" id="card-inf-acum">
+        <div class="kpi-label">Inflación acumulada</div>
+        <div class="kpi-value" id="val-inf-acum">—</div>
+        <div class="kpi-sub" id="src-inf-acum">Año en curso · INDEC</div>
+      </div>
+
+      <div class="card" id="card-rem">
+        <div class="kpi-label">Inflación esperada (REM)</div>
+        <div class="kpi-value" id="val-rem">—</div>
+        <div class="kpi-sub" id="src-rem">Mediana REM · BCRA</div>
+      </div>
+
       <div class="card" id="card-riesgo">
         <div class="kpi-label">Riesgo País</div>
         <div class="kpi-value" id="val-riesgo">—</div>
@@ -372,6 +413,18 @@ body {
         <div class="kpi-label">Tasa TAMAR</div>
         <div class="kpi-value" id="val-tamar">—</div>
         <div class="kpi-sub" id="src-tamar">Bancos priv. · BCRA</div>
+      </div>
+
+      <div class="card" id="card-merval">
+        <div class="kpi-label">MERVAL (pesos)</div>
+        <div class="kpi-value" id="val-merval">—</div>
+        <div class="kpi-sub" id="src-merval">S&amp;P Merval · BYMA</div>
+      </div>
+
+      <div class="card" id="card-merval-usd">
+        <div class="kpi-label">MERVAL (USD)</div>
+        <div class="kpi-value" id="val-merval-usd">—</div>
+        <div class="kpi-sub" id="src-merval-usd">Merval ÷ CCL</div>
       </div>
 
     </div>
@@ -551,22 +604,42 @@ body {
       </div>
     </div>
 
-    <!-- Gráfico dólar blue -->
+    <!-- Gráfico de cotizaciones del dólar -->
     <div id="blue-chart-section" style="margin-top:4px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
         <div>
-          <div class="sub-title">Evolución del dólar blue</div>
-          <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">Serie diaria de cierre · ArgentinaDatos · un día de rezago frente al valor en vivo de arriba</div>
+          <div class="sub-title">Comparación entre Tipos de Dolares</div>
+          <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">Punta vendedora · serie diaria de cierre · ArgentinaDatos · un día de rezago frente al valor en vivo de arriba</div>
         </div>
-        <select class="period-select" id="blue-range" onchange="renderBlueChart()">
-          <option value="365">Último año</option>
-          <option value="1095">Últimos 3 años</option>
-          <option value="1825">Últimos 5 años</option>
-          <option value="0">Histórico completo</option>
-        </select>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+
+          <!-- Desplegable multi-selección de cotizaciones -->
+          <div class="multi-dd" id="usd-dd">
+            <button type="button" class="period-select multi-dd-btn" id="usd-dd-btn" onclick="toggleUsdDD(event)">
+              <span id="usd-dd-label">Todos</span><span style="opacity:.55;font-size:9px;">▼</span>
+            </button>
+            <div class="multi-dd-panel" id="usd-dd-panel">
+              <label><input type="checkbox" value="oficial" checked onchange="onUsdChartSel()"><span class="dd-dot" style="background:#60a5fa"></span>Oficial</label>
+              <label><input type="checkbox" value="blue" checked onchange="onUsdChartSel()"><span class="dd-dot" style="background:#CC0000"></span>Blue / Informal</label>
+              <label><input type="checkbox" value="bolsa" checked onchange="onUsdChartSel()"><span class="dd-dot" style="background:#34d399"></span>MEP (Bolsa)</label>
+              <label><input type="checkbox" value="contadoconliqui" checked onchange="onUsdChartSel()"><span class="dd-dot" style="background:#f59e0b"></span>CCL (Cable)</label>
+              <div class="multi-dd-actions">
+                <button type="button" onclick="usdDDAll(true)">Todos</button>
+                <button type="button" onclick="usdDDAll(false)">Ninguno</button>
+              </div>
+            </div>
+          </div>
+
+          <select class="period-select" id="blue-range" onchange="renderBlueChart()">
+            <option value="365">Último año</option>
+            <option value="1095">Últimos 3 años</option>
+            <option value="1825">Últimos 5 años</option>
+            <option value="0">Histórico completo</option>
+          </select>
+        </div>
       </div>
       <div class="chart-wrap">
-        <canvas id="chart-blue" role="img" aria-label="Evolución del dólar blue"></canvas>
+        <canvas id="chart-blue" role="img" aria-label="Evolución de las cotizaciones del dólar"></canvas>
       </div>
     </div>
 
@@ -612,6 +685,8 @@ body {
 <script src="bcra_cache.js"></script>
 <script src="cac_cache.js"></script>  <!-- generado por update_cac_cache.py -->
 <script src="uva_cache.js"></script>  <!-- generado por update_uva_cache.py -->
+<script src="merval_cache.js"></script>  <!-- generado por update_merval_cache.py -->
+<script src="rem_cache.js"></script>  <!-- generado por update_rem_cache.py -->
 <!-- ══════════════════════════════════════
      JAVASCRIPT
 ══════════════════════════════════════ -->
@@ -858,10 +933,11 @@ function setMacro(valId, srcId, text, src, color) {
 
 /* ── Inflación (INDEC vía datos.gob.ar) ── */
 async function loadInflacion() {
-  // Serie 148.3_INIVELNAL_DICI_M_26 = IPC Nacional nivel general
-  // Traemos 14 meses y calculamos variaciones manualmente
+  // Serie 148.3_INIVELNAL_DICI_M_26 = IPC Nacional nivel general (indice, base dic-2016)
+  // Traemos 26 meses: alcanza para mensual, interanual y acumulado del año
+  // en curso (que se mide contra el indice de diciembre del año anterior).
   try {
-    const data = await fetchDG('148.3_INIVELNAL_DICI_M_26', 14);
+    const data = await fetchDG('148.3_INIVELNAL_DICI_M_26', 26);
     if (data.length >= 2) {
       const pctM = (data[0][1] / data[1][1] - 1) * 100;
       setMacro('val-inf-m', 'src-inf-m',
@@ -876,9 +952,123 @@ async function loadInflacion() {
         'Interanual a ' + fmtMes(data[0][0]) + ' · INDEC · datos.gob.ar',
         'var(--rojo-txt)');
     }
+
+    /* ── Acumulada del año en curso: ultimo indice contra el de diciembre
+       del año anterior. Si el ultimo dato ya ES diciembre, el acumulado
+       del año es diciembre contra el diciembre previo. ── */
+    const anioUlt = +String(data[0][0]).slice(0, 4);
+    const baseDic = data.find(r => String(r[0]).slice(0, 7) === (anioUlt - 1) + '-12');
+    if (baseDic && baseDic[1]) {
+      const pctAcum = (data[0][1] / baseDic[1] - 1) * 100;
+      const meses   = +String(data[0][0]).slice(5, 7);
+      setMacro('val-inf-acum', 'src-inf-acum',
+        fmtN(pctAcum, 1) + '%',
+        `${anioUlt} · ${meses} ${meses === 1 ? 'mes' : 'meses'} a ${fmtMes(data[0][0])} · INDEC`,
+        'var(--rojo-txt)');
+    } else {
+      setMacro('val-inf-acum', 'src-inf-acum', 'N/D', 'Sin base de diciembre', '');
+    }
   } catch (e) {
-    setMacro('val-inf-m',  'src-inf-m',  'N/D', 'Sin conexión', '');
-    setMacro('val-inf-ia', 'src-inf-ia', 'N/D', 'Sin conexión', '');
+    setMacro('val-inf-m',    'src-inf-m',    'N/D', 'Sin conexión', '');
+    setMacro('val-inf-ia',   'src-inf-ia',   'N/D', 'Sin conexión', '');
+    setMacro('val-inf-acum', 'src-inf-acum', 'N/D', 'Sin conexión', '');
+  }
+}
+
+/* ══════════════════════════════════════════
+   REM — Relevamiento de Expectativas de Mercado (BCRA)
+   El BCRA publica el REM en planillas, sin API propia. Se usan, en orden:
+     1) rem_cache.js, generado por update_rem_cache.py en la tarea diaria
+     2) copia guardada en localStorage (evita pegarle a la API en cada carga:
+        el servicio limita a 1 pedido por minuto y por IP)
+     3) API publica bcra-rem-api (proyecto abierto que normaliza la planilla)
+   Se muestra la mediana esperada para diciembre del año en curso y, en el
+   subtitulo, la de los proximos 12 meses y el mes del relevamiento.
+══════════════════════════════════════════ */
+const REM_API   = 'https://bcra-rem-api.facujallia.workers.dev/api/ipc_general';
+const REM_LS    = 'elyon_rem_cache';
+const REM_TTL_H = 12;   // horas de validez de la copia en localStorage
+
+/* De la tabla del REM extrae los tres numeros que nos interesan */
+function _remResumen(datos, periodoRelev) {
+  if (!Array.isArray(datos) || !datos.length) return null;
+  const anio = new Date().getFullYear();
+
+  const buscar = pred => {
+    const r = datos.find(pred);
+    return r && r.mediana != null ? Number(r.mediana) : null;
+  };
+  const per = r => String(r['período'] ?? r.periodo ?? '');
+
+  return {
+    anual:   buscar(r => per(r) === String(anio)),
+    m12:     buscar(r => per(r).toLowerCase().includes('12 meses')),
+    // primer mes proyectado (var. % mensual) que todavia no publico el INDEC
+    mensual: buscar(r => /^\d{4}-\d{2}/.test(per(r))),
+    relev:   periodoRelev || null,
+    anio,
+  };
+}
+
+/* El numero que el BCRA destaca como "inflacion esperada" es la mediana de
+   los proximos 12 meses. La proyeccion a diciembre del año en curso va en el
+   subtitulo, junto con el mes del relevamiento. */
+function _pintarREM(res) {
+  if (!res || (res.m12 == null && res.anual == null)) {
+    setMacro('val-rem', 'src-rem', 'N/D', 'REM no disponible', '');
+    return;
+  }
+  const usaM12 = res.m12 != null;
+  const valor  = usaM12 ? res.m12 : res.anual;
+  const anio   = res.anio || new Date().getFullYear();
+
+  const partes = [usaM12 ? 'próx. 12 meses' : `dic-${String(anio).slice(2)} i.a.`];
+  if (usaM12 && res.anual != null) {
+    partes.push(`dic-${String(anio).slice(2)}: ` + fmtN(res.anual, 1) + '%');
+  }
+  partes.push(res.relev ? 'REM ' + fmtMes(res.relev + '-01') : 'BCRA');
+
+  setMacro('val-rem', 'src-rem', fmtN(valor, 1) + '%', partes.join(' · '), '#f59e0b');
+}
+
+async function loadREM() {
+  /* 1) Caché generado por la tarea diaria contra la planilla del BCRA */
+  const c = window.REM_CACHE;
+  if (c && (c.m12 != null || c.anual != null)) {
+    _pintarREM({ ...c, anio: c.anio || new Date().getFullYear() });
+    return;
+  }
+
+  /* 2) Copia en localStorage todavia fresca */
+  try {
+    const raw = localStorage.getItem(REM_LS);
+    if (raw) {
+      const c = JSON.parse(raw);
+      if (c.ts && (Date.now() - c.ts) < REM_TTL_H * 3600e3 && c.res) {
+        _pintarREM(c.res);
+        return;
+      }
+    }
+  } catch (_) {}
+
+  /* 3) API publica */
+  try {
+    const res = await fetch(REM_API, { headers: { Accept: 'application/json' } });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const j = await res.json();
+    const meta = await fetch(REM_API.replace('/ipc_general', '/metadata'))
+      .then(r => r.ok ? r.json() : null).catch(() => null);
+    const resumen = _remResumen(j.datos, meta && meta.periodo);
+    if (!resumen) throw new Error('sin datos');
+    _pintarREM(resumen);
+    try { localStorage.setItem(REM_LS, JSON.stringify({ ts: Date.now(), res: resumen })); } catch (_) {}
+  } catch (_) {
+    /* 4) Copia vieja de localStorage antes que nada */
+    try {
+      const c = JSON.parse(localStorage.getItem(REM_LS) || 'null');
+      if (c && c.res) { _pintarREM(c.res); return; }
+    } catch (_) {}
+    setMacro('val-rem', 'src-rem', 'N/D', 'REM no disponible', '');
   }
 }
 
@@ -967,6 +1157,132 @@ async function loadTAMAR() {
     ref ? '~' + fmtN(ref.valor, 2) + '% TNA' : 'N/D',
     ref ? ref.fecha + ' · Ref. bcra_cache.js (sin API)' : 'API BCRA no disponible · Ver bcra.gob.ar',
     '');
+}
+
+/* ══════════════════════════════════════════
+   MERVAL — índice S&P Merval (BYMA)
+   En pesos: cierre diario del ticker ^MERV.
+   En dólares: Merval en pesos dividido el CCL (contado con liqui) de la
+   misma rueda, que es la convencion de mercado para el "Merval en USD".
+══════════════════════════════════════════ */
+let mervalSerie = [];   // [{fecha, cierre}] ascendente
+
+/* Parsea la respuesta del chart de Yahoo Finance a [{fecha, cierre}] */
+function _parseMervalYahoo(json) {
+  const r  = json && json.chart && json.chart.result && json.chart.result[0];
+  if (!r) return [];
+  const ts = r.timestamp || [];
+  const cl = (r.indicators && r.indicators.quote && r.indicators.quote[0] &&
+              r.indicators.quote[0].close) || [];
+  const out = [];
+  for (let i = 0; i < ts.length; i++) {
+    const v = cl[i];
+    if (v == null || isNaN(v)) continue;
+    const d = new Date(ts[i] * 1000);
+    out.push({ fecha: uvaISO(d.getFullYear(), d.getMonth(), d.getDate()), cierre: Number(v) });
+  }
+  // deduplicar por fecha quedandose con el ultimo cierre del dia
+  const idx = new Map();
+  out.forEach(r2 => idx.set(r2.fecha, r2.cierre));
+  return [...idx.entries()].map(([fecha, cierre]) => ({ fecha, cierre }))
+         .sort((a, b) => a.fecha.localeCompare(b.fecha));
+}
+
+/* Cascada de fuentes: Yahoo directo (query1 y query2) y, si el navegador
+   bloquea por CORS, un proxy publico de solo lectura. Devuelve [] si falla. */
+async function _fetchMervalSerie() {
+  const path = '/v8/finance/chart/%5EMERV?range=2y&interval=1d';
+  const urls = [
+    'https://query1.finance.yahoo.com' + path,
+    'https://query2.finance.yahoo.com' + path,
+    'https://api.allorigins.win/raw?url=' +
+      encodeURIComponent('https://query1.finance.yahoo.com' + path),
+  ];
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, { mode: 'cors', headers: { Accept: 'application/json' } });
+      if (!res.ok) continue;
+      const serie = _parseMervalYahoo(await res.json());
+      if (serie.length) return serie;
+    } catch (_) {}
+  }
+  return [];
+}
+
+/* Dibuja las dos tarjetas a partir de {fecha, ars, arsVar, usd, usdVar, fuente} */
+function _pintarMerval(d) {
+  if (!d || d.ars == null) {
+    setMacro('val-merval',     'src-merval',     'N/D', 'Sin conexión', '');
+    setMacro('val-merval-usd', 'src-merval-usd', 'N/D', 'Sin conexión', '');
+    return;
+  }
+  const badge = pct => pct == null ? '' :
+    (pct >= 0 ? '▲ +' : '▼ ') + fmtN(pct, 2) + '% · ';
+  const color = pct => pct == null ? '#e5e7eb'
+    : pct >= 0 ? 'var(--verde)' : 'var(--rojo-txt)';
+
+  const pie = fmtFecha(d.fecha) + ' · ' + (d.fuente || 'S&P Merval · BYMA');
+
+  setMacro('val-merval', 'src-merval',
+    fmtN(d.ars, 0) + ' pts', badge(d.arsVar) + pie, color(d.arsVar));
+
+  if (d.usd == null) {
+    setMacro('val-merval-usd', 'src-merval-usd', 'N/D', 'CCL no disponible', '');
+  } else {
+    setMacro('val-merval-usd', 'src-merval-usd',
+      'US$ ' + fmtN(d.usd, 0),
+      badge(d.usdVar) + fmtFecha(d.fecha) + ' · Merval ÷ CCL',
+      color(d.usdVar));
+  }
+}
+
+async function loadMerval() {
+  /* 1) merval_cache.js — lo escribe update_merval_cache.py en la tarea diaria.
+     Es la fuente principal: desde el navegador la mayoria de los proveedores
+     de indices bloquean el pedido por CORS, pero Python no tiene esa
+     restriccion. Se pinta primero para que la tarjeta nunca quede vacia. */
+  const c = window.MERVAL_CACHE;
+  if (c && c.ars != null) {
+    _pintarMerval(c);
+    if (Array.isArray(c.serie)) {
+      mervalSerie = c.serie.map(r => ({ fecha: r[0], cierre: Number(r[1]) }));
+    }
+  }
+
+  /* 2) Intento en vivo. Si el navegador lo permite, actualiza el cierre del
+     dia; si no, queda lo del cache y no se pisa nada. */
+  const serie = await _fetchMervalSerie();
+  if (!serie.length) {
+    if (!c || c.ars == null) _pintarMerval(null);
+    return;
+  }
+  mervalSerie = serie;
+
+  const hoy  = serie[serie.length - 1];
+  const prev = serie[serie.length - 2];
+  const d = {
+    fecha:  hoy.fecha,
+    ars:    hoy.cierre,
+    arsVar: prev && prev.cierre ? (hoy.cierre / prev.cierre - 1) * 100 : null,
+    usd:    null,
+    usdVar: null,
+    fuente: 'S&P Merval · BYMA',
+  };
+
+  /* Merval en dolares = Merval en pesos ÷ CCL de la misma rueda */
+  await loadUsdSerie('contadoconliqui');
+  const cclHoy  = buscarUsd('contadoconliqui', hoy.fecha);
+  const cclPrev = prev ? buscarUsd('contadoconliqui', prev.fecha) : null;
+  if (cclHoy && cclHoy.venta) {
+    d.usd = hoy.cierre / cclHoy.venta;
+    if (prev && cclPrev && cclPrev.venta) {
+      d.usdVar = (d.usd / (prev.cierre / cclPrev.venta) - 1) * 100;
+    }
+  } else if (c && c.usd != null && c.fecha === hoy.fecha) {
+    d.usd = c.usd; d.usdVar = c.usdVar;
+  }
+
+  _pintarMerval(d);
 }
 
 /* ── UVA (BCRA vía datos.gob.ar) ── */
@@ -1289,13 +1605,31 @@ const USD_CASAS = {
    valia $4,50 y redondeado a pesos se vuelve inservible. */
 const fmtARS2 = v => v != null && !isNaN(v) ? '$ ' + fmtN(v, 2) : 'N/D';
 
-const usdSeries = {};   // casa -> [{fecha, compra, venta}] descendente
-const usdIndex  = {};   // casa -> Map 'aaaa-mm-dd' -> {compra, venta}
-let blueChart   = null;
+const usdSeries  = {};   // casa -> [{fecha, compra, venta}] descendente
+const usdIndex   = {};   // casa -> Map 'aaaa-mm-dd' -> {compra, venta}
+const usdPending = {};   // casa -> promesa en vuelo (evita descargas duplicadas)
+let blueChart    = null;
+
+/* Colores y etiquetas cortas de cada cotizacion en el grafico */
+const USD_CHART_COLOR = {
+  oficial:         '#60a5fa',
+  blue:            '#CC0000',
+  bolsa:           '#34d399',
+  contadoconliqui: '#f59e0b',
+};
+const USD_CHART_SHORT = {
+  oficial: 'Oficial', blue: 'Blue', bolsa: 'MEP', contadoconliqui: 'CCL',
+};
 
 /* Descarga y cachea la serie completa de una casa. [] si falla. */
 async function loadUsdSerie(casa) {
-  if (usdSeries[casa]) return usdSeries[casa];
+  if (usdSeries[casa])  return usdSeries[casa];
+  if (usdPending[casa]) return usdPending[casa];
+  usdPending[casa] = _fetchUsdSerie(casa);
+  return usdPending[casa];
+}
+
+async function _fetchUsdSerie(casa) {
   try {
     const res = await fetch(`https://api.argentinadatos.com/v1/cotizaciones/dolares/${casa}`);
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -1407,34 +1741,102 @@ async function loadBlue() {
     }
   }
 
-  renderBlueChart();
+  onUsdChartSel();      // baja las cotizaciones tildadas y dibuja el grafico
   initUsdConsulta();
 }
 
-function renderBlueChart() {
-  const serie = usdSeries['blue'];
-  if (!serie || !serie.length) return;
-  const rangeEl = document.getElementById('blue-range');
-  const days    = rangeEl ? parseInt(rangeEl.value, 10) : 365;
-  const raw     = days > 0 ? serie.slice(0, days) : serie;
-  const datos   = [...raw].reverse();   // ascendente para el grafico
+/* ── Desplegable multi-selección de cotizaciones del gráfico ── */
+function usdChartSel() {
+  return [...document.querySelectorAll('#usd-dd-panel input[type=checkbox]')]
+    .filter(c => c.checked).map(c => c.value);
+}
 
+function toggleUsdDD(ev) {
+  if (ev) ev.stopPropagation();
+  const dd = document.getElementById('usd-dd');
+  if (dd) dd.classList.toggle('open');
+}
+
+/* Cerrar el panel al hacer clic afuera */
+document.addEventListener('click', e => {
+  const dd = document.getElementById('usd-dd');
+  if (dd && dd.classList.contains('open') && !dd.contains(e.target)) dd.classList.remove('open');
+});
+
+function usdDDAll(marcar) {
+  document.querySelectorAll('#usd-dd-panel input[type=checkbox]')
+    .forEach(c => { c.checked = marcar; });
+  onUsdChartSel();
+}
+
+/* Al cambiar la seleccion: baja las series que falten y redibuja */
+async function onUsdChartSel() {
+  const sel = usdChartSel();
+  const lbl = document.getElementById('usd-dd-label');
+  if (lbl) {
+    lbl.textContent = !sel.length      ? 'Ninguno'
+                    : sel.length === 4 ? 'Todos'
+                    : sel.map(k => USD_CHART_SHORT[k]).join(' · ');
+  }
+  await Promise.allSettled(sel.map(k => loadUsdSerie(k)));
+  renderBlueChart();
+}
+
+function renderBlueChart() {
   const ctx = document.getElementById('chart-blue');
   if (!ctx) return;
+
+  const sel     = usdChartSel();
+  const rangeEl = document.getElementById('blue-range');
+  const days    = rangeEl ? parseInt(rangeEl.value, 10) : 365;
+
+  /* Eje X = union de fechas de las series elegidas, recortada por rango.
+     Se usan dias calendario (no cantidad de registros) para que todas las
+     cotizaciones compartan exactamente la misma ventana temporal. */
+  const todas = new Set();
+  sel.forEach(k => (usdSeries[k] || []).forEach(r => todas.add(r.fecha)));
+  let fechas = [...todas].sort();
+
+  if (!fechas.length) {
+    if (blueChart) { blueChart.destroy(); blueChart = null; }
+    return;
+  }
+
+  if (days > 0) {
+    const d = new Date(fechas[fechas.length - 1] + 'T00:00:00');
+    d.setDate(d.getDate() - days);
+    const corte = uvaISO(d.getFullYear(), d.getMonth(), d.getDate());
+    fechas = fechas.filter(f => f >= corte);
+  }
+
+  const solo     = sel.length === 1;   // con una sola casa mostramos compra y venta
+  const datasets = [];
+
+  sel.forEach(k => {
+    const idx = usdIndex[k];
+    if (!idx || !idx.size) return;
+    const col = USD_CHART_COLOR[k] || '#888';
+    datasets.push({
+      label: solo ? 'Venta' : USD_CASAS[k],
+      data:  fechas.map(f => idx.has(f) ? idx.get(f).venta : null),
+      borderColor: col,
+      backgroundColor: col + '1A',
+      borderWidth: 2, pointRadius: 0, tension: .25, fill: solo, spanGaps: true,
+    });
+    if (solo) {
+      datasets.push({
+        label: 'Compra',
+        data:  fechas.map(f => idx.has(f) ? idx.get(f).compra : null),
+        borderColor: '#888', borderWidth: 1.5, pointRadius: 0,
+        tension: .25, fill: false, borderDash: [4, 3], spanGaps: true,
+      });
+    }
+  });
+
   if (blueChart) blueChart.destroy();
   blueChart = new Chart(ctx.getContext('2d'), {
     type: 'line',
-    data: {
-      labels: datos.map(r => fmtFecha(r.fecha)),
-      datasets: [
-        { label: 'Venta',  data: datos.map(r => r.venta),
-          borderColor: '#CC0000', backgroundColor: 'rgba(204,0,0,.10)',
-          borderWidth: 2, pointRadius: 0, tension: .25, fill: true },
-        { label: 'Compra', data: datos.map(r => r.compra),
-          borderColor: '#888', borderWidth: 1.5, pointRadius: 0,
-          tension: .25, fill: false, borderDash: [4, 3] },
-      ],
-    },
+    data: { labels: fechas.map(fmtFecha), datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
@@ -1442,8 +1844,9 @@ function renderBlueChart() {
         legend: { labels: { color: '#888', boxWidth: 12, font: { size: 10 } } },
         tooltip: {
           callbacks: {
-            label: c => ` ${c.dataset.label}: $ ${Number(c.parsed.y)
-              .toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            label: c => c.parsed.y == null ? null
+              : ` ${c.dataset.label}: $ ${Number(c.parsed.y)
+                  .toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           },
         },
       },
@@ -1694,9 +2097,11 @@ async function loadUVA() {
 // IDs de elementos de texto a guardar/restaurar
 const SNAP_IDS = [
   'val-inf-m','src-inf-m','val-inf-ia','src-inf-ia',
+  'val-inf-acum','src-inf-acum','val-rem','src-rem',
   'val-riesgo','src-riesgo',
   'val-badlar','src-badlar',
   'val-tamar','src-tamar',
+  'val-merval','src-merval','val-merval-usd','src-merval-usd',
   'val-uva','src-uva','val-uva-m','val-uva-ia',
   'val-blue-compra','val-blue-venta','src-blue','src-blue-fecha',
   'val-blue-m','val-blue-ia','val-blue-brecha',
@@ -1800,9 +2205,11 @@ async function reloadAll() {
     loadDolar(),
     loadDolarVariaciones(),
     loadInflacion(),
+    loadREM(),
     loadRiesgo(),
     loadBADLAR(),
     loadTAMAR(),
+    loadMerval(),
     loadUVA(),
     loadBlue(),
   ]);
