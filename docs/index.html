@@ -1,4 +1,4 @@
-<!-- Version autocontenida generada por build_publicar.py el 06/08/2026 23:16 - datos embebidos, no depende de archivos externos -->
+<!-- Version autocontenida generada por build_publicar.py el 06/08/2026 23:24 - datos embebidos, no depende de archivos externos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -85,9 +85,9 @@ body {
 
 /* ─── CARDS ──────────────────────────────── */
 .card { background: var(--gris-osc); border: 1px solid var(--gris-brd); border-radius: 10px; padding: 14px 16px; }
-.kpi-label { font-size: 10px; color: var(--gris-txt); letter-spacing: .8px; text-transform: uppercase; margin-bottom: 8px; }
+.kpi-label { font-size: 11px; font-weight: 600; color: #a8a8a8; letter-spacing: .9px; text-transform: uppercase; margin-bottom: 8px; }
 .kpi-value { font-size: 21px; font-weight: 700; color: #fff; line-height: 1.2; }
-.kpi-sub { font-size: 10px; color: var(--gris-txt); margin-top: 5px; }
+.kpi-sub { font-size: 10.5px; color: #8f8f8f; margin-top: 5px; }
 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 6px; }
 
 /* ─── SECCIÓN ─────────────────────────────── */
@@ -96,10 +96,19 @@ body {
   color: #fff; border-left: 5px solid var(--rojo); padding-left: 13px;
   margin: 34px 0 16px; line-height: 1.15;
 }
-/* Subtitulos internos de cada seccion (EVOLUCION..., CONSULTA POR...) */
+/* Subtitulos internos de cada seccion (Evolucion..., Consulta por...).
+   Tercer nivel de jerarquia: mas chico que .sec-title pero claramente
+   por encima del texto gris de apoyo. La marca roja los emparenta con
+   la barra del titulo de seccion. */
 .sub-title {
-  font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
-  color: #bbb;
+  font-size: 14px; font-weight: 700; letter-spacing: .4px;
+  color: #ededed; line-height: 1.25;
+  display: inline-flex; align-items: center; gap: 9px;
+}
+.sub-title::before {
+  content: ''; flex: 0 0 auto;
+  width: 3px; height: 15px; border-radius: 2px;
+  background: var(--rojo);
 }
 
 /* ─── LOGIN ──────────────────────────────── */
@@ -148,7 +157,7 @@ body {
 
 /* DÓLAR CARDS */
 .dolar-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 6px; gap: 6px; }
-.d-side-label { font-size: 9px; color: var(--gris-txt); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
+.d-side-label { font-size: 10px; font-weight: 600; color: #a8a8a8; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 3px; }
 .d-val { font-size: 16px; font-weight: 700; line-height: 1; }
 .d-val.compra { color: var(--verde); }
 .d-val.venta  { color: var(--rojo-txt); }
@@ -400,7 +409,7 @@ body {
       </div>
 
       <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div class="sub-title">Evolución CAC general</div>
+        <div class="sub-title">Evolución del índice CAC</div>
         <select class="period-select" id="cac-range" onchange="renderCacChart()">
           <option value="12">Último año</option>
           <option value="36">Últimos 3 años</option>
@@ -474,7 +483,7 @@ body {
     <!-- Gráfico UVA desde API -->
     <div id="uva-chart-section" style="margin-top:4px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div class="sub-title">Evolución UVA</div>
+        <div class="sub-title">Evolución del índice UVA</div>
         <select class="period-select" id="uva-range" onchange="renderUvaChart()">
           <option value="365">Último año</option>
           <option value="1095">Últimos 3 años</option>
@@ -547,7 +556,7 @@ body {
     <div id="blue-chart-section" style="margin-top:4px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
         <div>
-          <div class="sub-title">Evolución dólar blue</div>
+          <div class="sub-title">Evolución del dólar blue</div>
           <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">Serie diaria de cierre · ArgentinaDatos · un día de rezago frente al valor en vivo de arriba</div>
         </div>
         <select class="period-select" id="blue-range" onchange="renderBlueChart()">
