@@ -1,4 +1,4 @@
-<!-- Version autocontenida generada por build_publicar.py el 06/08/2026 22:56 - datos embebidos, no depende de archivos externos -->
+<!-- Version autocontenida generada por build_publicar.py el 06/08/2026 23:07 - datos embebidos, no depende de archivos externos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -92,9 +92,14 @@ body {
 
 /* ─── SECCIÓN ─────────────────────────────── */
 .sec-title {
-  font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
-  color: #fff; border-left: 4px solid var(--rojo); padding-left: 10px;
-  margin: 26px 0 14px; line-height: 1;
+  font-size: 17px; font-weight: 800; letter-spacing: 1.8px; text-transform: uppercase;
+  color: #fff; border-left: 5px solid var(--rojo); padding-left: 13px;
+  margin: 34px 0 16px; line-height: 1.15;
+}
+/* Subtitulos internos de cada seccion (EVOLUCION..., CONSULTA POR...) */
+.sub-title {
+  font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  color: #bbb;
 }
 
 /* ─── LOGIN ──────────────────────────────── */
@@ -395,7 +400,7 @@ body {
       </div>
 
       <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div style="font-size:11px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;">EVOLUCIÓN CAC GENERAL</div>
+        <div class="sub-title">Evolución CAC general</div>
         <select class="period-select" id="cac-range" onchange="renderCacChart()">
           <option value="12">Último año</option>
           <option value="36">Últimos 3 años</option>
@@ -411,15 +416,15 @@ body {
 
     <!-- ─── CONSULTA CAC POR PERÍODO ─── -->
     <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;">
-      <div style="font-size:10px;font-weight:700;color:var(--gris-txt);letter-spacing:1px;margin-bottom:12px;">CONSULTA POR PERÍODO</div>
+      <div class="sub-title" style="margin-bottom:12px;">Consulta por período</div>
 
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
         <div>
-          <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:4px;">AÑO</div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
           <select id="cac-q-anio" class="cac-q-select" onchange="onCacQAnioChange()"></select>
         </div>
         <div>
-          <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:4px;">MES</div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
           <select id="cac-q-mes" class="cac-q-select" onchange="renderCacConsulta()"></select>
         </div>
         <button type="button" class="cac-q-btn" onclick="cacQUltimo()">Último disponible</button>
@@ -469,7 +474,7 @@ body {
     <!-- Gráfico UVA desde API -->
     <div id="uva-chart-section" style="margin-top:4px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div style="font-size:11px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;">EVOLUCIÓN UVA</div>
+        <div class="sub-title">Evolución UVA</div>
         <select class="period-select" id="uva-range" onchange="renderUvaChart()">
           <option value="365">Último año</option>
           <option value="1095">Últimos 3 años</option>
@@ -484,19 +489,19 @@ body {
 
     <!-- ─── CONSULTA UVA POR FECHA ─── -->
     <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;">
-      <div style="font-size:10px;font-weight:700;color:var(--gris-txt);letter-spacing:1px;margin-bottom:12px;">CONSULTA POR FECHA</div>
+      <div class="sub-title" style="margin-bottom:12px;">Consulta por fecha</div>
 
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
         <div>
-          <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:4px;">AÑO</div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
           <select id="uva-q-anio" class="cac-q-select" onchange="onUvaQAnioChange()"></select>
         </div>
         <div>
-          <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:4px;">MES</div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
           <select id="uva-q-mes" class="cac-q-select" onchange="onUvaQMesChange()"></select>
         </div>
         <div>
-          <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:4px;">DÍA</div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">DÍA</div>
           <select id="uva-q-dia" class="cac-q-select" style="min-width:80px;" onchange="renderUvaConsulta()"></select>
         </div>
         <button type="button" class="cac-q-btn" onclick="uvaQHoy()">Último disponible</button>
@@ -541,7 +546,10 @@ body {
     <!-- Gráfico dólar blue -->
     <div id="blue-chart-section" style="margin-top:4px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div style="font-size:11px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;">EVOLUCIÓN DÓLAR BLUE</div>
+        <div>
+          <div class="sub-title">Evolución dólar blue</div>
+          <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">Serie diaria de cierre · ArgentinaDatos · un día de rezago frente al valor en vivo de arriba</div>
+        </div>
         <select class="period-select" id="blue-range" onchange="renderBlueChart()">
           <option value="365">Último año</option>
           <option value="1095">Últimos 3 años</option>
@@ -556,11 +564,11 @@ body {
 
     <!-- ─── CONSULTA COTIZACIÓN POR FECHA ─── -->
     <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;">
-      <div style="font-size:10px;font-weight:700;color:var(--gris-txt);letter-spacing:1px;margin-bottom:12px;">CONSULTA POR FECHA</div>
+      <div class="sub-title" style="margin-bottom:12px;">Consulta por fecha</div>
 
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
         <div>
-          <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:4px;">COTIZACIÓN</div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">COTIZACIÓN</div>
           <select id="usd-q-casa" class="cac-q-select" onchange="onUsdQCasaChange()">
             <option value="blue">Blue / Informal</option>
             <option value="oficial">Oficial</option>
@@ -569,15 +577,15 @@ body {
           </select>
         </div>
         <div>
-          <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:4px;">AÑO</div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
           <select id="usd-q-anio" class="cac-q-select" onchange="onUsdQAnioChange()"></select>
         </div>
         <div>
-          <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:4px;">MES</div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
           <select id="usd-q-mes" class="cac-q-select" onchange="onUsdQMesChange()"></select>
         </div>
         <div>
-          <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:4px;">DÍA</div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">DÍA</div>
           <select id="usd-q-dia" class="cac-q-select" style="min-width:80px;" onchange="renderUsdConsulta()"></select>
         </div>
         <button type="button" class="cac-q-btn" onclick="usdQHoy()">Último disponible</button>
@@ -1195,7 +1203,7 @@ function renderUvaConsulta() {
   const tarjetaVar = (titulo, ref, etiqueta) => {
     if (!ref || !ref.valor) {
       return `<div style="flex:1 1 150px;background:var(--gris-osc);border:1px solid var(--gris-brd);border-radius:8px;padding:12px 14px;">
-        <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:6px;">${titulo}</div>
+        <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:6px;">${titulo}</div>
         <div style="font-size:22px;font-weight:700;color:var(--gris-txt);line-height:1;">—</div>
         <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">fuera de la serie</div>
       </div>`;
@@ -1204,7 +1212,7 @@ function renderUvaConsulta() {
     const color = pct >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
     const signo = pct >= 0 ? '+' : '';
     return `<div style="flex:1 1 150px;background:var(--gris-osc);border:1px solid var(--gris-brd);border-radius:8px;padding:12px 14px;">
-      <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:6px;">${titulo}</div>
+      <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:6px;">${titulo}</div>
       <div style="font-size:22px;font-weight:700;color:${color};line-height:1;">${signo}${fmtN(pct, 1)}%</div>
       <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">${etiqueta}: $ ${fmtN(ref.valor, 2)}</div>
     </div>`;
@@ -1222,7 +1230,7 @@ function renderUvaConsulta() {
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
       <div style="flex:1 1 150px;background:var(--gris-osc);border:1px solid var(--rojo);border-radius:8px;padding:12px 14px;">
-        <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:6px;">VALOR UVA</div>
+        <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:6px;">VALOR UVA</div>
         <div style="font-size:22px;font-weight:700;color:#fff;line-height:1;">$ ${fmtN(act.valor, 2)}</div>
         <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">${fmtFecha(act.fecha)}</div>
       </div>
@@ -1306,10 +1314,28 @@ async function loadBlue() {
     document.getElementById('src-blue').textContent        = 'Sin conexión';
     return;
   }
-  const hoy = serie[0];
+  /* Para el valor de HOY usamos la misma fuente que las tarjetas de arriba
+     (dolarapi.com, cotizacion en vivo). ArgentinaDatos publica el cierre
+     diario con un dia de rezago, asi que si mostraramos su ultimo registro
+     no coincidiria con el encabezado del tablero. La serie historica, el
+     grafico y el consultor si salen de ArgentinaDatos. */
+  let hoy = serie[0];
+  let fuente = 'ArgentinaDatos · cierre diario';
+  try {
+    const rv = await fetch('https://dolarapi.com/v1/dolares/blue');
+    if (rv.ok) {
+      const j = await rv.json();
+      if (j && j.venta != null) {
+        hoy = { fecha: String(j.fechaActualizacion || '').slice(0, 10) || serie[0].fecha,
+                compra: Number(j.compra), venta: Number(j.venta) };
+        fuente = 'dolarapi.com · en vivo';
+      }
+    }
+  } catch (_) {}
+
   document.getElementById('val-blue-compra').textContent = fmtARS(hoy.compra);
   document.getElementById('val-blue-venta').textContent  = fmtARS(hoy.venta);
-  document.getElementById('src-blue').textContent        = 'ArgentinaDatos';
+  document.getElementById('src-blue').textContent        = fuente;
   document.getElementById('src-blue-fecha').textContent  = fmtFecha(hoy.fecha);
 
   const pintarVar = (id, ref) => {
@@ -1323,9 +1349,19 @@ async function loadBlue() {
   pintarVar('val-blue-m',  buscarUsd('blue', uvaDesplazar(hoy.fecha, { meses: 1 })));
   pintarVar('val-blue-ia', buscarUsd('blue', uvaDesplazar(hoy.fecha, { anios: 1 })));
 
-  // Brecha contra el oficial del mismo dia
+  // Brecha contra el oficial. Si el blue salio en vivo, el oficial tambien,
+  // para no mezclar una punta de hoy con otra de ayer.
   await loadUsdSerie('oficial');
-  const of = buscarUsd('oficial', hoy.fecha);
+  let of = buscarUsd('oficial', hoy.fecha);
+  if (fuente.startsWith('dolarapi')) {
+    try {
+      const ro = await fetch('https://dolarapi.com/v1/dolares/oficial');
+      if (ro.ok) {
+        const j = await ro.json();
+        if (j && j.venta != null) of = { compra: Number(j.compra), venta: Number(j.venta) };
+      }
+    } catch (_) {}
+  }
   const elB = document.getElementById('val-blue-brecha');
   if (elB) {
     if (of && of.venta) {
@@ -1512,7 +1548,7 @@ function renderUsdConsulta() {
       const color = br >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
       brechaHtml = `
         <div style="flex:1 1 150px;background:var(--gris-osc);border:1px solid var(--gris-brd);border-radius:8px;padding:12px 14px;">
-          <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:6px;">BRECHA VS. OFICIAL</div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:6px;">BRECHA VS. OFICIAL</div>
           <div style="font-size:22px;font-weight:700;color:${color};line-height:1;">${br >= 0 ? '+' : ''}${fmtN(br, 1)}%</div>
           <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">oficial: ${fmtARS2(of.venta)}</div>
         </div>`;
@@ -1534,12 +1570,12 @@ function renderUsdConsulta() {
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
       <div style="flex:1 1 150px;background:var(--gris-osc);border:1px solid var(--gris-brd);border-radius:8px;padding:12px 14px;">
-        <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:6px;">COMPRA</div>
+        <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:6px;">COMPRA</div>
         <div style="font-size:22px;font-weight:700;color:#fff;line-height:1;">${fmtARS2(c.compra)}</div>
         <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">tipo comprador</div>
       </div>
       <div style="flex:1 1 150px;background:var(--gris-osc);border:1px solid var(--rojo);border-radius:8px;padding:12px 14px;">
-        <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:6px;">VENTA</div>
+        <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:6px;">VENTA</div>
         <div style="font-size:22px;font-weight:700;color:#fff;line-height:1;">${fmtARS2(c.venta)}</div>
         ${spread}
       </div>
@@ -2013,7 +2049,7 @@ function renderCacConsulta() {
     return `
     <div style="flex:1 1 150px;background:var(--gris-osc);border:1px solid ${destacada ? 'var(--rojo)' : 'var(--gris-brd)'};
                 border-radius:8px;padding:12px 14px;">
-      <div style="font-size:9px;font-weight:700;color:var(--gris-txt);letter-spacing:.5px;margin-bottom:6px;">${titulo}</div>
+      <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:6px;">${titulo}</div>
       <div style="font-size:22px;font-weight:700;color:#fff;line-height:1;">${valor != null ? fmtN(valor, 1) : 'N/D'}</div>
       ${cacVarHtml(valor, prevM ? prevM[campo] : null, 'mensual')}
       ${cacVarHtml(valor, prevA ? prevA[campo] : null, 'i.a.')}
