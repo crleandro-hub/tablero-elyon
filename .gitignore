@@ -1,7 +1,18 @@
+# Credenciales - NUNCA subir
+.github_token
+
+# Registros de las corridas automaticas
+log_actualizacion.txt
+
+# Archivos derivados (los regenera build_publicar.py)
+tablero_elyon_portable.html
+*.bak.html
+
+# Python
 __pycache__/
 *.pyc
-*.bak.html
+
+# Sistema
 .DS_Store
 Thumbs.db
-.github_token
-log_actualizacion.txt
+desktop.ini
