@@ -3,3 +3,4 @@ __pycache__/
 *.bak.html
 .DS_Store
 Thumbs.db
+.github_token
