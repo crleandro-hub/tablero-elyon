@@ -31,6 +31,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_HTML = os.path.join(BASE_DIR, "tablero_elyon.html")
 BCRA_JS = os.path.join(BASE_DIR, "bcra_cache.js")
 CAC_JS = os.path.join(BASE_DIR, "cac_cache.js")
+UVA_JS = os.path.join(BASE_DIR, "uva_cache.js")
 
 DOCS_DIR = os.path.join(BASE_DIR, "docs")
 OUT_PAGES = os.path.join(DOCS_DIR, "index.html")
@@ -56,7 +57,10 @@ def inline(html, tag_src, contenido, etiqueta):
         print("[AVISO] No se encontro la etiqueta de " + tag_src + " en el HTML.")
         return html
     if contenido is None:
-        return html
+        # Sin el archivo de datos, dejar el <script src> apuntando a un archivo
+        # que no se publica daria un 404 en GitHub Pages. Se saca la etiqueta:
+        # el tablero ya tiene el camino alternativo de consultar la API.
+        return patron.sub("<!-- " + tag_src + " no disponible al generar -->", html, count=1)
     bloque = (
         "<script>\n/* === " + etiqueta + " embebido desde " + tag_src
         + " (build_publicar.py) === */\n" + contenido.strip() + "\n</script>"
@@ -72,9 +76,11 @@ def main():
     html = leer(SRC_HTML)
     bcra = leer(BCRA_JS, obligatorio=False)
     cac = leer(CAC_JS, obligatorio=False)
+    uva = leer(UVA_JS, obligatorio=False)
 
     html = inline(html, "bcra_cache.js", bcra, "BCRA_CACHE")
     html = inline(html, "cac_cache.js", cac, "CAC_CACHE")
+    html = inline(html, "uva_cache.js", uva, "UVA_CACHE")
 
     ts = datetime.now().strftime("%d/%m/%Y %H:%M")
     sello = (

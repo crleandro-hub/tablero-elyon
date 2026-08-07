@@ -503,7 +503,7 @@ body {
           <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">DÍA</div>
           <select id="uva-q-dia" class="cac-q-select" style="min-width:80px;" onchange="renderUvaConsulta()"></select>
         </div>
-        <button type="button" class="cac-q-btn" onclick="uvaQHoy()">Último disponible</button>
+        <button type="button" class="cac-q-btn" onclick="uvaQHoy()">Hoy</button>
       </div>
 
       <div id="uva-q-result">
@@ -602,6 +602,7 @@ body {
 
 <script src="bcra_cache.js"></script>
 <script src="cac_cache.js"></script>  <!-- generado por update_cac_cache.py -->
+<script src="uva_cache.js"></script>  <!-- generado por update_uva_cache.py -->
 <!-- ══════════════════════════════════════
      JAVASCRIPT
 ══════════════════════════════════════ -->
@@ -987,6 +988,23 @@ async function _fetchUvaBcraPaged(limit) {
 
 /* Carga el histórico UVA para variaciones y gráfico sin bloquear el valor del caché */
 async function _loadUvaHistorico(valorActual, srcLabel) {
+  /* 0) uva_cache.js, generado por update_uva_cache.py contra la API v4.0.
+     Es la fuente preferida por dos motivos: el endpoint v3.0 que se consultaba
+     desde el navegador quedo congelado (en agosto de 2026 seguia dando el
+     19/07 como ultimo dato), y el cache incluye los valores que el BCRA
+     publica por anticipado, que son los que hacen falta para indexar. */
+  if (window.UVA_CACHE && Array.isArray(window.UVA_CACHE.serie) && window.UVA_CACHE.serie.length) {
+    uvaApiData = window.UVA_CACHE.serie
+      .map(r => [String(r[0]).slice(0, 10), Number(r[1])])
+      .filter(r => /^\d{4}-\d{2}-\d{2}$/.test(r[0]) && !isNaN(r[1]))
+      .sort((a, b) => b[0].localeCompare(a[0]));   // descendente
+    if (uvaApiData.length) {
+      _calcUvaVariaciones(uvaApiData);
+      renderUvaChart(); initUvaConsulta();
+      return;
+    }
+  }
+
   // 1) BCRA API v3 paginado (historico completo)
   let data = await _fetchUvaBcraPaged(3000);
   // 2) Si el limite alto fue rechazado, reintentar con el limite original
@@ -1005,26 +1023,51 @@ async function _loadUvaHistorico(valorActual, srcLabel) {
   renderUvaChart(); initUvaConsulta();
 }
 
+/* Variaciones de la UVA ancladas en HOY, no en el ultimo registro.
+   Importante desde que la serie sale del cache v4.0: el BCRA publica la UVA
+   por anticipado, asi que el ultimo dato puede ser de dentro de un mes y
+   compararlo como "valor actual" daria una variacion inflada. */
 function _calcUvaVariaciones(data) {
   if (!data.length) return;
-  const getVal = d => Array.isArray(d) ? (typeof d[1] === 'number' ? d[1] : parseFloat(d[1])) : (d.valor ?? d.value);
-  const v0 = getVal(data[0]);
-  if (data.length >= 30) {
-    const vm = (v0 / getVal(data[29]) - 1) * 100;
-    const elM = document.getElementById('val-uva-m');
-    if (elM) {
-      elM.textContent = (vm >= 0 ? '+' : '') + fmtN(vm, 1) + '%';
-      elM.style.color = vm >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+
+  const getF = d => String(Array.isArray(d) ? d[0] : (d.fecha ?? d.date)).slice(0, 10);
+  const getV = d => {
+    const b = Array.isArray(d) ? d[1] : (d.valor ?? d.value);
+    return typeof b === 'number' ? b : parseFloat(b);
+  };
+
+  const mapa = new Map();
+  data.forEach(d => { const f = getF(d); if (!mapa.has(f)) mapa.set(f, getV(d)); });
+
+  const hoyISO = (() => { const n = new Date(); return uvaISO(n.getFullYear(), n.getMonth(), n.getDate()); })();
+
+  // Ancla: el dato de hoy o el ultimo anterior a hoy
+  const anclaF = [...mapa.keys()].filter(f => f <= hoyISO).sort().pop();
+  if (!anclaF) return;
+  const v0 = mapa.get(anclaF);
+
+  // Valor de una fecha, retrocediendo hasta 10 dias si ese dia no esta
+  const valorEn = iso => {
+    if (mapa.has(iso)) return mapa.get(iso);
+    const d = new Date(iso + 'T00:00:00');
+    for (let i = 0; i < 10; i++) {
+      d.setDate(d.getDate() - 1);
+      const f = uvaISO(d.getFullYear(), d.getMonth(), d.getDate());
+      if (mapa.has(f)) return mapa.get(f);
     }
-  }
-  if (data.length >= 365) {
-    const via = (v0 / getVal(data[364]) - 1) * 100;
-    const elIA = document.getElementById('val-uva-ia');
-    if (elIA) {
-      elIA.textContent = (via >= 0 ? '+' : '') + fmtN(via, 1) + '%';
-      elIA.style.color = via >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
-    }
-  }
+    return null;
+  };
+
+  const pintar = (id, ref) => {
+    const el = document.getElementById(id);
+    if (!el || !ref || !v0) return;
+    const pct = (v0 / ref - 1) * 100;
+    el.textContent = (pct >= 0 ? '+' : '') + fmtN(pct, 1) + '%';
+    el.style.color = pct >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+  };
+
+  pintar('val-uva-m',  valorEn(uvaDesplazar(anclaF, { meses: 1 })));
+  pintar('val-uva-ia', valorEn(uvaDesplazar(anclaF, { anios: 1 })));
 }
 
 /* ══════════════════════════════════════════
@@ -1058,11 +1101,23 @@ function initUvaConsulta() {
   const anios = [...new Set([...uvaIndex.keys()].map(f => +f.slice(0, 4)))].sort((a, b) => b - a);
   selA.innerHTML = anios.map(a => `<option value="${a}">${a}</option>`).join('');
 
-  const ultima = [...uvaIndex.keys()].sort().pop();   // aaaa-mm-dd mas reciente
-  selA.value = +ultima.slice(0, 4);
-  poblarUvaMeses(+ultima.slice(5, 7) - 1);
-  poblarUvaDias(+ultima.slice(8, 10));
+  /* Arranca en HOY, no en el ultimo registro: la serie incluye los valores
+     que el BCRA ya publico a futuro y abrir el tablero en una fecha que
+     todavia no llego seria confuso. Igual se pueden elegir. */
+  const inicial = uvaFechaInicial();
+  selA.value = +inicial.slice(0, 4);
+  poblarUvaMeses(+inicial.slice(5, 7) - 1);
+  poblarUvaDias(+inicial.slice(8, 10));
   renderUvaConsulta();
+}
+
+/* Hoy si esta publicado; si no, el ultimo dato anterior a hoy. */
+function uvaFechaInicial() {
+  const n = new Date();
+  const hoyISO = uvaISO(n.getFullYear(), n.getMonth(), n.getDate());
+  const claves = [...uvaIndex.keys()].sort();
+  const hastaHoy = claves.filter(f => f <= hoyISO);
+  return hastaHoy.length ? hastaHoy[hastaHoy.length - 1] : claves[claves.length - 1];
 }
 
 /* Solo los meses que existen para el año elegido */
@@ -1120,10 +1175,10 @@ function onUvaQMesChange() {
 
 function uvaQHoy() {
   if (!uvaIndex || !uvaIndex.size) return;
-  const ultima = [...uvaIndex.keys()].sort().pop();
-  document.getElementById('uva-q-anio').value = +ultima.slice(0, 4);
-  poblarUvaMeses(+ultima.slice(5, 7) - 1);
-  poblarUvaDias(+ultima.slice(8, 10));
+  const f = uvaFechaInicial();
+  document.getElementById('uva-q-anio').value = +f.slice(0, 4);
+  poblarUvaMeses(+f.slice(5, 7) - 1);
+  poblarUvaDias(+f.slice(8, 10));
   renderUvaConsulta();
 }
 

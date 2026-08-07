@@ -42,17 +42,21 @@ if exist ".git\index.lock"               del /f /q ".git\index.lock"
 if exist ".git\HEAD.lock"                del /f /q ".git\HEAD.lock"
 if exist ".git\objects\maintenance.lock" del /f /q ".git\objects\maintenance.lock"
 
-echo [1/4] Actualizando BCRA (TAMAR / BADLAR / UVA)...
+echo [1/5] Actualizando BCRA (TAMAR / BADLAR / UVA)...
 %PY% update_bcra_cache.py
+if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
+echo.
+echo [2/5] Actualizando serie historica UVA...
+%PY% update_uva_cache.py
 if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
 
 echo.
-echo [2/4] Actualizando indice CAC...
+echo [3/5] Actualizando indice CAC...
 %PY% update_cac_cache.py
 if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
 
 echo.
-echo [3/4] Generando docs\index.html y version portable...
+echo [4/5] Generando docs\index.html y version portable...
 %PY% build_publicar.py
 if errorlevel 1 (
   echo [ERROR] Fallo build_publicar.py. Cancelado.
@@ -61,7 +65,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo [4/4] Publicando en GitHub Pages...
+echo [5/5] Publicando en GitHub Pages...
 git add -A
 git commit -m "Actualizacion de indicadores %date% %time%" 2>nul
 if errorlevel 1 (
