@@ -70,18 +70,26 @@ call :log "[7/10] ISAC e insumos de la construccion (INDEC)..."
 %PY% update_isac_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_isac_cache.py - se conservan los datos previos."
 
-call :log "[8/10] ICC de Cordoba (Estadistica y Censos Cba)..."
+call :log "[8/11] ICC de Cordoba (Estadistica y Censos Cba)..."
 %PY% update_icc_cba_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_icc_cba_cache.py - se conservan los datos previos."
 
-call :log "[9/10] Generando docs\index.html y version portable..."
+call :log "[9/12] Registro General de la Propiedad de Cordoba..."
+%PY% update_rgp_cba_cache.py >> "%LOG%" 2>&1
+if errorlevel 1 call :log "[AVISO] Fallo update_rgp_cba_cache.py - se conservan los datos previos."
+
+call :log "[10/12] ICC del INDEC (Gran Buenos Aires)..."
+%PY% update_icc_indec_cache.py >> "%LOG%" 2>&1
+if errorlevel 1 call :log "[AVISO] Fallo update_icc_indec_cache.py - se conservan los datos previos."
+
+call :log "[11/12] Generando docs\index.html y version portable..."
 %PY% build_publicar.py >> "%LOG%" 2>&1
 if errorlevel 1 (
   call :log "[ERROR] Fallo build_publicar.py. No se publica."
   goto :fin
 )
 
-call :log "[10/10] Publicando en GitHub Pages..."
+call :log "[12/12] Publicando en GitHub Pages..."
 git add -A >> "%LOG%" 2>&1
 git commit -m "Actualizacion automatica de indicadores %date%" >> "%LOG%" 2>&1
 if errorlevel 1 (

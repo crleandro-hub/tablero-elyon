@@ -687,6 +687,61 @@ body {
       <div class="chart-wrap">
         <canvas id="chart-icc-cba" role="img" aria-label="Evolución del ICC de Córdoba por rubro"></canvas>
       </div>
+
+    </div>
+
+    <!-- ── ICC INDEC (GRAN BUENOS AIRES) ──────────────── -->
+    <div class="sec-title" id="icc-indec-titulo">Índice ICC INDEC</div>
+    <div id="icc-indec-section">
+      <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
+        Índice del costo de la construcción en el <strong style="color:#bbb;">Gran Buenos Aires</strong>,
+        del INDEC. Mide construcción privada de edificios para vivienda en CABA y los 24 partidos
+        del conurbano, con apertura en Materiales (46,0%), Mano de obra (45,6%) y Gastos generales (8,4%).
+        Es el índice al que remite el Decreto 1.295/02 para redeterminar obra pública.
+        <span id="icc-indec-datasource" style="display:block;margin-top:5px;font-size:10px;"></span>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="card">
+          <div class="kpi-label">ICC INDEC</div>
+          <div class="kpi-value" id="kpi-iccn-idx">—</div>
+          <div class="kpi-sub" id="kpi-iccn-fecha">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Var. mensual</div>
+          <div class="kpi-value" id="kpi-iccn-m">—</div>
+          <div class="kpi-sub">vs. mes anterior</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Var. interanual</div>
+          <div class="kpi-value" id="kpi-iccn-ia">—</div>
+          <div class="kpi-sub">vs. mismo mes año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Acum. en el año</div>
+          <div class="kpi-value" id="kpi-iccn-ytd">—</div>
+          <div class="kpi-sub" id="kpi-iccn-ytd-sub">vs. dic. año ant.</div>
+        </div>
+      </div>
+
+      <div style="margin:20px 0 10px;">
+        <div class="sub-title">Apertura por capítulo</div>
+      </div>
+      <div class="kpi-grid" id="icc-indec-rubros"
+           style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));"></div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:22px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución del ICC INDEC</div>
+        <select class="period-select" id="icc-indec-range" onchange="renderIccIndecChart()">
+          <option value="12">Último año</option>
+          <option value="36" selected>Últimos 3 años</option>
+          <option value="60">Últimos 5 años</option>
+          <option value="0">Histórico completo</option>
+        </select>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-icc-indec" role="img" aria-label="Evolución del ICC del INDEC por capítulo"></canvas>
+      </div>
     </div>
 
     <!-- ── ÍNDICE UVA ──────────────────── -->
@@ -988,6 +1043,7 @@ body {
               <option value="obraCba">Obra completa · ICC Cba (45 mat / 40 MO / 15 IPC)</option>
               <option value="cac">Solo CAC general</option>
               <option value="iccCba">Solo ICC Córdoba</option>
+              <option value="dto1295">Obra pública · ICC INDEC (46 mat / 46 MO / 8 IPC)</option>
               <option value="ipc">Solo IPC</option>
               <option value="uva">Solo UVA</option>
               <option value="usd">Solo dólar oficial</option>
@@ -1007,6 +1063,93 @@ body {
       <div id="aj-detalle"></div>
     </div>
 
+    <!-- ── MERCADO INMOBILIARIO Y CRÉDITO ──────────────── -->
+    <div class="sec-title" id="rgp-titulo">Mercado inmobiliario y crédito</div>
+    <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
+      El lado de la <strong style="color:#bbb;">demanda</strong>. Transferencias de dominio e
+      hipotecas ingresadas al Registro General de la Provincia de Córdoba, y el crédito
+      hipotecario del sistema financiero. Los permisos de edificación miden la obra que viene;
+      esto mide las operaciones que se cerraron.
+      <span style="display:block;margin-top:5px;font-size:10px;" id="rgp-datasource"></span>
+    </div>
+
+    <div id="rgp-section">
+      <div class="sub-title" style="margin-bottom:10px;">Registro General de Córdoba</div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(165px,1fr));">
+        <div class="card">
+          <div class="kpi-label">Transferencias</div>
+          <div class="kpi-value" id="kpi-transf">—</div>
+          <div class="kpi-sub" id="kpi-transf-fecha">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Transf. · interanual</div>
+          <div class="kpi-value" id="kpi-transf-ia">—</div>
+          <div class="kpi-sub">vs. mismo mes año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Transf. · acum. año</div>
+          <div class="kpi-value" id="kpi-transf-acum">—</div>
+          <div class="kpi-sub" id="kpi-transf-acum-sub">vs. igual período año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Hipotecas</div>
+          <div class="kpi-value" id="kpi-hipo">—</div>
+          <div class="kpi-sub" id="kpi-hipo-fecha">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Hipotecas · interanual</div>
+          <div class="kpi-value" id="kpi-hipo-ia">—</div>
+          <div class="kpi-sub">vs. mismo mes año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Hipotecas · acum. año</div>
+          <div class="kpi-value" id="kpi-hipo-acum">—</div>
+          <div class="kpi-sub" id="kpi-hipo-acum-sub">vs. igual período año ant.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Transferencias e hipotecas por mes</div>
+        <select class="period-select" id="rgp-range" onchange="renderRgpChart()">
+          <option value="24">Últimos 2 años</option>
+          <option value="60" selected>Últimos 5 años</option>
+          <option value="0">Desde 2017</option>
+        </select>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-rgp" role="img" aria-label="Transferencias e hipotecas mensuales en Córdoba"></canvas>
+      </div>
+
+      <div style="margin:24px 0 10px;">
+        <div class="sub-title">Crédito hipotecario del sistema</div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;" id="hipo-cred-sub">
+          Stock de préstamos con garantía hipotecaria al sector privado y tasa activa · BCRA
+        </div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(175px,1fr));">
+        <div class="card">
+          <div class="kpi-label">Stock hipotecario</div>
+          <div class="kpi-value" id="kpi-cred-stock">—</div>
+          <div class="kpi-sub" id="kpi-cred-fecha">en pesos · sector privado</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Stock · i.a. nominal</div>
+          <div class="kpi-value" id="kpi-cred-ia">—</div>
+          <div class="kpi-sub">sin descontar inflación</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Stock · i.a. real</div>
+          <div class="kpi-value" id="kpi-cred-real">—</div>
+          <div class="kpi-sub">deflactado por IPC</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Tasa hipotecaria</div>
+          <div class="kpi-value" id="kpi-cred-tasa">—</div>
+          <div class="kpi-sub" id="kpi-cred-tasa-sub">nominal anual</div>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /content -->
   <div class="footer">© Grupo Elyon · Tablero de Gestión Interna</div>
 </div>
@@ -1020,6 +1163,8 @@ body {
 <script src="riesgo_cache.js"></script>  <!-- generado por update_riesgo_cache.py -->
 <script src="isac_cache.js"></script>  <!-- generado por update_isac_cache.py -->
 <script src="icc_cba_cache.js"></script>  <!-- generado por update_icc_cba_cache.py -->
+<script src="rgp_cba_cache.js"></script>  <!-- generado por update_rgp_cba_cache.py -->
+<script src="icc_indec_cache.js"></script>  <!-- generado por update_icc_indec_cache.py -->
 <script src="salarios_cache.js"></script>  <!-- escalas UOCRA / UECARA, se edita a mano -->
 <!-- ══════════════════════════════════════
      JAVASCRIPT
@@ -1054,6 +1199,8 @@ function showScreen(id) {
     indicadoresLoaded = true;
     initCacFromEmbedded();
     initIccCba();     // ICC de Córdoba (dato local, pinta al toque)
+    initIccIndec();   // ICC del INDEC · Gran Buenos Aires (dato local)
+    initRgp();        // Registro General de Córdoba (dato local)
     initSalarios();   // escalas de convenio (dato local, pinta al toque)
     initAjuste();     // calculadora de redeterminacion
     loadSnapshot();   // datos guardados inmediatamente
@@ -2459,6 +2606,11 @@ const SNAP_IDS = [
   'kpi-cac-ytd','kpi-cac-ytd-sub',
   'kpi-icc-idx','kpi-icc-fecha','kpi-icc-m','kpi-icc-ia','kpi-icc-ytd',
   'kpi-icc-ytd-sub','kpi-icc-m2','kpi-icc-m2-sub',
+  'kpi-iccn-idx','kpi-iccn-fecha','kpi-iccn-m','kpi-iccn-ia','kpi-iccn-ytd','kpi-iccn-ytd-sub',
+  'kpi-transf','kpi-transf-fecha','kpi-transf-ia','kpi-transf-acum','kpi-transf-acum-sub',
+  'kpi-hipo','kpi-hipo-fecha','kpi-hipo-ia','kpi-hipo-acum','kpi-hipo-acum-sub',
+  'kpi-cred-stock','kpi-cred-fecha','kpi-cred-ia','kpi-cred-real',
+  'kpi-cred-tasa','kpi-cred-tasa-sub',
   'kpi-isac-idx','kpi-isac-fecha','kpi-isac-ia','kpi-isac-acum','kpi-isac-acum-sub',
   'kpi-isac-desest',
   'kpi-emp-val','kpi-emp-fecha','kpi-emp-ia','kpi-emp-acum',
@@ -2569,6 +2721,9 @@ const COMP_SERIES = {
   iccCba:    { label: 'ICC Córdoba',        color: '#fb7185', get: () => compIccCba(1) },
   iccCbaMat: { label: 'ICC Cba materiales', color: '#f9a8d4', get: () => compIccCba(2) },
   iccCbaMo:  { label: 'ICC Cba mano obra',  color: '#e879f9', get: () => compIccCba(3) },
+  iccIndec:  { label: 'ICC INDEC (GBA)',    color: '#f472b6', get: () => compIccIndec(1) },
+  iccIndecMat: { label: 'ICC INDEC materiales', color: '#fbcfe8', get: () => compIccIndec(2) },
+  iccIndecMo:  { label: 'ICC INDEC mano obra',  color: '#d946ef', get: () => compIccIndec(3) },
   uocra:     { label: 'Jornal UOCRA',       color: '#a3e635', get: () => salSerieUocra('oficial') },
   uva:       { label: 'UVA',                color: '#c084fc', get: () => compUva() },
   oficial:   { label: 'Dólar oficial',      color: '#60a5fa', get: () => compUsd('oficial') },
@@ -2855,6 +3010,7 @@ async function reloadAll() {
     loadUVA(),
     loadBlue(),
     loadIsac(),
+    loadCreditoHipotecario(),
   ]);
 
   // El comparador se arma al final: necesita saber que series terminaron
@@ -3115,6 +3271,9 @@ const AJ_COMPONENTES = [
   { id: 'iccMat', label: 'ICC Cba · Materiales',   get: () => compIccCba(2) },
   { id: 'iccMo',  label: 'ICC Cba · Mano de obra', get: () => compIccCba(3) },
   { id: 'iccGen', label: 'ICC Cba · General',      get: () => compIccCba(1) },
+  { id: 'iccnMat', label: 'ICC INDEC · Materiales',   get: () => compIccIndec(2) },
+  { id: 'iccnMo',  label: 'ICC INDEC · Mano de obra', get: () => compIccIndec(3) },
+  { id: 'iccnGen', label: 'ICC INDEC · General',      get: () => compIccIndec(1) },
   { id: 'uocra',  label: 'UOCRA · Oficial',    get: () => salSerieUocra('oficial') },
   { id: 'ipc',    label: 'IPC (INDEC)',        get: () => compIpc()        },
   { id: 'uva',    label: 'UVA',                get: () => compUva()        },
@@ -3125,6 +3284,7 @@ const AJ_COMPONENTES = [
 const AJ_PRESETS = {
   obra: { cacMat: 45, cacMo: 40, ipc: 15 },
   obraCba: { iccMat: 45, iccMo: 40, ipc: 15 },
+  dto1295: { iccnMat: 46, iccnMo: 46, ipc: 8 },
   cac:  { cacGen: 100 },
   iccCba: { iccGen: 100 },
   ipc:  { ipc: 100 },
@@ -3607,11 +3767,12 @@ const ICC_CBA_RUBROS = [
   [4, 'Varios',       '#c084fc'],
 ];
 
-/* Devuelve las tres variaciones de una columna: mensual, interanual y
-   acumulada del año (contra diciembre del año anterior). */
-function iccCbaVars(col) {
+/* Devuelve las tres variaciones de una columna de una serie mensual de
+   niveles: mensual, interanual y acumulada del año (contra diciembre del año
+   anterior). Sirve para cualquier indice: ICC Cordoba, ICC INDEC, etc. */
+function varsColumna(serie, col) {
   const m = new Map();
-  iccCbaSerie.forEach(r => { if (r[col] != null) m.set(String(r[0]).slice(0, 7), Number(r[col])); });
+  (serie || []).forEach(r => { if (r[col] != null) m.set(String(r[0]).slice(0, 7), Number(r[col])); });
   const ym = [...m.keys()].sort();
   if (!ym.length) return null;
 
@@ -3628,6 +3789,8 @@ function iccCbaVars(col) {
     ytd:     pct(m.get((anio - 1) + '-12')),
   };
 }
+
+const iccCbaVars = col => varsColumna(iccCbaSerie, col);
 
 /* Los indices de costo se pintan al reves que la actividad: que suba el costo
    es mala noticia, asi que va en rojo (mismo criterio que el CAC y el IPC). */
@@ -3748,6 +3911,311 @@ function renderIccCbaChart() {
       },
     },
   });
+}
+
+/* ══════════════════════════════════════════
+   ICC INDEC — GRAN BUENOS AIRES
+
+   Sale de icc_indec_cache.js, que arma update_icc_indec_cache.py con el Excel
+   de series del INDEC (icc_variaciones_indices_2016.xls, nombre estable).
+
+   El Excel puede traer niveles o variaciones mensuales, segun que hoja use el
+   INDEC. Si vienen variaciones se encadenan a un indice sintetico base 100 en
+   el primer mes, asi el resto del codigo trabaja siempre con niveles y las
+   variaciones se calculan igual que en los demas indices.
+══════════════════════════════════════════ */
+let iccIndecSerie = [];
+let iccIndecChart = null;
+
+const ICC_INDEC_CAPS = [
+  [2, 'Materiales',       '#60a5fa'],
+  [3, 'Mano de obra',     '#4ade80'],
+  [4, 'Gastos generales', '#c084fc'],
+];
+
+/* [[fecha, %ng, %mat, %mo, %gg]] -> indice encadenado base 100 */
+function _encadenarVariaciones(serie) {
+  const acum = [100, 100, 100, 100];
+  return serie.map(r => {
+    const fila = [r[0]];
+    for (let c = 1; c <= 4; c++) {
+      if (r[c] != null) acum[c - 1] *= (1 + Number(r[c]) / 100);
+      fila.push(acum[c - 1]);
+    }
+    return fila;
+  });
+}
+
+function initIccIndec() {
+  const cache = window.ICC_INDEC_CACHE;
+  const sec = document.getElementById('icc-indec-section');
+  const tit = document.getElementById('icc-indec-titulo');
+
+  if (!cache || !cache.serie || !cache.serie.length) {
+    // Todavia no se corrió update_icc_indec_cache.py: se oculta la sección
+    if (sec) sec.style.display = 'none';
+    if (tit) tit.style.display = 'none';
+    return;
+  }
+  let s = cache.serie.slice().sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+  const encadenado = cache.tipo === 'variacion_mensual';
+  iccIndecSerie = encadenado ? _encadenarVariaciones(s) : s;
+
+  const g = varsColumna(iccIndecSerie, 1);
+  if (!g) return;
+
+  document.getElementById('kpi-iccn-idx').textContent = fmtN(g.valor, 1);
+  document.getElementById('kpi-iccn-fecha').textContent =
+    isacMesLargo(g.mes) + (encadenado ? ' · índice encadenado' : ' · base 1993=100');
+  iccCbaPintarPct('kpi-iccn-m',   g.mensual);
+  iccCbaPintarPct('kpi-iccn-ia',  g.ia);
+  iccCbaPintarPct('kpi-iccn-ytd', g.ytd);
+
+  const subYtd = document.getElementById('kpi-iccn-ytd-sub');
+  if (subYtd) subYtd.textContent = 'vs. dic-' + (+g.mes.slice(0, 4) - 1);
+
+  const cont = document.getElementById('icc-indec-rubros');
+  if (cont) {
+    cont.innerHTML = ICC_INDEC_CAPS.map(([col, nombre]) => {
+      const r = varsColumna(iccIndecSerie, col);
+      if (!r) return '';
+      const sig = v => v == null || isNaN(v) ? '—' : (v >= 0 ? '+' : '') + fmtN(v, 1) + '%';
+      const color = r.ia == null ? '' : (r.ia >= 0 ? 'var(--rojo-txt)' : 'var(--verde)');
+      return '<div class="card">'
+           +   '<div class="kpi-label">' + nombre + '</div>'
+           +   '<div class="kpi-value" style="color:' + color + ';">' + sig(r.ia)
+           +   ' <span style="font-size:11px;font-weight:600;color:#8f8f8f;">i.a.</span></div>'
+           +   '<div class="kpi-sub">' + sig(r.mensual) + ' mensual · ' + sig(r.ytd) + ' acum. año</div>'
+           + '</div>';
+    }).join('');
+  }
+
+  const src = document.getElementById('icc-indec-datasource');
+  if (src) {
+    src.textContent = '📊 ' + (cache.source || 'INDEC') + ' · serie hasta ' + (cache.hasta || '') +
+      (cache.updated ? ' · cache del ' + new Date(cache.updated).toLocaleDateString('es-AR') : '');
+  }
+
+  renderIccIndecChart();
+}
+
+function renderIccIndecChart() {
+  if (!iccIndecSerie.length) return;
+  const rangeEl = document.getElementById('icc-indec-range');
+  const meses = rangeEl ? parseInt(rangeEl.value) : 36;
+  const slice = meses > 0 ? iccIndecSerie.slice(-meses) : iccIndecSerie;
+  const ctx = document.getElementById('chart-icc-indec');
+  if (!ctx) return;
+  if (iccIndecChart) iccIndecChart.destroy();
+
+  const sets = [{
+    label: 'Nivel general', data: slice.map(r => r[1]),
+    borderColor: '#FF5F5F', backgroundColor: 'rgba(255,95,95,0.10)',
+    borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true,
+  }].concat(ICC_INDEC_CAPS.map(([col, nombre, color]) => ({
+    label: nombre, data: slice.map(r => r[col]),
+    borderColor: color, backgroundColor: 'transparent',
+    borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false,
+  })));
+
+  iccIndecChart = new Chart(ctx.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: slice.map(r => {
+        const m = String(r[0]).match(/^(\d{4})-(\d{2})/);
+        return m ? ISAC_MESES[+m[2] - 1].slice(0, 3) + '-' + m[1].slice(2) : r[0];
+      }),
+      datasets: sets,
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#aaa', font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: '#1C1C1C', borderColor: '#383838', borderWidth: 1,
+          titleColor: '#fff', bodyColor: '#aaa',
+          callbacks: { label: c => ` ${c.dataset.label}: ${fmtN(c.parsed.y, 1)}` },
+        },
+      },
+      scales: {
+        x: { ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 12 }, grid: { color: '#222' } },
+        y: { ticks: { color: '#555', font: { size: 9 } }, grid: { color: '#222' } },
+      },
+    },
+  });
+}
+
+/* col: 1 nivel general | 2 materiales | 3 mano de obra | 4 gastos generales */
+function compIccIndec(col) {
+  if (!iccIndecSerie.length) return null;
+  const m = new Map();
+  iccIndecSerie.forEach(r => {
+    if (r[col] != null) m.set(String(r[0]).slice(0, 7), Number(r[col]));
+  });
+  return m.size ? m : null;
+}
+
+/* Helpers genericos para series mensuales [[fecha, valor]]. Son alias de las
+   funciones del bloque del ISAC, que sirven para cualquier indicador. */
+const serieMapa = isacMapa, serieUltimoMes = isacUltimoMes,
+      serieVarIA = isacVarIA, serieVarAcum = isacVarAcum;
+
+/* ══════════════════════════════════════════
+   MERCADO INMOBILIARIO Y CRÉDITO
+
+   Dos fuentes distintas:
+   · Registro General de Cordoba (rgp_cba_cache.js) - transferencias e
+     hipotecas ingresadas. Son documentos INGRESADOS, no escrituras firmadas:
+     hay semanas de desfasaje y diciembre siempre pega un salto por cierre.
+   · BCRA via datos.gob.ar - stock de credito hipotecario y tasa activa.
+     El stock se muestra tambien en terminos reales, porque con inflacion de
+     dos digitos el crecimiento nominal no dice nada.
+══════════════════════════════════════════ */
+let rgpChart = null;
+
+/* Verde cuando sube: mas operaciones y mas credito son buenas noticias */
+function rgpPintarPct(id, pct) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (pct == null || isNaN(pct)) { el.textContent = '—'; el.style.color = ''; return; }
+  el.textContent = (pct >= 0 ? '+' : '') + fmtN(pct, 1) + '%';
+  el.style.color = pct >= 0 ? 'var(--verde)' : 'var(--rojo-txt)';
+}
+
+function initRgp() {
+  const c = window.RGP_CBA_CACHE;
+  const sec = document.getElementById('rgp-section');
+  if (!c || !c.transferencias || !c.transferencias.length) {
+    // Sin cache queda solo el bloque de credito, que sale de la API
+    const src = document.getElementById('rgp-datasource');
+    if (src) src.textContent = '⚠ Sin datos del Registro General (falta rgp_cba_cache.js).';
+    return sec;
+  }
+
+  const t = serieMapa(c.transferencias);
+  const h = serieMapa(c.hipotecas || []);
+  const ultT = serieUltimoMes(t), ultH = serieUltimoMes(h);
+
+  document.getElementById('kpi-transf').textContent = fmtN(t.get(ultT), 0);
+  document.getElementById('kpi-transf-fecha').textContent = isacMesLargo(ultT);
+  rgpPintarPct('kpi-transf-ia', serieVarIA(t));
+  rgpPintarPct('kpi-transf-acum', serieVarAcum(t));
+
+  if (ultH) {
+    document.getElementById('kpi-hipo').textContent = fmtN(h.get(ultH), 0);
+    document.getElementById('kpi-hipo-fecha').textContent = isacMesLargo(ultH);
+    rgpPintarPct('kpi-hipo-ia', serieVarIA(h));
+    rgpPintarPct('kpi-hipo-acum', serieVarAcum(h));
+  }
+
+  const rotulo = ym => 'ene-' + ISAC_MESES[+ym.slice(5, 7) - 1].slice(0, 3) +
+                       ' vs. igual período ' + (+ym.slice(0, 4) - 1);
+  const sT = document.getElementById('kpi-transf-acum-sub');
+  const sH = document.getElementById('kpi-hipo-acum-sub');
+  if (sT) sT.textContent = rotulo(ultT);
+  if (sH && ultH) sH.textContent = rotulo(ultH);
+
+  const src = document.getElementById('rgp-datasource');
+  if (src) {
+    src.textContent = '📊 ' + (c.source || 'Registro General de Córdoba') +
+      ' · serie desde 2017, hasta ' + (c.hasta || '') +
+      ' · son documentos ingresados al Registro, no escrituras firmadas';
+  }
+
+  renderRgpChart();
+}
+
+function renderRgpChart() {
+  const c = window.RGP_CBA_CACHE;
+  if (!c || !c.transferencias) return;
+  const rangeEl = document.getElementById('rgp-range');
+  const meses = rangeEl ? parseInt(rangeEl.value) : 60;
+
+  const t = serieMapa(c.transferencias);
+  const h = serieMapa(c.hipotecas || []);
+  let claves = [...new Set([...t.keys(), ...h.keys()])].sort();
+  if (meses > 0) claves = claves.slice(-meses);
+
+  const ctx = document.getElementById('chart-rgp');
+  if (!ctx) return;
+  if (rgpChart) rgpChart.destroy();
+
+  rgpChart = new Chart(ctx.getContext('2d'), {
+    data: {
+      labels: claves.map(k => ISAC_MESES[+k.slice(5, 7) - 1].slice(0, 3) + '-' + k.slice(2, 4)),
+      datasets: [
+        { type: 'bar', label: 'Transferencias', yAxisID: 'y',
+          data: claves.map(k => t.get(k) ?? null),
+          backgroundColor: 'rgba(96,165,250,0.55)', borderWidth: 0 },
+        { type: 'line', label: 'Hipotecas', yAxisID: 'y2',
+          data: claves.map(k => h.get(k) ?? null),
+          borderColor: '#22c55e', backgroundColor: 'transparent',
+          borderWidth: 2, pointRadius: 0, tension: 0.3 },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#aaa', font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: '#1C1C1C', borderColor: '#383838', borderWidth: 1,
+          titleColor: '#fff', bodyColor: '#aaa',
+          callbacks: { label: c2 => ` ${c2.dataset.label}: ${fmtN(c2.parsed.y, 0)}` },
+        },
+      },
+      scales: {
+        x:  { ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 12 }, grid: { color: '#222' } },
+        y:  { position: 'left',  ticks: { color: '#60a5fa', font: { size: 9 } }, grid: { color: '#222' },
+              title: { display: true, text: 'Transferencias', color: '#60a5fa', font: { size: 9 } } },
+        y2: { position: 'right', ticks: { color: '#22c55e', font: { size: 9 } }, grid: { display: false },
+              title: { display: true, text: 'Hipotecas', color: '#22c55e', font: { size: 9 } } },
+      },
+    },
+  });
+}
+
+/* ── Crédito hipotecario del sistema (BCRA vía datos.gob.ar) ── */
+async function loadCreditoHipotecario() {
+  let datos = [];
+  try {
+    // 91.1… = stock de prestamos con garantia hipotecaria, en millones de pesos
+    // 89.1… = tasa de interes activa para hipotecarios, en % nominal anual
+    datos = await fetchDG('91.1_DETALLE_PRPOT_0_0_53,89.1_TS_INTEIOS_0_M_34', 30, 'desc');
+  } catch (_) {}
+  if (!datos.length) return;
+
+  const stock = serieMapa(datos.map(f => [f[0], f[1]]));
+  const tasa  = serieMapa(datos.map(f => [f[0], f[2]]));
+  const ult   = serieUltimoMes(stock);
+  if (!ult) return;
+
+  // El stock viene en millones: se muestra en billones para que se lea
+  const v = stock.get(ult);
+  document.getElementById('kpi-cred-stock').textContent =
+    v >= 1e6 ? '$ ' + fmtN(v / 1e6, 2) + ' bill.' : '$ ' + fmtN(v / 1e3, 1) + ' mil M';
+  document.getElementById('kpi-cred-fecha').textContent =
+    isacMesLargo(ult) + ' · sector privado';
+
+  const iaNom = serieVarIA(stock);
+  rgpPintarPct('kpi-cred-ia', iaNom);
+
+  // En términos reales: se descuenta la inflación del mismo período con el IPC.
+  // loadIpcSerie cachea, asi que si el comparador ya la bajo no la pide de nuevo.
+  const ipc = serieMapa(await loadIpcSerie());
+  const ipcAct = ipc.get(ult), ipcAnt = ipc.get((+ult.slice(0, 4) - 1) + '-' + ult.slice(5, 7));
+  if (iaNom != null && ipcAct && ipcAnt) {
+    const infl = ipcAct / ipcAnt;
+    rgpPintarPct('kpi-cred-real', ((1 + iaNom / 100) / infl - 1) * 100);
+  }
+
+  const ultT = serieUltimoMes(tasa);
+  if (ultT) {
+    document.getElementById('kpi-cred-tasa').textContent = fmtN(tasa.get(ultT), 1) + '%';
+    const sub = document.getElementById('kpi-cred-tasa-sub');
+    if (sub) sub.textContent = 'nominal anual · ' + isacMesLargo(ultT);
+  }
 }
 
 /* ══════════════════════════════════════════

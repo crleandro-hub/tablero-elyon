@@ -76,12 +76,22 @@ echo [7/10] Actualizando ISAC e insumos de la construccion (INDEC)...
 if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
 
 echo.
-echo [8/10] Actualizando ICC de Cordoba (Estadistica y Censos Cba)...
+echo [8/11] Actualizando ICC de Cordoba (Estadistica y Censos Cba)...
 %PY% update_icc_cba_cache.py
 if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
 
 echo.
-echo [9/10] Generando docs\index.html y version portable...
+echo [9/12] Actualizando Registro General de la Propiedad de Cordoba...
+%PY% update_rgp_cba_cache.py
+if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
+
+echo.
+echo [10/12] Actualizando ICC del INDEC (Gran Buenos Aires)...
+%PY% update_icc_indec_cache.py
+if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
+
+echo.
+echo [11/12] Generando docs\index.html y version portable...
 %PY% build_publicar.py
 if errorlevel 1 (
   echo [ERROR] Fallo build_publicar.py. Cancelado.
@@ -90,7 +100,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo [10/10] Publicando en GitHub Pages...
+echo [12/12] Publicando en GitHub Pages...
 git add -A
 git commit -m "Actualizacion de indicadores %date% %time%" 2>nul
 if errorlevel 1 (

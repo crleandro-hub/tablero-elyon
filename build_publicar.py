@@ -38,6 +38,8 @@ SAL_JS = os.path.join(BASE_DIR, "salarios_cache.js")
 RIESGO_JS = os.path.join(BASE_DIR, "riesgo_cache.js")
 ISAC_JS = os.path.join(BASE_DIR, "isac_cache.js")
 ICC_CBA_JS = os.path.join(BASE_DIR, "icc_cba_cache.js")
+RGP_CBA_JS = os.path.join(BASE_DIR, "rgp_cba_cache.js")
+ICC_INDEC_JS = os.path.join(BASE_DIR, "icc_indec_cache.js")
 
 DOCS_DIR = os.path.join(BASE_DIR, "docs")
 OUT_PAGES = os.path.join(DOCS_DIR, "index.html")
@@ -89,6 +91,8 @@ def main():
     riesgo = leer(RIESGO_JS, obligatorio=False)
     isac = leer(ISAC_JS, obligatorio=False)
     icc_cba = leer(ICC_CBA_JS, obligatorio=False)
+    rgp_cba = leer(RGP_CBA_JS, obligatorio=False)
+    icc_indec = leer(ICC_INDEC_JS, obligatorio=False)
 
     html = inline(html, "bcra_cache.js", bcra, "BCRA_CACHE")
     html = inline(html, "cac_cache.js", cac, "CAC_CACHE")
@@ -99,6 +103,8 @@ def main():
     html = inline(html, "riesgo_cache.js", riesgo, "RIESGO_CACHE")
     html = inline(html, "isac_cache.js", isac, "ISAC_CACHE")
     html = inline(html, "icc_cba_cache.js", icc_cba, "ICC_CBA_CACHE")
+    html = inline(html, "rgp_cba_cache.js", rgp_cba, "RGP_CBA_CACHE")
+    html = inline(html, "icc_indec_cache.js", icc_indec, "ICC_INDEC_CACHE")
 
     ts = datetime.now().strftime("%d/%m/%Y %H:%M")
     sello = (
