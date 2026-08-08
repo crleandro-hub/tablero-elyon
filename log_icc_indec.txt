@@ -1,5 +1,5 @@
 ===================================================== 
- Prueba ICC INDEC - sáb. 08/08/2026 20:38:01,84 
+ Prueba ICC INDEC - sáb. 08/08/2026 20:49:20,93 
 ===================================================== 
 Python usado: py -3 
  
@@ -19,7 +19,7 @@ Actualizando ICC del INDEC (Gran Buenos Aires)...
  
 --- BUILD_PUBLICAR --- 
 Generando version autocontenida del tablero...
-[OK] docs/index.html               (400 KB)
+[OK] docs/index.html               (405 KB)
 [OK] tablero_elyon_portable.html   (mismo contenido, para mandar suelto)
 
      Datos embebidos:

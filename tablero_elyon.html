@@ -102,6 +102,17 @@ body {
 .ins-ia     { font-size: 18px; font-weight: 700; line-height: 1.1; }
 .ins-acum   { font-size: 9.5px; color: var(--gris-txt); margin-top: 4px; }
 
+/* RESUMEN DE ÍNDICES DE LA CONSTRUCCIÓN
+   Una tarjeta por índice, con el nivel arriba y las dos variaciones que
+   importan abajo, separadas por una línea. La idea es poder comparar CAC,
+   ICC Córdoba, ICC INDEC y UVA de un vistazo, sin bajar a cada sección. */
+.res-grid  { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 12px; }
+.res-vars  { margin-top: 11px; padding-top: 9px; border-top: 1px solid var(--gris-brd); }
+.res-vars > div { display: flex; justify-content: space-between; align-items: baseline;
+                  font-size: 11px; padding: 2px 0; }
+.res-vars .rot { color: var(--gris-txt); letter-spacing: .3px; }
+.res-vars .val { font-size: 14px; font-weight: 700; }
+
 /* GRILLA DE INDICADORES MACRO
    Son 9 tarjetas y algunas traen numeros largos (el Merval pasa el millon de
    puntos). Con auto-fit entrarian las 9 en una sola fila y quedan apretadas,
@@ -451,6 +462,15 @@ body {
       </div>
 
     </div>
+
+    <!-- ── RESUMEN DE ÍNDICES DE LA CONSTRUCCIÓN ──────────── -->
+    <div class="sec-title">Índices de la construcción</div>
+    <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
+      Los cuatro índices con los que se ajustan obras y contratos, uno al lado del otro.
+      Cada uno mide algo distinto y no son intercambiables: mirá siempre cuál nombra el contrato.
+      Más abajo está el detalle de cada uno.
+    </div>
+    <div class="res-grid" id="resumen-construccion"></div>
 
     <!-- ── ISAC · ACTIVIDAD DE LA CONSTRUCCIÓN ──────────── -->
     <div class="sec-title">Actividad de la construcción</div>
@@ -1201,6 +1221,7 @@ function showScreen(id) {
     initIccCba();     // ICC de Córdoba (dato local, pinta al toque)
     initIccIndec();   // ICC del INDEC · Gran Buenos Aires (dato local)
     initRgp();        // Registro General de Córdoba (dato local)
+    renderResumenConstruccion();   // CAC / ICC Cba / ICC INDEC ya están; la UVA entra después
     initSalarios();   // escalas de convenio (dato local, pinta al toque)
     initAjuste();     // calculadora de redeterminacion
     loadSnapshot();   // datos guardados inmediatamente
@@ -1793,6 +1814,7 @@ async function loadMerval() {
 
 /* ── UVA (BCRA vía datos.gob.ar) ── */
 let uvaApiData = []; // [fecha, valor] desc
+let uvaResumen = null; // {fecha, valor, ia, ytd} para el resumen de índices
 
 
 /* Trae la serie UVA del BCRA paginando, para llegar al historico completo
@@ -1905,6 +1927,17 @@ function _calcUvaVariaciones(data) {
   pintar('val-uva-ytd', valorEn(anioBase + '-12-31'));
   const subYtd = document.getElementById('val-uva-ytd-sub');
   if (subYtd) subYtd.textContent = 'vs. 31-dic-' + anioBase;
+
+  /* Se guardan los mismos numeros para el resumen de arriba, asi la tarjeta
+     de la UVA dice exactamente lo mismo que esta seccion y no se calculan
+     dos veces con criterios distintos. */
+  const pctRef = ref => (ref && v0) ? (v0 / ref - 1) * 100 : null;
+  uvaResumen = {
+    fecha: anclaF,
+    valor: v0,
+    ia:  pctRef(valorEn(uvaDesplazar(anclaF, { anios: 1 }))),
+    ytd: pctRef(valorEn(anioBase + '-12-31')),
+  };
 }
 
 /* ══════════════════════════════════════════
@@ -3013,6 +3046,9 @@ async function reloadAll() {
     loadCreditoHipotecario(),
   ]);
 
+  // Se repinta con la UVA ya cargada, que es la única del resumen que viene de la red
+  renderResumenConstruccion();
+
   // El comparador se arma al final: necesita saber que series terminaron
   // con datos para no ofrecer casillas que no dibujarian nada.
   initComparador();
@@ -3911,6 +3947,72 @@ function renderIccCbaChart() {
       },
     },
   });
+}
+
+/* ══════════════════════════════════════════
+   RESUMEN DE ÍNDICES DE LA CONSTRUCCIÓN
+
+   Una tarjeta por indice con el nivel, el interanual y el acumulado del año.
+   No recalcula nada raro: usa las mismas fuentes que cada seccion de abajo,
+   asi los numeros del resumen y los del detalle nunca discrepan.
+══════════════════════════════════════════ */
+
+/* Igual que varsColumna pero sobre un Map 'aaaa-mm' -> nivel */
+function varsDeMapa(mapa) {
+  if (!mapa || !mapa.size) return null;
+  const ym = [...mapa.keys()].sort();
+  const ult = ym[ym.length - 1];
+  const anio = +ult.slice(0, 4), mm = ult.slice(5, 7);
+  const v = mapa.get(ult);
+  const pct = ref => (ref && v != null) ? (v / ref - 1) * 100 : null;
+  return {
+    mes: ult, valor: v,
+    ia:  pct(mapa.get((anio - 1) + '-' + mm)),
+    ytd: pct(mapa.get((anio - 1) + '-12')),
+  };
+}
+
+function renderResumenConstruccion() {
+  const cont = document.getElementById('resumen-construccion');
+  if (!cont) return;
+
+  const pct = v => v == null || isNaN(v)
+    ? '—' : (v >= 0 ? '+' : '') + fmtN(v, 1) + '%';
+  // Son indices de costo: que suban es mala noticia, van en rojo
+  const color = v => v == null || isNaN(v) ? '#888'
+    : (v >= 0 ? 'var(--rojo-txt)' : 'var(--verde)');
+
+  const tarjetas = [
+    { nombre: 'CAC General',  pie: 'Cámara Arg. de la Construcción · nacional',
+      d: varsDeMapa(compCac('cacGen')), dec: 1 },
+    { nombre: 'ICC Córdoba',  pie: 'vivienda social 50,25 m² · base 2012=100',
+      d: varsDeMapa(compIccCba(1)), dec: 1 },
+    { nombre: 'ICC INDEC',    pie: 'Gran Buenos Aires · base 1993=100',
+      d: varsDeMapa(compIccIndec(1)), dec: 1 },
+    { nombre: 'UVA',          pie: 'unidad de indexación · BCRA',
+      d: uvaResumen ? { mes: String(uvaResumen.fecha).slice(0, 7), valor: uvaResumen.valor,
+                        ia: uvaResumen.ia, ytd: uvaResumen.ytd } : null,
+      dec: 2, pesos: true },
+  ].filter(t => t.d && t.d.valor != null);
+
+  if (!tarjetas.length) {
+    cont.innerHTML = '<div style="color:var(--gris-txt);font-size:12px;padding:8px;">' +
+                     'Cargando índices…</div>';
+    return;
+  }
+
+  cont.innerHTML = tarjetas.map(t =>
+      '<div class="card">'
+    +   '<div class="kpi-label">' + t.nombre + '</div>'
+    +   '<div class="kpi-value">' + (t.pesos ? '$ ' : '') + fmtN(t.d.valor, t.dec) + '</div>'
+    +   '<div class="kpi-sub">' + isacMesLargo(t.d.mes + '-01') + ' · ' + t.pie + '</div>'
+    +   '<div class="res-vars">'
+    +     '<div><span class="rot">Interanual</span>'
+    +       '<span class="val" style="color:' + color(t.d.ia) + ';">' + pct(t.d.ia) + '</span></div>'
+    +     '<div><span class="rot">Acum. en el año</span>'
+    +       '<span class="val" style="color:' + color(t.d.ytd) + ';">' + pct(t.d.ytd) + '</span></div>'
+    +   '</div>'
+    + '</div>').join('');
 }
 
 /* ══════════════════════════════════════════
