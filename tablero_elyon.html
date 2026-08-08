@@ -3952,9 +3952,20 @@ function initIccIndec() {
   const tit = document.getElementById('icc-indec-titulo');
 
   if (!cache || !cache.serie || !cache.serie.length) {
-    // Todavia no se corrió update_icc_indec_cache.py: se oculta la sección
-    if (sec) sec.style.display = 'none';
-    if (tit) tit.style.display = 'none';
+    /* Todavia no se corrio update_icc_indec_cache.py. Antes esto ocultaba la
+       seccion entera, que es peor: parecia que el tablero estaba roto. Ahora
+       avisa que falta el paso y como resolverlo. */
+    if (sec) {
+      sec.innerHTML =
+        '<div style="background:var(--gris-med);border:1px dashed var(--gris-brd);' +
+        'border-radius:10px;padding:18px 20px;color:var(--gris-txt);font-size:12px;line-height:1.6;">' +
+        '<strong style="color:#ddd;">Falta generar los datos.</strong><br>' +
+        'Corré <code style="color:#ddd;">5-PROBAR-ICC-INDEC.bat</code> (o ' +
+        '<code style="color:#ddd;">python update_icc_indec_cache.py</code>) para bajar la serie ' +
+        'del INDEC y crear <code style="color:#ddd;">icc_indec_cache.js</code>. ' +
+        'Después regenerá el tablero y la sección aparece sola.' +
+        '</div>';
+    }
     return;
   }
   let s = cache.serie.slice().sort((a, b) => String(a[0]).localeCompare(String(b[0])));

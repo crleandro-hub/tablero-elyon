@@ -50,12 +50,25 @@ Uso:
 
 import io
 import os
+import re
 import ssl
 import sys
+import traceback
 import urllib.request as req
 from datetime import datetime
 
-import pandas as pd
+# pandas y xlrd no vienen con Python. update_cac_cache.py ya los usa, asi que
+# normalmente estan; pero si esta PC tiene mas de un Python instalado, el .bat
+# puede agarrar uno distinto al de la tarea programada. Por eso el aviso dice
+# con que interprete hay que instalarlos.
+try:
+    import pandas as pd
+except ImportError:
+    raise SystemExit(
+        "[ERROR] Falta pandas en este Python.\n"
+        "        Interprete: %s\n"
+        "        Instalalo con:  \"%s\" -m pip install pandas xlrd"
+        % (sys.executable, sys.executable))
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CACHE_PATH = os.path.join(BASE_DIR, "icc_indec_cache.js")
@@ -91,16 +104,30 @@ def bajar():
 
 
 def hojas(crudo):
-    """Devuelve {nombre: DataFrame sin encabezado}. Prueba xlrd (.xls viejo) y,
-    si el INDEC algun dia lo pasa a xlsx, openpyxl."""
+    """Devuelve {nombre: DataFrame sin encabezado}. Prueba xlrd (.xls viejo),
+    openpyxl (por si el INDEC lo pasa a xlsx) y, como ultimo recurso, lo lee
+    como tabla HTML: varios sitios oficiales publican .xls que en realidad son
+    HTML con extension cambiada."""
+    errores = []
     for motor in ("xlrd", "openpyxl", None):
         try:
             kw = {"engine": motor} if motor else {}
             return pd.read_excel(io.BytesIO(crudo), sheet_name=None, header=None, **kw)
         except Exception as e:
-            ultimo = e
-    raise SystemExit("[ERROR] No se pudo abrir el Excel: %s\n"
-                     "        Si falta xlrd: pip install xlrd" % ultimo)
+            errores.append("%s: %s" % (motor or "auto", e))
+
+    try:
+        tablas = pd.read_html(io.BytesIO(crudo), header=None)
+        if tablas:
+            print("   [AVISO] El archivo no es un Excel real: se leyo como HTML.")
+            return {"html_%d" % i: t for i, t in enumerate(tablas)}
+    except Exception as e:
+        errores.append("html: %s" % e)
+
+    raise SystemExit(
+        "[ERROR] No se pudo abrir el archivo del INDEC.\n        "
+        + "\n        ".join(errores)
+        + "\n        Si falta xlrd:  \"%s\" -m pip install xlrd" % sys.executable)
 
 
 def texto(v):
@@ -116,7 +143,6 @@ def a_fecha(v):
         return None
     meses = {"ene": 1, "feb": 2, "mar": 3, "abr": 4, "may": 5, "jun": 6,
              "jul": 7, "ago": 8, "sep": 9, "set": 9, "oct": 10, "nov": 11, "dic": 12}
-    import re
     m = re.match(r"^(\d{4})-(\d{1,2})", s)
     if m:
         return "%04d-%02d-01" % (int(m.group(1)), int(m.group(2)))
@@ -130,77 +156,156 @@ def a_fecha(v):
 
 
 def a_num(v):
+    """Los valores de xlrd ya vienen como float. Si vienen como texto puede ser
+    formato argentino ('1.234,56') o ingles ('1234.56'): solo se sacan los
+    puntos de miles cuando ademas hay una coma decimal."""
+    if isinstance(v, str):
+        s = v.replace("%", "").replace(" ", "").strip()
+        if not s:
+            return None
+        if "," in s:
+            s = s.replace(".", "").replace(",", ".")
+        v = s
     try:
-        f = float(str(v).replace("%", "").replace(".", "").replace(",", ".")
-                  if isinstance(v, str) else v)
+        f = float(v)
         return None if pd.isna(f) else f
     except (TypeError, ValueError):
         return None
 
 
-def buscar_bloque(df):
-    """Encuentra la fila de encabezado y las columnas de cada capitulo."""
-    for i in range(min(len(df), 40)):
-        fila = [texto(v) for v in df.iloc[i].tolist()]
-        cols = {}
-        for clave, alias in CAPITULOS:
-            for j, celda in enumerate(fila):
-                if any(a in celda for a in alias) and j not in cols.values():
-                    cols[clave] = j
-                    break
-        if len(cols) == 4:
-            return i, cols
-    return None, None
+MESES_NOM = {"enero": 1, "febrero": 2, "marzo": 3, "abril": 4, "mayo": 5, "junio": 6,
+             "julio": 7, "agosto": 8, "septiembre": 9, "setiembre": 9, "octubre": 10,
+             "noviembre": 11, "diciembre": 12}
 
 
-def columna_periodos(df, desde):
-    """La columna con mas fechas validas por debajo del encabezado."""
-    mejor, cuantas = None, 0
-    for j in range(min(df.shape[1], 8)):
-        n = sum(1 for i in range(desde + 1, len(df)) if a_fecha(df.iat[i, j]))
-        if n > cuantas:
-            mejor, cuantas = j, n
-    return mejor, cuantas
-
-
-def leer_serie(df):
-    enc, cols = buscar_bloque(df)
-    if enc is None:
-        return None
-    colper, n = columna_periodos(df, enc)
-    if colper is None or n < 12:
+def _anio(v):
+    try:
+        n = int(float(v))
+        return n if 1990 <= n <= 2100 else None
+    except (TypeError, ValueError):
         return None
 
-    filas = []
-    for i in range(enc + 1, len(df)):
-        f = a_fecha(df.iat[i, colper])
-        if not f:
+
+def _mes(v):
+    # Los meses provisorios vienen marcados con asterisco: "Enero*"
+    return MESES_NOM.get(texto(v).replace("*", "").strip())
+
+
+def mapa_columnas(df):
+    """El Excel del INDEC viene TRANSPUESTO: los capitulos son filas y los
+    meses son columnas, agrupados por año. Una fila trae los años (solo en la
+    columna donde arranca cada uno) y la de abajo los nombres de mes.
+
+    Devuelve {columna: 'aaaa-mm-01'} arrastrando el año hacia la derecha."""
+    fa = fm = None
+    for i in range(min(len(df), 15)):
+        fila = df.iloc[i].tolist()
+        if fa is None and sum(1 for v in fila if _anio(v)) >= 2:
+            fa = i
+        elif fa is not None and sum(1 for v in fila if _mes(v)) >= 6:
+            fm = i
+            break
+    if fa is None or fm is None:
+        return None, None
+
+    cols, anio = {}, None
+    for j in range(df.shape[1]):
+        a = _anio(df.iat[fa, j])
+        if a:
+            anio = a
+        mes = _mes(df.iat[fm, j])
+        if anio and mes:
+            cols[j] = "%04d-%02d-01" % (anio, mes)
+    return (cols, fm) if cols else (None, None)
+
+
+def _etiqueta(v):
+    """Normaliza el rotulo de la fila para compararlo con el nombre del
+    capitulo: saca la llamada al pie y los espacios sobrantes.
+        'Mano de obra (1)'  ->  'mano de obra'
+    Ojo: NO alcanza con buscar el nombre adentro del texto. La fila de titulo
+    dice 'Nivel general y capitulos_var%', que contiene 'nivel general' y se
+    colaba como si fuera la fila de datos."""
+    return re.sub(r"\(.*?\)", "", texto(v)).strip(" .:*")
+
+
+def leer_transpuesta(df):
+    """Lee una hoja con el layout del INDEC (capitulos en filas)."""
+    cols, fm = mapa_columnas(df)
+    if not cols or len(cols) < 12:
+        return None
+
+    filas_cap = {}
+    for i in range(fm + 1, len(df)):          # solo debajo de la fila de meses
+        etiqueta = _etiqueta(df.iat[i, 0])
+        if not etiqueta:
             continue
-        vals = [a_num(df.iat[i, cols[c]]) for c, _ in CAPITULOS]
+        for clave, alias in CAPITULOS:
+            if clave not in filas_cap and etiqueta in alias:
+                filas_cap[clave] = i
+    if len(filas_cap) < 4:
+        return None
+
+    serie = []
+    for j in sorted(cols, key=lambda c: cols[c]):
+        vals = [a_num(df.iat[filas_cap[c], j]) for c, _ in CAPITULOS]
         if vals[0] is None:
             continue
-        filas.append([f] + vals)
-    filas.sort(key=lambda r: r[0])
-    # Puede haber filas repetidas si el Excel trae indices y variaciones juntos
-    unicas, vistos = [], set()
-    for r in filas:
-        if r[0] not in vistos:
-            vistos.add(r[0])
-            unicas.append(r)
-    return unicas or None
+        serie.append([cols[j]] + vals)
+    serie.sort(key=lambda r: r[0])
+    return serie or None
 
 
 def es_indice(serie):
-    """Los indices base 1993 andan en miles; las variaciones, entre -20 y 30."""
+    """Los indices andan en cientos o miles; las variaciones, entre -20 y 30."""
     ult = [r[1] for r in serie[-12:] if r[1] is not None]
     return bool(ult) and max(abs(v) for v in ult) > 200
 
 
+def extender_hacia_atras(niveles, variaciones):
+    """La hoja de indices arranca en 2022, la de variaciones en 2015. Se
+    reconstruyen los meses previos dividiendo el nivel por cada variacion:
+
+        nivel(t-1) = nivel(t) / (1 + var(t)/100)
+
+    Asi el grafico muestra la serie larga con una unica escala."""
+    if not niveles or not variaciones:
+        return niveles
+    var = {r[0]: r for r in variaciones}
+    fechas_var = sorted(var)
+    primero = niveles[0][0]
+    if primero not in var:
+        return niveles
+    corte = fechas_var.index(primero)
+    if corte == 0:
+        return niveles
+
+    previos, actual = [], list(niveles[0][1:])
+    for k in range(corte - 1, -1, -1):
+        # var del mes siguiente = cuanto subio de fechas_var[k] a fechas_var[k+1]
+        v = var[fechas_var[k + 1]]
+        fila = []
+        for c in range(4):
+            pct = v[c + 1]
+            fila.append(None if actual[c] is None or pct is None or pct <= -100
+                        else actual[c] / (1 + pct / 100.0))
+        if fila[0] is None:
+            break
+        previos.append([fechas_var[k]] + fila)
+        actual = fila
+
+    previos.reverse()
+    return previos + niveles
+
+
 def diagnostico(hs):
+    """Vuelca las primeras filas y columnas de cada hoja. Se recorta a 14
+    columnas: con eso alcanza para ver como esta armada la planilla y el log
+    no queda ilegible (la hoja de variaciones tiene 140 columnas)."""
     print("\n--- ESTRUCTURA DEL EXCEL ---")
     for nombre, df in hs.items():
         print("\n[hoja] %r  filas=%d  columnas=%d" % (nombre, len(df), df.shape[1]))
-        print(df.head(12).to_string(max_colwidth=22))
+        print(df.iloc[:14, :14].to_string(max_colwidth=24))
     print("\nPegale esta salida a Claude para que ajuste el parser.")
 
 
@@ -216,23 +321,41 @@ def main():
     if "--diagnostico" in sys.argv:
         return diagnostico(hs)
 
-    # Se prefiere la hoja con indices (niveles): con eso el tablero calcula
-    # mensual, interanual y acumulada por su cuenta, sin depender del Excel.
-    candidatas = []
+    # El archivo trae dos hojas: una con indices y otra con variaciones %.
+    niveles = variaciones = None
     for nombre, df in hs.items():
-        s = leer_serie(df)
-        if s:
-            candidatas.append((nombre, s, es_indice(s)))
-    if not candidatas:
+        s = leer_transpuesta(df)
+        if not s:
+            continue
+        if es_indice(s):
+            if niveles is None or len(s) > len(niveles[1]):
+                niveles = (nombre, s)
+        else:
+            if variaciones is None or len(s) > len(variaciones[1]):
+                variaciones = (nombre, s)
+
+    if not niveles and not variaciones:
         print("\n[ERROR] No se encontro ninguna hoja con Nivel general / Materiales /"
               " Mano de obra / Gastos generales.")
         diagnostico(hs)
         raise SystemExit("Se conserva el icc_indec_cache.js anterior.")
 
-    candidatas.sort(key=lambda c: (not c[2], -len(c[1])))
-    nombre, serie, indices = candidatas[0]
-    tipo = "indice" if indices else "variacion_mensual"
-    print("   Hoja elegida: %r  (%d meses, %s)" % (nombre, len(serie), tipo))
+    if niveles:
+        nombre, serie = niveles
+        tipo = "indice"
+        print("   Indices : hoja %r, %d meses (%s a %s)"
+              % (nombre, len(serie), serie[0][0][:7], serie[-1][0][:7]))
+        # La hoja de indices arranca en 2022; la de variaciones llega mas
+        # atras. Se extiende el indice hacia el pasado dividiendo por cada
+        # variacion mensual, para no perder esos años en el grafico.
+        if variaciones:
+            serie = extender_hacia_atras(serie, variaciones[1])
+            print("   Empalme : con la hoja %r -> %d meses desde %s"
+                  % (variaciones[0], len(serie), serie[0][0][:7]))
+    else:
+        nombre, serie = variaciones
+        tipo = "variacion_mensual"
+        print("   Solo hay variaciones: hoja %r, %d meses" % (nombre, len(serie)))
 
     hasta = serie[-1][0][:7]
 
@@ -241,7 +364,7 @@ def main():
     ctrl = mapa.get(CONTROL["mes"])
     ok = "sin control (el mes de control no esta en la serie)"
     if ctrl:
-        if indices:
+        if tipo == "indice":
             prev = mapa.get("2026-05")
             calc = (ctrl[1] / prev[1] - 1) * 100 if prev and prev[1] else None
         else:
@@ -289,4 +412,16 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except SystemExit:
+        raise
+    except Exception:
+        # Cualquier error inesperado se muestra completo: sin el traceback no
+        # hay forma de saber que paso, y el cache anterior queda intacto.
+        print("\n[ERROR] El script se cayo con una excepcion inesperada.")
+        print("        Python: %s" % sys.version.split()[0])
+        print("        Interprete: %s" % sys.executable)
+        print("        Se conserva el icc_indec_cache.js anterior.\n")
+        traceback.print_exc()
+        sys.exit(1)
