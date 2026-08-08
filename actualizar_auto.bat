@@ -62,18 +62,26 @@ call :log "[5/8] REM del BCRA (inflacion esperada)..."
 %PY% update_rem_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_rem_cache.py - se conservan los datos previos."
 
-call :log "[6/8] Riesgo pais (Rava Bursatil)..."
+call :log "[6/9] Riesgo pais (Rava Bursatil)..."
 %PY% update_riesgo_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_riesgo_cache.py - se conservan los datos previos."
 
-call :log "[7/8] Generando docs\index.html y version portable..."
+call :log "[7/10] ISAC e insumos de la construccion (INDEC)..."
+%PY% update_isac_cache.py >> "%LOG%" 2>&1
+if errorlevel 1 call :log "[AVISO] Fallo update_isac_cache.py - se conservan los datos previos."
+
+call :log "[8/10] ICC de Cordoba (Estadistica y Censos Cba)..."
+%PY% update_icc_cba_cache.py >> "%LOG%" 2>&1
+if errorlevel 1 call :log "[AVISO] Fallo update_icc_cba_cache.py - se conservan los datos previos."
+
+call :log "[9/10] Generando docs\index.html y version portable..."
 %PY% build_publicar.py >> "%LOG%" 2>&1
 if errorlevel 1 (
   call :log "[ERROR] Fallo build_publicar.py. No se publica."
   goto :fin
 )
 
-call :log "[8/8] Publicando en GitHub Pages..."
+call :log "[10/10] Publicando en GitHub Pages..."
 git add -A >> "%LOG%" 2>&1
 git commit -m "Actualizacion automatica de indicadores %date%" >> "%LOG%" 2>&1
 if errorlevel 1 (

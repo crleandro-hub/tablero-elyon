@@ -36,6 +36,8 @@ MERVAL_JS = os.path.join(BASE_DIR, "merval_cache.js")
 REM_JS = os.path.join(BASE_DIR, "rem_cache.js")
 SAL_JS = os.path.join(BASE_DIR, "salarios_cache.js")
 RIESGO_JS = os.path.join(BASE_DIR, "riesgo_cache.js")
+ISAC_JS = os.path.join(BASE_DIR, "isac_cache.js")
+ICC_CBA_JS = os.path.join(BASE_DIR, "icc_cba_cache.js")
 
 DOCS_DIR = os.path.join(BASE_DIR, "docs")
 OUT_PAGES = os.path.join(DOCS_DIR, "index.html")
@@ -85,6 +87,8 @@ def main():
     rem = leer(REM_JS, obligatorio=False)
     sal = leer(SAL_JS, obligatorio=False)
     riesgo = leer(RIESGO_JS, obligatorio=False)
+    isac = leer(ISAC_JS, obligatorio=False)
+    icc_cba = leer(ICC_CBA_JS, obligatorio=False)
 
     html = inline(html, "bcra_cache.js", bcra, "BCRA_CACHE")
     html = inline(html, "cac_cache.js", cac, "CAC_CACHE")
@@ -93,6 +97,8 @@ def main():
     html = inline(html, "rem_cache.js", rem, "REM_CACHE")
     html = inline(html, "salarios_cache.js", sal, "SALARIOS_CACHE")
     html = inline(html, "riesgo_cache.js", riesgo, "RIESGO_CACHE")
+    html = inline(html, "isac_cache.js", isac, "ISAC_CACHE")
+    html = inline(html, "icc_cba_cache.js", icc_cba, "ICC_CBA_CACHE")
 
     ts = datetime.now().strftime("%d/%m/%Y %H:%M")
     sello = (

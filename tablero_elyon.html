@@ -88,6 +88,20 @@ body {
 .kpi-sub { font-size: 10.5px; color: #8f8f8f; margin-top: 5px; }
 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 6px; }
 
+/* TARJETAS DE INSUMOS DEL ISAC
+   Son 13 y cada una lleva su emoji, la variacion interanual y la acumulada
+   del año. Se ordenan de mayor a menor interanual, como el grafico del INDEC. */
+.ins-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 10px; }
+.ins-card { background: var(--gris-osc); border: 1px solid var(--gris-brd); border-radius: 10px;
+            padding: 11px 12px; display: flex; flex-direction: column; }
+.ins-card.sube { border-left: 3px solid var(--verde); }
+.ins-card.baja { border-left: 3px solid var(--rojo); }
+.ins-emoji  { font-size: 19px; line-height: 1; }
+.ins-nombre { font-size: 10px; color: #a8a8a8; line-height: 1.3; margin: 7px 0 6px;
+              min-height: 26px; letter-spacing: .3px; }
+.ins-ia     { font-size: 18px; font-weight: 700; line-height: 1.1; }
+.ins-acum   { font-size: 9.5px; color: var(--gris-txt); margin-top: 4px; }
+
 /* GRILLA DE INDICADORES MACRO
    Son 9 tarjetas y algunas traen numeros largos (el Merval pasa el millon de
    puntos). Con auto-fit entrarian las 9 en una sola fila y quedan apretadas,
@@ -438,6 +452,113 @@ body {
 
     </div>
 
+    <!-- ── ISAC · ACTIVIDAD DE LA CONSTRUCCIÓN ──────────── -->
+    <div class="sec-title">Actividad de la construcción</div>
+    <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
+      Indicador sintético de la actividad de la construcción (ISAC) del INDEC, base 2004=100.
+      Mide el consumo aparente de 13 insumos, o sea el <strong style="color:#bbb;">volumen físico</strong>
+      de obra. El CAC dice cuánto cuesta construir; el ISAC, cuánto se está construyendo.
+      <span id="isac-datasource" style="display:block;margin-top:5px;font-size:10px;"></span>
+    </div>
+
+    <div id="isac-section">
+      <div class="kpi-grid">
+        <div class="card">
+          <div class="kpi-label">ISAC nivel general</div>
+          <div class="kpi-value" id="kpi-isac-idx">—</div>
+          <div class="kpi-sub" id="kpi-isac-fecha">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Var. interanual</div>
+          <div class="kpi-value" id="kpi-isac-ia">—</div>
+          <div class="kpi-sub">vs. mismo mes año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Acum. en el año</div>
+          <div class="kpi-value" id="kpi-isac-acum">—</div>
+          <div class="kpi-sub" id="kpi-isac-acum-sub">vs. igual período año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Desestacionalizada</div>
+          <div class="kpi-value" id="kpi-isac-desest">—</div>
+          <div class="kpi-sub">vs. mes anterior</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución del ISAC</div>
+        <select class="period-select" id="isac-range" onchange="renderIsacChart()">
+          <option value="24">Últimos 2 años</option>
+          <option value="60" selected>Últimos 5 años</option>
+          <option value="120">Últimos 10 años</option>
+          <option value="0">Histórico completo</option>
+        </select>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-isac" role="img" aria-label="Evolución del ISAC, serie original y desestacionalizada"></canvas>
+      </div>
+
+      <!-- ─── INSUMOS ─── -->
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:24px 0 10px;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div class="sub-title">Insumos para la construcción</div>
+          <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;" id="isac-ins-sub">
+            Consumo aparente por insumo · variación interanual y acumulada del año
+          </div>
+        </div>
+      </div>
+
+      <div class="ins-grid" id="isac-insumos"></div>
+
+      <div style="margin:18px 0 8px;">
+        <div class="sub-title">Interanual por insumo</div>
+      </div>
+      <div class="chart-wrap" style="height:340px;">
+        <canvas id="chart-isac-ins" role="img" aria-label="Variación interanual por insumo de la construcción"></canvas>
+      </div>
+
+      <!-- ─── EMPLEO Y PERMISOS ─── -->
+      <div style="margin:24px 0 10px;">
+        <div class="sub-title">Empleo registrado y permisos de edificación</div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;" id="isac-ep-sub">
+          Complementos del informe mensual del INDEC · un mes más de rezago que el ISAC
+        </div>
+      </div>
+
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
+        <div class="card">
+          <div class="kpi-label">Puestos registrados</div>
+          <div class="kpi-value" id="kpi-emp-val">—</div>
+          <div class="kpi-sub" id="kpi-emp-fecha">sector privado</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Empleo · interanual</div>
+          <div class="kpi-value" id="kpi-emp-ia">—</div>
+          <div class="kpi-sub">vs. mismo mes año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Empleo · acum. año</div>
+          <div class="kpi-value" id="kpi-emp-acum">—</div>
+          <div class="kpi-sub">vs. igual período año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Superficie autorizada</div>
+          <div class="kpi-value" id="kpi-per-val">—</div>
+          <div class="kpi-sub" id="kpi-per-fecha">m² · 246 municipios</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Permisos · interanual</div>
+          <div class="kpi-value" id="kpi-per-ia">—</div>
+          <div class="kpi-sub" id="kpi-per-cant">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Permisos · acum. año</div>
+          <div class="kpi-value" id="kpi-per-acum">—</div>
+          <div class="kpi-sub">m² vs. igual período año ant.</div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── ÍNDICE CAC ──────────────────── -->
     <div class="sec-title">Índice CAC</div>
 
@@ -506,6 +627,65 @@ body {
 
       <div id="cac-q-result">
         <div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">Cargando...</div>
+      </div>
+    </div>
+
+    <!-- ── ICC CÓRDOBA ──────────────────── -->
+    <div class="sec-title" id="icc-cba-titulo">Índice ICC Córdoba</div>
+    <div id="icc-cba-section">
+      <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
+        Índice del Costo de la Construcción de la provincia de Córdoba, base 2012=100.
+        Mide una <strong style="color:#bbb;">vivienda social tipo de 50,25 m²</strong>
+        (cocina-comedor, dos dormitorios y baño), metodología vigente desde oct-2013.
+        Es el par local del CAC, que es nacional y sobre un edificio tipo porteño.
+        <span id="icc-cba-datasource" style="display:block;margin-top:5px;font-size:10px;"></span>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="card">
+          <div class="kpi-label">ICC Córdoba</div>
+          <div class="kpi-value" id="kpi-icc-idx">—</div>
+          <div class="kpi-sub" id="kpi-icc-fecha">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Var. mensual</div>
+          <div class="kpi-value" id="kpi-icc-m">—</div>
+          <div class="kpi-sub">vs. mes anterior</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Var. interanual</div>
+          <div class="kpi-value" id="kpi-icc-ia">—</div>
+          <div class="kpi-sub">vs. mismo mes año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Acum. en el año</div>
+          <div class="kpi-value" id="kpi-icc-ytd">—</div>
+          <div class="kpi-sub" id="kpi-icc-ytd-sub">vs. dic. año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Valor del m²</div>
+          <div class="kpi-value" id="kpi-icc-m2">—</div>
+          <div class="kpi-sub" id="kpi-icc-m2-sub">vivienda tipo 50,25 m²</div>
+        </div>
+      </div>
+
+      <div style="margin:20px 0 10px;">
+        <div class="sub-title">Apertura por rubro</div>
+      </div>
+      <div class="kpi-grid" id="icc-cba-rubros"
+           style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));"></div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:22px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución del ICC Córdoba</div>
+        <select class="period-select" id="icc-cba-range" onchange="renderIccCbaChart()">
+          <option value="12">Último año</option>
+          <option value="36" selected>Últimos 3 años</option>
+          <option value="60">Últimos 5 años</option>
+          <option value="0">Histórico completo</option>
+        </select>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-icc-cba" role="img" aria-label="Evolución del ICC de Córdoba por rubro"></canvas>
       </div>
     </div>
 
@@ -733,60 +913,18 @@ body {
       <div id="sal-uecara-tabla"></div>
     </div>
 
-    <!-- ── AJUSTE DE CONTRATOS / REDETERMINACIÓN ───────── -->
-    <div id="ajuste-section">
-      <div class="sec-title">Ajuste de contratos y presupuestos</div>
-      <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
-        Cuánto vale hoy un monto pactado en otra fecha. Se arma un polinomio: se reparte el
-        100% del monto entre los índices que mejor representan la estructura de costos del
-        contrato y cada componente se ajusta por su propia variación.
-      </div>
-
-      <div class="card" style="margin-bottom:14px;">
-        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
-          <div>
-            <div class="kpi-label" style="margin-bottom:5px;">Monto original</div>
-            <input type="number" id="aj-monto" value="10000000" min="0" step="1000"
-                   oninput="renderAjuste()" class="period-select" style="width:170px;">
-          </div>
-          <div>
-            <div class="kpi-label" style="margin-bottom:5px;">Desde</div>
-            <select class="period-select" id="aj-desde" onchange="renderAjuste()" style="width:150px;"></select>
-          </div>
-          <div>
-            <div class="kpi-label" style="margin-bottom:5px;">Hasta</div>
-            <select class="period-select" id="aj-hasta" onchange="renderAjuste()" style="width:150px;"></select>
-          </div>
-          <div>
-            <div class="kpi-label" style="margin-bottom:5px;">Polinomio armado</div>
-            <select class="period-select" id="aj-preset" onchange="aplicarPresetAjuste()" style="width:230px;">
-              <option value="obra">Obra completa (45 mat / 40 MO / 15 IPC)</option>
-              <option value="cac">Solo CAC general</option>
-              <option value="ipc">Solo IPC</option>
-              <option value="uva">Solo UVA</option>
-              <option value="usd">Solo dólar oficial</option>
-              <option value="libre">Personalizado</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="sub-title" style="margin-bottom:10px;">Composición (%)</div>
-        <div id="aj-pesos" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:10px;"></div>
-        <div id="aj-suma" style="font-size:11px;margin-top:12px;"></div>
-      </div>
-
-      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:14px;"
-           id="aj-kpis"></div>
-
-      <div id="aj-detalle"></div>
-    </div>
-
     <!-- ── COMPARADOR DE ÍNDICES ──────────── -->
     <div class="sec-title">Comparador de índices</div>
     <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
-      Variación interanual mes a mes de todos los índices, en una misma escala.
+      Variación interanual mes a mes de todos los índices del tablero, en una misma escala.
       Sirve para ver cuál corrió más rápido en cada momento: si el costo de obra le ganó
-      a la inflación, si el dólar quedó atrasado contra el CAC, y así.
+      a la inflación, si el dólar quedó atrasado contra el CAC, si la mano de obra en Córdoba
+      se despegó de los materiales, y así.
+      <span style="display:block;margin-top:5px;font-size:10px;">
+        Se pueden abrir CAC e ICC Córdoba por rubro, y sumar el jornal UOCRA, el MERVAL
+        y el ISAC. Este último es el único que no mide precios sino volumen físico de obra:
+        se compara para ver si la actividad acompaña o no a la escalada de costos.
+      </span>
     </div>
 
     <div id="comp-section">
@@ -819,6 +957,56 @@ body {
       <div id="comp-resumen" style="margin-top:14px;"></div>
     </div>
 
+    <!-- ── AJUSTE DE CONTRATOS / REDETERMINACIÓN ───────── -->
+    <div id="ajuste-section">
+      <div class="sec-title">Ajuste de contratos y presupuestos</div>
+      <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
+        Cuánto vale hoy un monto pactado en otra fecha. Se arma un polinomio: se reparte el
+        100% del monto entre los índices que mejor representan la estructura de costos del
+        contrato y cada componente se ajusta por su propia variación.
+      </div>
+
+      <div class="card" style="margin-bottom:14px;">
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+          <div>
+            <div class="kpi-label" style="margin-bottom:5px;">Monto original</div>
+            <input type="number" id="aj-monto" value="10000000" min="0" step="1000"
+                   oninput="renderAjuste()" class="period-select" style="width:170px;">
+          </div>
+          <div>
+            <div class="kpi-label" style="margin-bottom:5px;">Desde</div>
+            <select class="period-select" id="aj-desde" onchange="renderAjuste()" style="width:150px;"></select>
+          </div>
+          <div>
+            <div class="kpi-label" style="margin-bottom:5px;">Hasta</div>
+            <select class="period-select" id="aj-hasta" onchange="renderAjuste()" style="width:150px;"></select>
+          </div>
+          <div>
+            <div class="kpi-label" style="margin-bottom:5px;">Polinomio armado</div>
+            <select class="period-select" id="aj-preset" onchange="aplicarPresetAjuste()" style="width:230px;">
+              <option value="obra">Obra completa · CAC (45 mat / 40 MO / 15 IPC)</option>
+              <option value="obraCba">Obra completa · ICC Cba (45 mat / 40 MO / 15 IPC)</option>
+              <option value="cac">Solo CAC general</option>
+              <option value="iccCba">Solo ICC Córdoba</option>
+              <option value="ipc">Solo IPC</option>
+              <option value="uva">Solo UVA</option>
+              <option value="usd">Solo dólar oficial</option>
+              <option value="libre">Personalizado</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sub-title" style="margin-bottom:10px;">Composición (%)</div>
+        <div id="aj-pesos" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:10px;"></div>
+        <div id="aj-suma" style="font-size:11px;margin-top:12px;"></div>
+      </div>
+
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:14px;"
+           id="aj-kpis"></div>
+
+      <div id="aj-detalle"></div>
+    </div>
+
   </div><!-- /content -->
   <div class="footer">© Grupo Elyon · Tablero de Gestión Interna</div>
 </div>
@@ -830,6 +1018,8 @@ body {
 <script src="merval_cache.js"></script>  <!-- generado por update_merval_cache.py -->
 <script src="rem_cache.js"></script>  <!-- generado por update_rem_cache.py -->
 <script src="riesgo_cache.js"></script>  <!-- generado por update_riesgo_cache.py -->
+<script src="isac_cache.js"></script>  <!-- generado por update_isac_cache.py -->
+<script src="icc_cba_cache.js"></script>  <!-- generado por update_icc_cba_cache.py -->
 <script src="salarios_cache.js"></script>  <!-- escalas UOCRA / UECARA, se edita a mano -->
 <!-- ══════════════════════════════════════
      JAVASCRIPT
@@ -863,6 +1053,7 @@ function showScreen(id) {
   if (id === 'indicadores' && !indicadoresLoaded) {
     indicadoresLoaded = true;
     initCacFromEmbedded();
+    initIccCba();     // ICC de Córdoba (dato local, pinta al toque)
     initSalarios();   // escalas de convenio (dato local, pinta al toque)
     initAjuste();     // calculadora de redeterminacion
     loadSnapshot();   // datos guardados inmediatamente
@@ -2266,6 +2457,12 @@ const SNAP_IDS = [
   'dolar-ts','refresh-ts',
   'kpi-cac-gen','kpi-cac-mat','kpi-cac-mo','kpi-cac-ia','kpi-cac-fecha',
   'kpi-cac-ytd','kpi-cac-ytd-sub',
+  'kpi-icc-idx','kpi-icc-fecha','kpi-icc-m','kpi-icc-ia','kpi-icc-ytd',
+  'kpi-icc-ytd-sub','kpi-icc-m2','kpi-icc-m2-sub',
+  'kpi-isac-idx','kpi-isac-fecha','kpi-isac-ia','kpi-isac-acum','kpi-isac-acum-sub',
+  'kpi-isac-desest',
+  'kpi-emp-val','kpi-emp-fecha','kpi-emp-ia','kpi-emp-acum',
+  'kpi-per-val','kpi-per-fecha','kpi-per-ia','kpi-per-acum','kpi-per-cant',
 ];
 // IDs de las variation badges de dólar
 const SNAP_BADGE_IDS = [
@@ -2365,17 +2562,26 @@ let compChart = null;
 let ipcSerie  = [];   // [fecha, indice] descendente
 
 const COMP_SERIES = {
-  ipc:      { label: 'IPC (INDEC)',   color: '#f59e0b', get: () => compIpc() },
-  cac:      { label: 'CAC general',   color: '#ef4444', get: () => compCac() },
-  uva:      { label: 'UVA',           color: '#c084fc', get: () => compUva() },
-  oficial:  { label: 'Dólar oficial', color: '#60a5fa', get: () => compUsd('oficial') },
-  blue:     { label: 'Dólar blue',    color: '#22c55e', get: () => compUsd('blue') },
-  bolsa:    { label: 'Dólar MEP',     color: '#14b8a6', get: () => compUsd('bolsa') },
-  contadoconliqui: { label: 'Dólar CCL', color: '#f97316', get: () => compUsd('contadoconliqui') },
+  ipc:       { label: 'IPC (INDEC)',        color: '#f59e0b', get: () => compIpc() },
+  cac:       { label: 'CAC general',        color: '#ef4444', get: () => compCac('cacGen') },
+  cacMat:    { label: 'CAC materiales',     color: '#fca5a5', get: () => compCac('mat') },
+  cacMo:     { label: 'CAC mano de obra',   color: '#fdba74', get: () => compCac('mo') },
+  iccCba:    { label: 'ICC Córdoba',        color: '#fb7185', get: () => compIccCba(1) },
+  iccCbaMat: { label: 'ICC Cba materiales', color: '#f9a8d4', get: () => compIccCba(2) },
+  iccCbaMo:  { label: 'ICC Cba mano obra',  color: '#e879f9', get: () => compIccCba(3) },
+  uocra:     { label: 'Jornal UOCRA',       color: '#a3e635', get: () => salSerieUocra('oficial') },
+  uva:       { label: 'UVA',                color: '#c084fc', get: () => compUva() },
+  oficial:   { label: 'Dólar oficial',      color: '#60a5fa', get: () => compUsd('oficial') },
+  blue:      { label: 'Dólar blue',         color: '#22c55e', get: () => compUsd('blue') },
+  bolsa:     { label: 'Dólar MEP',          color: '#14b8a6', get: () => compUsd('bolsa') },
+  contadoconliqui: { label: 'Dólar CCL',    color: '#f97316', get: () => compUsd('contadoconliqui') },
+  merval:    { label: 'MERVAL (pesos)',     color: '#38bdf8', get: () => compMerval() },
+  isac:      { label: 'ISAC (actividad)',   color: '#94a3b8', get: () => compIsac() },
 };
 
-/* Los cuatro que mas se miran juntos en obra: costo, precios, indexacion y dolar */
-const COMP_DEFAULT = ['ipc', 'cac', 'uva', 'blue'];
+/* Los que mas se miran juntos en obra: costo nacional, costo local,
+   precios, indexacion y dolar. El resto se tilda a mano. */
+const COMP_DEFAULT = ['ipc', 'cac', 'iccCba', 'uva', 'blue'];
 
 /* ── Normalizadores: cada uno devuelve Map 'aaaa-mm' -> nivel ── */
 
@@ -2402,13 +2608,41 @@ function compUva() {
   return _mensualDesdeDiaria(uvaApiData.map(r => [String(r[0]).slice(0, 10), r[1]]));
 }
 
-function compCac() {
+/* campo: 'cacGen' | 'mat' | 'mo' */
+function compCac(campo) {
   if (!cacData || !cacData.length) return null;
   const m = new Map();
   cacData.forEach(r => {
-    if (!r.fecha || r.cacGen == null) return;
+    if (!r.fecha || r[campo] == null) return;
     const ym = r.fecha.getFullYear() + '-' + String(r.fecha.getMonth() + 1).padStart(2, '0');
-    m.set(ym, Number(r.cacGen));
+    m.set(ym, Number(r[campo]));
+  });
+  return m.size ? m : null;
+}
+
+/* col: 1 nivel general | 2 materiales | 3 mano de obra | 4 varios */
+function compIccCba(col) {
+  if (!iccCbaSerie.length) return null;
+  const m = new Map();
+  iccCbaSerie.forEach(r => {
+    if (r[col] != null) m.set(String(r[0]).slice(0, 7), Number(r[col]));
+  });
+  return m.size ? m : null;
+}
+
+function compMerval() {
+  const c = window.MERVAL_CACHE;
+  if (!c || !c.serie || !c.serie.length) return null;
+  return _mensualDesdeDiaria(c.serie.map(r => [String(r[0]).slice(0, 10), r[1]]));
+}
+
+/* Ojo: el ISAC mide volumen fisico de obra, no precios. Se compara igual
+   porque muestra si la actividad acompaña o no a la escalada de costos. */
+function compIsac() {
+  if (!isacSerie.length) return null;
+  const m = new Map();
+  isacSerie.forEach(r => {
+    if (r[1] != null) m.set(String(r[0]).slice(0, 7), Number(r[1]));
   });
   return m.size ? m : null;
 }
@@ -2620,6 +2854,7 @@ async function reloadAll() {
     loadMerval(),
     loadUVA(),
     loadBlue(),
+    loadIsac(),
   ]);
 
   // El comparador se arma al final: necesita saber que series terminaron
@@ -2876,7 +3111,10 @@ async function renderSalChart() {
 const AJ_COMPONENTES = [
   { id: 'cacMat', label: 'CAC · Materiales',   get: () => _serieCac('mat') },
   { id: 'cacMo',  label: 'CAC · Mano de obra', get: () => _serieCac('mo')  },
-  { id: 'cacGen', label: 'CAC · General',      get: () => compCac()        },
+  { id: 'cacGen', label: 'CAC · General',      get: () => compCac('cacGen') },
+  { id: 'iccMat', label: 'ICC Cba · Materiales',   get: () => compIccCba(2) },
+  { id: 'iccMo',  label: 'ICC Cba · Mano de obra', get: () => compIccCba(3) },
+  { id: 'iccGen', label: 'ICC Cba · General',      get: () => compIccCba(1) },
   { id: 'uocra',  label: 'UOCRA · Oficial',    get: () => salSerieUocra('oficial') },
   { id: 'ipc',    label: 'IPC (INDEC)',        get: () => compIpc()        },
   { id: 'uva',    label: 'UVA',                get: () => compUva()        },
@@ -2886,7 +3124,9 @@ const AJ_COMPONENTES = [
 
 const AJ_PRESETS = {
   obra: { cacMat: 45, cacMo: 40, ipc: 15 },
+  obraCba: { iccMat: 45, iccMo: 40, ipc: 15 },
   cac:  { cacGen: 100 },
+  iccCba: { iccGen: 100 },
   ipc:  { ipc: 100 },
   uva:  { uva: 100 },
   usd:  { usdOf: 100 },
@@ -3346,6 +3586,511 @@ function renderUvaChart() {
       },
     },
   });
+}
+
+/* ══════════════════════════════════════════
+   ICC CÓRDOBA — Dirección Gral. de Estadística y Censos de Córdoba
+
+   Sale de icc_cba_cache.js, que arma update_icc_cba_cache.py con el CSV del
+   portal de datos abiertos. No se puede pedir en vivo desde el navegador: el
+   link de descarga redirige a un S3 firmado que vence en una hora.
+
+   Columnas de la serie:
+     [fecha, nivel general, materiales, mano de obra, varios, valor del m2]
+══════════════════════════════════════════ */
+let iccCbaSerie = [];
+let iccCbaChart = null;
+
+const ICC_CBA_RUBROS = [
+  [2, 'Materiales',   '#60a5fa'],
+  [3, 'Mano de obra', '#4ade80'],
+  [4, 'Varios',       '#c084fc'],
+];
+
+/* Devuelve las tres variaciones de una columna: mensual, interanual y
+   acumulada del año (contra diciembre del año anterior). */
+function iccCbaVars(col) {
+  const m = new Map();
+  iccCbaSerie.forEach(r => { if (r[col] != null) m.set(String(r[0]).slice(0, 7), Number(r[col])); });
+  const ym = [...m.keys()].sort();
+  if (!ym.length) return null;
+
+  const ult = ym[ym.length - 1], prev = ym[ym.length - 2];
+  const anio = +ult.slice(0, 4), mm = ult.slice(5, 7);
+  const v = m.get(ult);
+  const pct = ref => (ref && v != null) ? (v / ref - 1) * 100 : null;
+
+  return {
+    mes:  ult,
+    valor: v,
+    mensual: pct(prev ? m.get(prev) : null),
+    ia:      pct(m.get((anio - 1) + '-' + mm)),
+    ytd:     pct(m.get((anio - 1) + '-12')),
+  };
+}
+
+/* Los indices de costo se pintan al reves que la actividad: que suba el costo
+   es mala noticia, asi que va en rojo (mismo criterio que el CAC y el IPC). */
+function iccCbaPintarPct(id, pct) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (pct == null || isNaN(pct)) { el.textContent = '—'; el.style.color = ''; return; }
+  el.textContent = (pct >= 0 ? '+' : '') + fmtN(pct, 1) + '%';
+  el.style.color = pct >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+}
+
+function initIccCba() {
+  const cache = window.ICC_CBA_CACHE;
+  const sec   = document.getElementById('icc-cba-section');
+  const tit   = document.getElementById('icc-cba-titulo');
+
+  if (!cache || !cache.serie || !cache.serie.length) {
+    // Sin cache no hay nada que mostrar: se oculta la sección entera
+    if (sec) sec.style.display = 'none';
+    if (tit) tit.style.display = 'none';
+    return;
+  }
+  iccCbaSerie = cache.serie.slice().sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+
+  const g = iccCbaVars(1);
+  if (!g) return;
+
+  document.getElementById('kpi-icc-idx').textContent   = fmtN(g.valor, 1);
+  document.getElementById('kpi-icc-fecha').textContent =
+    isacMesLargo(g.mes) + ' · base 2012=100';
+  iccCbaPintarPct('kpi-icc-m',   g.mensual);
+  iccCbaPintarPct('kpi-icc-ia',  g.ia);
+  iccCbaPintarPct('kpi-icc-ytd', g.ytd);
+
+  const subYtd = document.getElementById('kpi-icc-ytd-sub');
+  if (subYtd) subYtd.textContent = 'vs. dic-' + (+g.mes.slice(0, 4) - 1);
+
+  const m2 = iccCbaVars(5);
+  if (m2 && m2.valor != null) {
+    document.getElementById('kpi-icc-m2').textContent = fmtARS(m2.valor);
+    document.getElementById('kpi-icc-m2-sub').textContent =
+      'vivienda tipo 50,25 m² · ' +
+      (m2.ia != null ? (m2.ia >= 0 ? '+' : '') + fmtN(m2.ia, 1) + '% i.a.' : '');
+  }
+
+  // Tarjetas de rubros
+  const cont = document.getElementById('icc-cba-rubros');
+  if (cont) {
+    cont.innerHTML = ICC_CBA_RUBROS.map(([col, nombre]) => {
+      const r = iccCbaVars(col);
+      if (!r) return '';
+      const sig = v => v == null || isNaN(v)
+        ? '—' : (v >= 0 ? '+' : '') + fmtN(v, 1) + '%';
+      const color = r.ia == null ? '' : (r.ia >= 0 ? 'var(--rojo-txt)' : 'var(--verde)');
+      return '<div class="card">'
+           +   '<div class="kpi-label">' + nombre + '</div>'
+           +   '<div class="kpi-value" style="color:' + color + ';">' + sig(r.ia) + ' <span style="font-size:11px;font-weight:600;color:#8f8f8f;">i.a.</span></div>'
+           +   '<div class="kpi-sub">' + sig(r.mensual) + ' mensual · '
+           +   sig(r.ytd) + ' acum. año</div>'
+           +   '<div class="kpi-sub" style="opacity:.75;">índice ' + fmtN(r.valor, 1) + '</div>'
+           + '</div>';
+    }).join('');
+  }
+
+  const src = document.getElementById('icc-cba-datasource');
+  if (src) {
+    src.textContent = '📊 ' + (cache.source || 'Estadística y Censos de Córdoba') +
+      ' · datos abiertos · serie oct-2013/' + (cache.hasta || '') +
+      (cache.updated ? ' · cache del ' +
+        new Date(cache.updated).toLocaleDateString('es-AR') : '');
+  }
+
+  renderIccCbaChart();
+}
+
+function renderIccCbaChart() {
+  if (!iccCbaSerie.length) return;
+  const rangeEl = document.getElementById('icc-cba-range');
+  const meses   = rangeEl ? parseInt(rangeEl.value) : 36;
+  const slice   = meses > 0 ? iccCbaSerie.slice(-meses) : iccCbaSerie;
+  const ctx = document.getElementById('chart-icc-cba');
+  if (!ctx) return;
+  if (iccCbaChart) iccCbaChart.destroy();
+
+  const sets = [{
+    label: 'Nivel general', data: slice.map(r => r[1]),
+    borderColor: '#FF5F5F', backgroundColor: 'rgba(255,95,95,0.10)',
+    borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true,
+  }].concat(ICC_CBA_RUBROS.map(([col, nombre, color]) => ({
+    label: nombre, data: slice.map(r => r[col]),
+    borderColor: color, backgroundColor: 'transparent',
+    borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false,
+  })));
+
+  iccCbaChart = new Chart(ctx.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: slice.map(r => {
+        const m = String(r[0]).match(/^(\d{4})-(\d{2})/);
+        return m ? ISAC_MESES[+m[2] - 1].slice(0, 3) + '-' + m[1].slice(2) : r[0];
+      }),
+      datasets: sets,
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#aaa', font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: '#1C1C1C', borderColor: '#383838', borderWidth: 1,
+          titleColor: '#fff', bodyColor: '#aaa',
+          callbacks: { label: c => ` ${c.dataset.label}: ${fmtN(c.parsed.y, 1)}` },
+        },
+      },
+      scales: {
+        x: { ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 12 }, grid: { color: '#222' } },
+        y: { ticks: { color: '#555', font: { size: 9 } }, grid: { color: '#222' } },
+      },
+    },
+  });
+}
+
+/* ══════════════════════════════════════════
+   ISAC — ACTIVIDAD DE LA CONSTRUCCIÓN (INDEC)
+
+   Fuente en vivo: apis.datos.gob.ar (series de la SSPM, armadas sobre el
+   INDEC). Suele adelantarse un mes al PDF del informe mensual.
+   Respaldo: isac_cache.js, que genera update_isac_cache.py.
+
+   Los puestos de trabajo y los permisos de edificacion NO estan en la API:
+   salen del cache, cargados a mano en isac_manual.json con los cuadros 3 y 4
+   del informe. Por eso tienen su propio mes de referencia.
+══════════════════════════════════════════ */
+const ISAC_ID_ORIG   = '33.2_ISAC_NIVELRAL_0_M_18_63';
+const ISAC_ID_DESEST = '33.2_ISAC_SIN_EDAD_0_M_23_56';
+
+/* clave, emoji, nombre corto, id de serie original (distribucion 33.3) */
+const ISAC_INSUMOS = [
+  ['cemento',    '🏭', 'Cemento portland',            '33.3_ISAC_CEMENAND_0_0_21_29'],
+  ['hormigon',   '🚛', 'Hormigón elaborado',          '33.3_ISAC_HORMIADO_0_0_23_36'],
+  ['hierro',     '🔩', 'Hierro redondo y aceros',     '33.3_ISAC_HIERRION_0_0_49_36'],
+  ['ladrillos',  '🧱', 'Ladrillos huecos',            '33.3_ISAC_LADRICOS_0_0_21_27'],
+  ['cales',      '🪣', 'Cales',                       '33.3_ISAC_CALESLES_0_0_10_7'],
+  ['yeso',       '🪨', 'Yeso',                        '33.3_ISAC_YESOESO_0_0_9_54'],
+  ['placas',     '⬜', 'Placas de yeso',              '33.3_ISAC_PLACAESO_0_0_19_5'],
+  ['pisos',      '🔲', 'Pisos y revest. cerámicos',   '33.3_ISAC_PISOSCOS_0_0_37_22'],
+  ['mosaicos',   '🔷', 'Mosaicos gran. y calcáreos',  '33.3_ISAC_MOSAIEOS_0_0_36_91'],
+  ['sanitarios', '🚽', 'Art. sanitarios de cerámica', '33.3_ISAC_ARTICICA_0_0_37_38'],
+  ['pinturas',   '🎨', 'Pinturas para construcción',  '33.3_ISAC_PINTUION_0_0_31_13'],
+  ['asfalto',    '🛣️', 'Asfalto',                     '33.3_ISAC_ASFALLTO_0_0_12_97'],
+  ['resto',      '🚿', 'Resto: grifería, tubos, vidrio', '33.3_ISAC_RESTOSTO_0_0_10_50'],
+];
+
+const ISAC_MESES = ['enero','febrero','marzo','abril','mayo','junio',
+                    'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+let isacSerie   = [];   // [[fecha, original, desestacionalizada], ...] ascendente
+let isacInsumos = {};   // clave -> [[fecha, indice], ...]
+let isacChart = null, isacInsChart = null;
+
+/* 'aaaa-mm-dd' -> 'junio de 2026' */
+function isacMesLargo(iso) {
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})/);
+  return m ? ISAC_MESES[+m[2] - 1] + ' de ' + m[1] : '—';
+}
+
+/* Map 'aaaa-mm' -> valor, a partir de [[fecha, valor], ...] en cualquier orden */
+function isacMapa(pares) {
+  const m = new Map();
+  (pares || []).forEach(p => {
+    if (p && p[1] != null && !isNaN(p[1])) m.set(String(p[0]).slice(0, 7), Number(p[1]));
+  });
+  return m;
+}
+
+/* Ultimo mes con dato, formato 'aaaa-mm' */
+function isacUltimoMes(mapa) {
+  const k = [...mapa.keys()].sort();
+  return k.length ? k[k.length - 1] : null;
+}
+
+/* Variacion interanual del ultimo mes */
+function isacVarIA(mapa) {
+  const ult = isacUltimoMes(mapa);
+  if (!ult) return null;
+  const prev = mapa.get((+ult.slice(0, 4) - 1) + '-' + ult.slice(5, 7));
+  return prev ? (mapa.get(ult) / prev - 1) * 100 : null;
+}
+
+/* Variacion acumulada del año: suma de los indices de enero al ultimo mes
+   contra la suma de los mismos meses del año anterior. Es el criterio del
+   INDEC (no es el promedio de las variaciones mensuales). */
+function isacVarAcum(mapa) {
+  const ult = isacUltimoMes(mapa);
+  if (!ult) return null;
+  const anio = +ult.slice(0, 4), hastaMes = +ult.slice(5, 7);
+  let act = 0, ant = 0;
+  for (let mes = 1; mes <= hastaMes; mes++) {
+    const mm = '-' + String(mes).padStart(2, '0');
+    const a = mapa.get(anio + mm), b = mapa.get((anio - 1) + mm);
+    if (a == null || b == null) return null;
+    act += a; ant += b;
+  }
+  return ant ? (act / ant - 1) * 100 : null;
+}
+
+/* Pinta un porcentaje con signo y color en un elemento */
+function isacPintarPct(id, pct, decimales) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (pct == null || isNaN(pct)) { el.textContent = '—'; el.style.color = ''; return; }
+  el.textContent = (pct >= 0 ? '+' : '') + fmtN(pct, decimales == null ? 1 : decimales) + '%';
+  el.style.color = pct >= 0 ? 'var(--verde)' : 'var(--rojo-txt)';
+}
+
+/* ── Carga: API en vivo y, si falla, el cache ── */
+async function loadIsac() {
+  let fuente = '';
+
+  try {
+    const d = await fetchDG(ISAC_ID_ORIG + ',' + ISAC_ID_DESEST, 1000, 'asc');
+    if (d.length) { isacSerie = d; fuente = 'apis.datos.gob.ar · en vivo'; }
+  } catch (_) {}
+
+  try {
+    const ids = ISAC_INSUMOS.map(i => i[3]).join(',');
+    const d = await fetchDG(ids, 30, 'desc');
+    if (d.length) {
+      isacInsumos = {};
+      ISAC_INSUMOS.forEach((ins, i) => {
+        isacInsumos[ins[0]] = d.map(f => [f[0], f[i + 1]]).filter(f => f[1] != null);
+      });
+    }
+  } catch (_) {}
+
+  const cache = window.ISAC_CACHE;
+  if (!isacSerie.length && cache && cache.serie) {
+    isacSerie = cache.serie;
+    fuente = 'isac_cache.js · ' + (cache.hasta || '');
+  }
+  if (!Object.keys(isacInsumos).length && cache && cache.insumos) {
+    isacInsumos = cache.insumos;
+  }
+
+  const src = document.getElementById('isac-datasource');
+  if (src) {
+    src.textContent = isacSerie.length
+      ? '📊 INDEC vía ' + (fuente || 'cache local') +
+        ' · serie desde ' + String(isacSerie[0][0]).slice(0, 4)
+      : '⚠ Sin datos del ISAC (no respondió la API ni hay cache).';
+  }
+
+  if (!isacSerie.length) return;
+
+  pintarIsacKpis();
+  renderIsacChart();
+  pintarIsacInsumos();
+  pintarIsacEmpleoPermisos();
+}
+
+/* ── Tarjetas del nivel general ── */
+function pintarIsacKpis() {
+  const orig   = isacMapa(isacSerie.map(f => [f[0], f[1]]));
+  const desest = isacMapa(isacSerie.map(f => [f[0], f[2]]));
+  const ult    = isacUltimoMes(orig);
+  if (!ult) return;
+
+  document.getElementById('kpi-isac-idx').textContent   = fmtN(orig.get(ult), 1);
+  document.getElementById('kpi-isac-fecha').textContent = isacMesLargo(ult) + ' · base 2004=100';
+
+  isacPintarPct('kpi-isac-ia',   isacVarIA(orig));
+  isacPintarPct('kpi-isac-acum', isacVarAcum(orig));
+
+  const sub = document.getElementById('kpi-isac-acum-sub');
+  if (sub) {
+    sub.textContent = 'ene-' + ISAC_MESES[+ult.slice(5, 7) - 1].slice(0, 3) +
+                      ' vs. igual período ' + (+ult.slice(0, 4) - 1);
+  }
+
+  // Desestacionalizada contra el mes anterior
+  const mesesD = [...desest.keys()].sort();
+  const uD = mesesD[mesesD.length - 1], pD = mesesD[mesesD.length - 2];
+  isacPintarPct('kpi-isac-desest',
+    (uD && pD && desest.get(pD)) ? (desest.get(uD) / desest.get(pD) - 1) * 100 : null);
+}
+
+/* ── Gráfico del nivel general ── */
+function renderIsacChart() {
+  if (!isacSerie.length) return;
+  const rangeEl = document.getElementById('isac-range');
+  const meses   = rangeEl ? parseInt(rangeEl.value) : 60;
+  const slice   = meses > 0 ? isacSerie.slice(-meses) : isacSerie;
+  const ctx = document.getElementById('chart-isac');
+  if (!ctx) return;
+  if (isacChart) isacChart.destroy();
+  isacChart = new Chart(ctx.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: slice.map(f => {
+        const m = String(f[0]).match(/^(\d{4})-(\d{2})/);
+        return m ? ISAC_MESES[+m[2] - 1].slice(0, 3) + '-' + m[1].slice(2) : f[0];
+      }),
+      datasets: [
+        { label: 'Serie original', data: slice.map(f => f[1]),
+          borderColor: '#FF5F5F', backgroundColor: 'rgba(255,95,95,0.10)',
+          borderWidth: 2, pointRadius: 0, tension: 0.25, fill: true },
+        { label: 'Desestacionalizada', data: slice.map(f => f[2]),
+          borderColor: '#60a5fa', backgroundColor: 'transparent',
+          borderWidth: 1.5, pointRadius: 0, tension: 0.25, fill: false },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#aaa', font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: '#1C1C1C', borderColor: '#383838', borderWidth: 1,
+          titleColor: '#fff', bodyColor: '#aaa',
+          callbacks: { label: c => ` ${c.dataset.label}: ${fmtN(c.parsed.y, 1)}` },
+        },
+      },
+      scales: {
+        x: { ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 12 }, grid: { color: '#222' } },
+        y: { ticks: { color: '#555', font: { size: 9 } }, grid: { color: '#222' } },
+      },
+    },
+  });
+}
+
+/* ── Tarjetas de insumos (con emoji) + gráfico de barras ── */
+function pintarIsacInsumos() {
+  const cont = document.getElementById('isac-insumos');
+  if (!cont) return;
+
+  const filas = [];
+  ISAC_INSUMOS.forEach(([clave, emoji, nombre]) => {
+    const mapa = isacMapa(isacInsumos[clave]);
+    if (!mapa.size) return;
+    filas.push({
+      emoji, nombre,
+      mes:  isacUltimoMes(mapa),
+      ia:   isacVarIA(mapa),
+      acum: isacVarAcum(mapa),
+    });
+  });
+
+  if (!filas.length) {
+    cont.innerHTML = '<div style="color:var(--gris-txt);font-size:12px;padding:10px;">' +
+                     'Sin datos de insumos.</div>';
+    return;
+  }
+
+  // De mayor a menor interanual, igual que el gráfico del informe
+  filas.sort((a, b) => (b.ia == null ? -1e9 : b.ia) - (a.ia == null ? -1e9 : a.ia));
+
+  const pct = (v, d) => v == null || isNaN(v)
+    ? '—' : (v >= 0 ? '+' : '') + fmtN(v, d == null ? 1 : d) + '%';
+
+  cont.innerHTML = filas.map(f => {
+    const sube  = f.ia != null && f.ia >= 0;
+    const color = f.ia == null ? '#888' : (sube ? 'var(--verde)' : 'var(--rojo-txt)');
+    return '<div class="ins-card ' + (f.ia == null ? '' : (sube ? 'sube' : 'baja')) + '">'
+         +   '<div class="ins-emoji">' + f.emoji + '</div>'
+         +   '<div class="ins-nombre">' + f.nombre + '</div>'
+         +   '<div class="ins-ia" style="color:' + color + ';">' + pct(f.ia) + '</div>'
+         +   '<div class="ins-acum">acum. año ' + pct(f.acum) + '</div>'
+         + '</div>';
+  }).join('');
+
+  const sub = document.getElementById('isac-ins-sub');
+  if (sub) {
+    sub.textContent = 'Consumo aparente · ' + isacMesLargo(filas[0].mes) +
+                      ' · variación interanual (tarjeta grande) y acumulada del año';
+  }
+
+  // Gráfico de barras: insumos + el ISAC nivel general como referencia
+  const orig   = isacMapa(isacSerie.map(f => [f[0], f[1]]));
+  const iaIsac = isacVarIA(orig);
+  const datos  = filas.slice().sort((a, b) => (a.ia || 0) - (b.ia || 0));
+  const labels = datos.map(f => f.emoji + ' ' + f.nombre);
+  const vals   = datos.map(f => f.ia);
+
+  if (iaIsac != null) {
+    // El ISAC se inserta en la posicion que le corresponde por magnitud
+    let i = 0;
+    while (i < vals.length && (vals[i] || 0) < iaIsac) i++;
+    labels.splice(i, 0, '📊 ISAC nivel general');
+    vals.splice(i, 0, iaIsac);
+  }
+
+  const ctx = document.getElementById('chart-isac-ins');
+  if (!ctx) return;
+  if (isacInsChart) isacInsChart.destroy();
+  isacInsChart = new Chart(ctx.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Variación interanual',
+        data: vals,
+        backgroundColor: labels.map((l, i) =>
+          l.indexOf('ISAC nivel') >= 0 ? '#f59e0b'
+            : ((vals[i] || 0) >= 0 ? 'rgba(34,197,94,0.75)' : 'rgba(204,0,0,0.75)')),
+        borderWidth: 0,
+      }],
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1C1C1C', borderColor: '#383838', borderWidth: 1,
+          titleColor: '#fff', bodyColor: '#aaa',
+          callbacks: { label: c => ' ' + pct(c.parsed.x) + ' interanual' },
+        },
+      },
+      scales: {
+        x: { ticks: { color: '#555', font: { size: 9 }, callback: v => v + '%' },
+             grid: { color: '#222' } },
+        y: { ticks: { color: '#9a9a9a', font: { size: 10 } }, grid: { display: false } },
+      },
+    },
+  });
+}
+
+/* ── Empleo registrado y permisos de edificación (vienen del cache) ── */
+function pintarIsacEmpleoPermisos() {
+  const c = window.ISAC_CACHE;
+  const emp = c && c.empleo && c.empleo.serie;
+  const per = c && c.permisos && c.permisos.serie;
+
+  if (emp && emp.length) {
+    const mapa = isacMapa(emp);
+    const ult  = isacUltimoMes(mapa);
+    document.getElementById('kpi-emp-val').textContent = fmtN(mapa.get(ult), 0);
+    document.getElementById('kpi-emp-fecha').textContent =
+      isacMesLargo(ult) + ' · sector privado';
+    isacPintarPct('kpi-emp-ia',   isacVarIA(mapa));
+    isacPintarPct('kpi-emp-acum', isacVarAcum(mapa));
+  }
+
+  if (per && per.length) {
+    const m2   = isacMapa(per.map(f => [f[0], f[1]]));
+    const cant = isacMapa(per.map(f => [f[0], f[2]]));
+    const ult  = isacUltimoMes(m2);
+    document.getElementById('kpi-per-val').textContent = fmtN(m2.get(ult), 0);
+    document.getElementById('kpi-per-fecha').textContent =
+      'm² · ' + isacMesLargo(ult) + ' · ' + ((c.permisos.municipios || 246) + ' municipios');
+    isacPintarPct('kpi-per-ia',   isacVarIA(m2));
+    isacPintarPct('kpi-per-acum', isacVarAcum(m2));
+    const cEl = document.getElementById('kpi-per-cant');
+    if (cEl && cant.get(ult) != null) {
+      cEl.textContent = fmtN(cant.get(ult), 0) + ' permisos otorgados';
+    }
+  }
+
+  const sub = document.getElementById('isac-ep-sub');
+  if (sub && c && c.informe) {
+    sub.textContent = 'Cuadros 3 y 4 del informe del INDEC (' + c.informe +
+                      ') · no están en la API, se cargan con el informe mensual';
+  }
 }
 
 </script>

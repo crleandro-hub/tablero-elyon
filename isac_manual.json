@@ -1,0 +1,56 @@
+{
+  "_comentario": [
+    "Datos del informe mensual del INDEC 'Indicadores de coyuntura de la actividad de la construccion'",
+    "que NO estan publicados en la API de apis.datos.gob.ar: puestos de trabajo registrados y",
+    "superficie autorizada por permisos de edificacion.",
+    "Se actualizan A MANO con los cuadros 3 y 4 del informe (o los cuadros web sh_isac_AAAA.xls).",
+    "update_isac_cache.py lee este archivo tal cual y lo embebe en isac_cache.js.",
+    "Formato empleo:   [fecha, puestos de trabajo]",
+    "Formato permisos: [fecha, superficie autorizada m2, cantidad de permisos]"
+  ],
+  "fuente": "INDEC, Indicadores de coyuntura de la actividad de la construccion - Mayo 2026 (cuadros 3 y 4)",
+  "informe": "Mayo de 2026",
+  "empleo": {
+    "hasta": "2026-04",
+    "serie": [
+      ["2025-01-01", 372898],
+      ["2025-02-01", 374480],
+      ["2025-03-01", 374659],
+      ["2025-04-01", 374818],
+      ["2025-05-01", 374257],
+      ["2025-06-01", 371885],
+      ["2025-07-01", 376324],
+      ["2025-08-01", 376073],
+      ["2025-09-01", 378307],
+      ["2025-10-01", 380767],
+      ["2025-11-01", 377394],
+      ["2025-12-01", 369013],
+      ["2026-01-01", 375598],
+      ["2026-02-01", 375960],
+      ["2026-03-01", 384501],
+      ["2026-04-01", 379459]
+    ]
+  },
+  "permisos": {
+    "hasta": "2026-04",
+    "municipios": 246,
+    "serie": [
+      ["2025-01-01", 1285168, 4563],
+      ["2025-02-01", 1053604, 4134],
+      ["2025-03-01", 1219231, 4486],
+      ["2025-04-01", 1245075, 4677],
+      ["2025-05-01", 1372953, 4818],
+      ["2025-06-01", 1196043, 4289],
+      ["2025-07-01", 1387500, 4917],
+      ["2025-08-01", 1451131, 4936],
+      ["2025-09-01", 1400099, 5179],
+      ["2025-10-01", 1600728, 5813],
+      ["2025-11-01", 1337171, 4330],
+      ["2025-12-01", 1428329, 4741],
+      ["2026-01-01", 1322763, 4420],
+      ["2026-02-01", 997373, 3770],
+      ["2026-03-01", 1396405, 4696],
+      ["2026-04-01", 1451267, 4746]
+    ]
+  }
+}
