@@ -1,11 +1,11 @@
 ===================================================== 
- Actualizacion manual - sÃ¡b. 08/08/2026 22:51:01,57 
+ Actualizacion manual - sÃ¡b. 08/08/2026 22:55:27,79 
 ===================================================== 
 Python: py -3 
  
 --- [1/13] BCRA (TAMAR / BADLAR / UVA) --- 
 Actualizando bcra_cache.js desde api.bcra.gob.ar ...
-[OK] bcra_cache.js actualizado - 2026-08-08T22:51:02
+[OK] bcra_cache.js actualizado - 2026-08-08T22:55:28
      tamar  : 23.25  (06/08/2026)
      badlar : 22.0  (06/08/2026)
      uva    : 2068.01  (08/08/2026)
@@ -124,7 +124,7 @@ Generando version autocontenida del tablero...
  
 --- [12/13] VERIFICAR --- 
 ==============================================================
- VERIFICACION DEL TABLERO — 08/08/2026 22:51
+ VERIFICACION DEL TABLERO — 08/08/2026 22:55
 ==============================================================
 
 > bcra_cache.js

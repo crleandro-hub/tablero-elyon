@@ -1,9 +1,16 @@
 # Credenciales - NUNCA subir
 .github_token
 
-# Registros de las corridas automaticas
+# Registros de las corridas: no van al repo. Son locales, cambian en cada
+# corrida y ensuciarian el historial con un commit por dia.
 log_actualizacion.txt
 log_actualizacion.txt.old
+log_actualizar.txt
+log_icc_indec.txt
+
+# Archivo obsoleto: quedo de cuando el ICC INDEC se cargaba a mano, antes de
+# encontrar el Excel del INDEC. Se puede borrar de la carpeta.
+icc_indec_manual.json
 
 # Archivos derivados (los regenera build_publicar.py)
 tablero_elyon_portable.html
