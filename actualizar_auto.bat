@@ -42,54 +42,67 @@ if exist ".git\index.lock"               del /f /q ".git\index.lock"
 if exist ".git\HEAD.lock"                del /f /q ".git\HEAD.lock"
 if exist ".git\objects\maintenance.lock" del /f /q ".git\objects\maintenance.lock"
 
-call :log "[1/8] BCRA - valores del dia (TAMAR / BADLAR / UVA)..."
+call :log "[1/13] BCRA - valores del dia (TAMAR / BADLAR / UVA)..."
 %PY% update_bcra_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_bcra_cache.py - se conservan los datos previos."
 
-call :log "[2/8] BCRA - serie historica UVA..."
+call :log "[2/13] BCRA - serie historica UVA..."
 %PY% update_uva_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_uva_cache.py - se conserva la serie previa."
 
-call :log "[3/8] Indice CAC..."
+call :log "[3/13] Indice CAC..."
 %PY% update_cac_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_cac_cache.py - se conservan los datos previos."
 
-call :log "[4/8] Indice MERVAL (pesos y dolares)..."
+call :log "[4/13] Indice MERVAL (pesos y dolares)..."
 %PY% update_merval_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_merval_cache.py - se conservan los datos previos."
 
-call :log "[5/8] REM del BCRA (inflacion esperada)..."
+call :log "[5/13] REM del BCRA (inflacion esperada)..."
 %PY% update_rem_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_rem_cache.py - se conservan los datos previos."
 
-call :log "[6/9] Riesgo pais (Rava Bursatil)..."
+call :log "[6/13] Riesgo pais (Rava Bursatil)..."
 %PY% update_riesgo_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_riesgo_cache.py - se conservan los datos previos."
 
-call :log "[7/10] ISAC e insumos de la construccion (INDEC)..."
+call :log "[7/13] ISAC e insumos de la construccion (INDEC)..."
 %PY% update_isac_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_isac_cache.py - se conservan los datos previos."
 
-call :log "[8/11] ICC de Cordoba (Estadistica y Censos Cba)..."
+call :log "[8/13] ICC de Cordoba (Estadistica y Censos Cba)..."
 %PY% update_icc_cba_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_icc_cba_cache.py - se conservan los datos previos."
 
-call :log "[9/12] Registro General de la Propiedad de Cordoba..."
+call :log "[9/13] Registro General de la Propiedad de Cordoba..."
 %PY% update_rgp_cba_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_rgp_cba_cache.py - se conservan los datos previos."
 
-call :log "[10/12] ICC del INDEC (Gran Buenos Aires)..."
+call :log "[10/13] ICC del INDEC (Gran Buenos Aires)..."
 %PY% update_icc_indec_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_icc_indec_cache.py - se conservan los datos previos."
 
-call :log "[11/12] Generando docs\index.html y version portable..."
+call :log "[11/13] Generando docs\index.html y version portable..."
 %PY% build_publicar.py >> "%LOG%" 2>&1
 if errorlevel 1 (
   call :log "[ERROR] Fallo build_publicar.py. No se publica."
   goto :fin
 )
 
-call :log "[12/12] Publicando en GitHub Pages..."
+call :log "[12/13] Verificando frescura e integridad de los datos..."
+%PY% verificar.py >> "%LOG%" 2>&1
+rem  0 = todo bien   1 = datos con problemas, no publicar
+rem  2 = se cayo el verificador, es un bug suyo: se publica igual
+rem  Se compara el codigo exacto en vez de usar "if errorlevel", que en cmd
+rem  significa "mayor o igual" y encadenado con else se comporta mal.
+set "RC=%errorlevel%"
+if "%RC%"=="2" call :log "[AVISO] verificar.py no pudo completarse. Se publica igual."
+if "%RC%"=="1" (
+  call :log "[ERROR] verificar.py encontro problemas en los datos. NO se publica."
+  goto :fin
+)
+
+call :log "[13/13] Publicando en GitHub Pages..."
 git add -A >> "%LOG%" 2>&1
 git commit -m "Actualizacion automatica de indicadores %date%" >> "%LOG%" 2>&1
 if errorlevel 1 (

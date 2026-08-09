@@ -463,6 +463,9 @@ body {
 
     </div>
 
+    <!-- Aviso de fuentes desactualizadas. Vacío cuando está todo al día. -->
+    <div id="estado-fuentes"></div>
+
     <!-- ── RESUMEN DE ÍNDICES DE LA CONSTRUCCIÓN ──────────── -->
     <div class="sec-title">Índices de la construcción</div>
     <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
@@ -1222,6 +1225,7 @@ function showScreen(id) {
     initIccIndec();   // ICC del INDEC · Gran Buenos Aires (dato local)
     initRgp();        // Registro General de Córdoba (dato local)
     renderResumenConstruccion();   // CAC / ICC Cba / ICC INDEC ya están; la UVA entra después
+    revisarFuentes();  // avisa si algún cache quedó viejo
     initSalarios();   // escalas de convenio (dato local, pinta al toque)
     initAjuste();     // calculadora de redeterminacion
     loadSnapshot();   // datos guardados inmediatamente
@@ -1323,10 +1327,8 @@ async function loadDolar() {
 }
 
 /* ═══════════════════════════════════════
-   VARIACIONES DÓLAR — bluelytics.com.ar
-   Fuente: api.bluelytics.com.ar/v2/evolution.json
-   Oficial y Blue: variación diaria e interanual
-   MEP/CCL: sin fuente histórica pública disponible
+   VARIACIONES DÓLAR — ArgentinaDatos
+   Variación diaria e interanual de las cuatro cotizaciones.
 ═══════════════════════════════════════ */
 function setVarBadge(id, pct, label) {
   const el = document.getElementById(id);
@@ -1342,74 +1344,46 @@ function setVarBadge(id, pct, label) {
   el.className   = 'var-badge ' + (pct >= 0 ? 'up' : 'dn');
 }
 
+/* Antes esto salia de bluelytics con evolution.json?days=400. Dos problemas:
+   el parametro limita la cantidad de registros y no los dias por casa, asi que
+   al separar Oficial de Blue quedaban ~200 dias de cada uno y nunca se llegaba
+   al de hace un año -> el interanual daba N/D siempre. Y encima esa API solo
+   trae Oficial y Blue: el MEP y el CCL estaban clavados en N/D a mano.
+
+   Ahora sale de ArgentinaDatos, la misma serie que ya usa el grafico del blue:
+   tiene historico completo y las cuatro cotizaciones. Como esa fuente publica
+   el cierre del dia anterior, estas variaciones son cierre contra cierre y
+   pueden diferir un poco del valor en vivo de las tarjetas. */
 async function loadDolarVariaciones() {
-  try {
-    // Trae historial diario Oficial y Blue (pedimos 400 días para cubrir interanual)
-    const res  = await fetch('https://api.bluelytics.com.ar/v2/evolution.json?days=400');
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json(); // desc: [0]=hoy, [1]=ayer, …
+  const casas = [
+    ['oficial', 'oficial'],
+    ['blue',    'blue'],
+    ['mep',     'bolsa'],
+    ['ccl',     'contadoconliqui'],
+  ];
 
-    // Separar por fuente
-    const oficial = data.filter(d => d.source === 'Oficial');
-    const blue    = data.filter(d => d.source === 'Blue');
+  await Promise.allSettled(casas.map(async ([id, casa]) => {
+    let serie = [];
+    try { serie = await loadUsdSerie(casa); } catch (_) {}
 
-    const calcVar = (arr, idx0, idx1) => {
-      if (idx1 >= arr.length) return null;
-      const now  = arr[idx0].value_sell;
-      const prev = arr[idx1].value_sell;
-      return (now - prev) / prev * 100;
-    };
-
-    // Variación diaria (hoy vs ayer = índices 0 y 1)
-    setVarBadge('var-oficial-dia', calcVar(oficial, 0, 1), '1d');
-    setVarBadge('var-blue-dia',    calcVar(blue,    0, 1), '1d');
-
-    // Variación interanual: buscar entrada con fecha ~365 días atrás
-    const hoy = new Date(oficial[0]?.date);
-    const objetivo = new Date(hoy);
-    objetivo.setFullYear(objetivo.getFullYear() - 1);
-
-    const findNearest = (arr) => {
-      if (!arr.length) return null;
-      return arr.reduce((best, d) => {
-        const diff  = Math.abs(new Date(d.date) - objetivo);
-        const bdiff = Math.abs(new Date(best.date) - objetivo);
-        return diff < bdiff ? d : best;
-      });
-    };
-
-    const ofIaRef = findNearest(oficial);
-    const blIaRef = findNearest(blue);
-
-    // Sólo mostrar interanual si la referencia es <= 30 días fuera del objetivo
-    const MAX_GAP_MS = 30 * 86400 * 1000;
-
-    if (ofIaRef && Math.abs(new Date(ofIaRef.date) - objetivo) <= MAX_GAP_MS) {
-      const ia = (oficial[0].value_sell - ofIaRef.value_sell) / ofIaRef.value_sell * 100;
-      setVarBadge('var-oficial-ia', ia, '1a');
-    } else {
-      setVarBadge('var-oficial-ia', null, '1a N/D');
+    if (!serie.length) {
+      setVarBadge(`var-${id}-dia`, null, '1d N/D');
+      setVarBadge(`var-${id}-ia`,  null, '1a N/D');
+      return;
     }
 
-    if (blIaRef && Math.abs(new Date(blIaRef.date) - objetivo) <= MAX_GAP_MS) {
-      const ia = (blue[0].value_sell - blIaRef.value_sell) / blIaRef.value_sell * 100;
-      setVarBadge('var-blue-ia', ia, '1a');
-    } else {
-      setVarBadge('var-blue-ia', null, '1a N/D');
-    }
+    const hoy  = serie[0];    // la serie viene descendente
+    const ayer = serie[1];
 
-    // MEP y CCL: sin fuente histórica
-    ['mep','ccl'].forEach(k => {
-      setVarBadge(`var-${k}-dia`, null, '1d N/D');
-      setVarBadge(`var-${k}-ia`,  null, '1a N/D');
-    });
+    setVarBadge(`var-${id}-dia`,
+      (ayer && ayer.venta) ? (hoy.venta / ayer.venta - 1) * 100 : null,
+      ayer ? '1d' : '1d N/D');
 
-  } catch (e) {
-    ['oficial','blue','mep','ccl'].forEach(k => {
-      setVarBadge(`var-${k}-dia`, null, '1d');
-      setVarBadge(`var-${k}-ia`,  null, '1a');
-    });
-  }
+    const ref = buscarUsd(casa, uvaDesplazar(hoy.fecha, { anios: 1 }));
+    setVarBadge(`var-${id}-ia`,
+      (ref && ref.venta) ? (hoy.venta / ref.venta - 1) * 100 : null,
+      ref ? '1a' : '1a N/D');
+  }));
 }
 
 /* ═══════════════════════════════════════
@@ -1935,8 +1909,9 @@ function _calcUvaVariaciones(data) {
   uvaResumen = {
     fecha: anclaF,
     valor: v0,
-    ia:  pctRef(valorEn(uvaDesplazar(anclaF, { anios: 1 }))),
-    ytd: pctRef(valorEn(anioBase + '-12-31')),
+    mensual: pctRef(valorEn(uvaDesplazar(anclaF, { meses: 1 }))),
+    ia:      pctRef(valorEn(uvaDesplazar(anclaF, { anios: 1 }))),
+    ytd:     pctRef(valorEn(anioBase + '-12-31')),
   };
 }
 
@@ -3950,6 +3925,108 @@ function renderIccCbaChart() {
 }
 
 /* ══════════════════════════════════════════
+   ESTADO DE LAS FUENTES
+
+   El ciclo de actualizacion toca doce fuentes distintas. Cuando una falla, el
+   .bat deja el cache anterior y sigue: el tablero muestra el numero viejo sin
+   ninguna marca, y una fuente puede quedar muerta meses sin que nadie lo note.
+
+   Esto compara, para cada cache, dos cosas:
+     · hace cuanto se genero        -> si es viejo, el script dejo de correr
+     · hace cuanto es el ultimo dato -> si es viejo, la fuente dejo de publicar
+                                        o se rompio el parseo
+
+   Los limites salen del calendario real de cada fuente. Las diarias se
+   actualizan todos los habiles; el ICC y el CAC salen a mitad del mes
+   siguiente, asi que su ultimo dato vive normalmente unos 45 dias.
+══════════════════════════════════════════ */
+const FUENTES = [
+  // clave del cache,        nombre,                    díasDato, díasScript
+  ['BCRA_CACHE',      'BADLAR / TAMAR (BCRA)',              6,   6],
+  ['UVA_CACHE',       'UVA (BCRA)',                         6,   6],
+  ['MERVAL_CACHE',    'MERVAL',                             6,   6],
+  ['RIESGO_CACHE',    'Riesgo país',                        6,   6],
+  ['REM_CACHE',       'REM (BCRA)',                        60,   6],
+  ['CAC_CACHE',       'Índice CAC',                        70,   6],
+  ['ICC_CBA_CACHE',   'ICC Córdoba',                       70,   6],
+  ['ICC_INDEC_CACHE', 'ICC INDEC',                         70,   6],
+  ['ISAC_CACHE',      'ISAC (actividad)',                  80,   6],
+  ['RGP_CBA_CACHE',   'Registro General de Córdoba',       80,   6],
+  ['SALARIOS_CACHE',  'Escalas UOCRA / UECARA',           240, null],  // carga manual
+];
+
+const DIA_MS = 86400000;
+
+function _diasDesde(iso) {
+  if (!iso) return null;
+  const d = new Date(String(iso).slice(0, 10) + 'T00:00:00');
+  if (isNaN(d)) return null;
+  return Math.floor((Date.now() - d.getTime()) / DIA_MS);
+}
+
+/* Recorre el cache y devuelve la fecha mas reciente que encuentre en
+   cualquiera de sus series, sin importar como se llame el campo. */
+function _ultimaFechaCache(c) {
+  let ult = null;
+  const mirar = v => {
+    if (typeof v === 'string' && /^\d{4}-\d{2}(-\d{2})?$/.test(v)) {
+      const f = v.length === 7 ? v + '-01' : v;
+      if (!ult || f > ult) ult = f;
+    } else if (Array.isArray(v)) {
+      v.forEach(mirar);
+    } else if (v && typeof v === 'object') {
+      Object.values(v).forEach(mirar);
+    }
+  };
+  // Se saltea 'updated', que es cuando corrio el script y no un dato
+  Object.entries(c || {}).forEach(([k, v]) => {
+    if (k !== 'updated' && k !== 'actualizado') mirar(v);
+  });
+  return ult;
+}
+
+function revisarFuentes() {
+  const cont = document.getElementById('estado-fuentes');
+  if (!cont) return;
+
+  const problemas = [];
+  FUENTES.forEach(([clave, nombre, diasDato, diasScript]) => {
+    const c = window[clave];
+    if (!c) { problemas.push([nombre, 'falta el archivo de datos']); return; }
+
+    const edadScript = _diasDesde(c.updated || c.actualizado);
+    if (diasScript != null && edadScript != null && edadScript > diasScript) {
+      problemas.push([nombre, 'el script no corre desde hace ' + edadScript + ' días']);
+      return;   // si no corre, que el dato sea viejo es consecuencia, no otra falla
+    }
+
+    const ult = _ultimaFechaCache(c);
+    const edadDato = _diasDesde(ult);
+    if (edadDato != null && edadDato > diasDato) {
+      problemas.push([nombre, 'sin datos nuevos hace ' + edadDato + ' días (último: ' +
+                              isacMesLargo(ult) + ')']);
+    }
+  });
+
+  if (!problemas.length) { cont.innerHTML = ''; return; }
+
+  cont.innerHTML =
+      '<div style="background:rgba(204,0,0,0.10);border:1px solid var(--rojo);'
+    + 'border-left-width:4px;border-radius:10px;padding:13px 16px;margin-bottom:18px;">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--rojo-txt);'
+    + 'letter-spacing:.5px;margin-bottom:7px;">⚠ '
+    + problemas.length + (problemas.length === 1 ? ' fuente desactualizada' : ' fuentes desactualizadas')
+    + '</div>'
+    + '<div style="font-size:11.5px;color:#c9c9c9;line-height:1.65;">'
+    + problemas.map(p => '<div><strong style="color:#e6e6e6;">' + p[0] + '</strong> — ' + p[1] + '</div>').join('')
+    + '</div>'
+    + '<div style="font-size:10px;color:var(--gris-txt);margin-top:8px;">'
+    + 'Los números de esas secciones siguen siendo los últimos que se pudieron bajar. '
+    + 'Corré <code>2-ACTUALIZAR-TABLERO.bat</code> y mirá el log si el aviso persiste.'
+    + '</div></div>';
+}
+
+/* ══════════════════════════════════════════
    RESUMEN DE ÍNDICES DE LA CONSTRUCCIÓN
 
    Una tarjeta por indice con el nivel, el interanual y el acumulado del año.
@@ -3961,12 +4038,13 @@ function renderIccCbaChart() {
 function varsDeMapa(mapa) {
   if (!mapa || !mapa.size) return null;
   const ym = [...mapa.keys()].sort();
-  const ult = ym[ym.length - 1];
+  const ult = ym[ym.length - 1], prev = ym[ym.length - 2];
   const anio = +ult.slice(0, 4), mm = ult.slice(5, 7);
   const v = mapa.get(ult);
   const pct = ref => (ref && v != null) ? (v / ref - 1) * 100 : null;
   return {
     mes: ult, valor: v,
+    mensual: pct(prev ? mapa.get(prev) : null),
     ia:  pct(mapa.get((anio - 1) + '-' + mm)),
     ytd: pct(mapa.get((anio - 1) + '-12')),
   };
@@ -3991,7 +4069,7 @@ function renderResumenConstruccion() {
       d: varsDeMapa(compIccIndec(1)), dec: 1 },
     { nombre: 'UVA',          pie: 'unidad de indexación · BCRA',
       d: uvaResumen ? { mes: String(uvaResumen.fecha).slice(0, 7), valor: uvaResumen.valor,
-                        ia: uvaResumen.ia, ytd: uvaResumen.ytd } : null,
+                        mensual: uvaResumen.mensual, ia: uvaResumen.ia, ytd: uvaResumen.ytd } : null,
       dec: 2, pesos: true },
   ].filter(t => t.d && t.d.valor != null);
 
@@ -4007,6 +4085,8 @@ function renderResumenConstruccion() {
     +   '<div class="kpi-value">' + (t.pesos ? '$ ' : '') + fmtN(t.d.valor, t.dec) + '</div>'
     +   '<div class="kpi-sub">' + isacMesLargo(t.d.mes + '-01') + ' · ' + t.pie + '</div>'
     +   '<div class="res-vars">'
+    +     '<div><span class="rot">Mensual</span>'
+    +       '<span class="val" style="color:' + color(t.d.mensual) + ';">' + pct(t.d.mensual) + '</span></div>'
     +     '<div><span class="rot">Interanual</span>'
     +       '<span class="val" style="color:' + color(t.d.ia) + ';">' + pct(t.d.ia) + '</span></div>'
     +     '<div><span class="rot">Acum. en el año</span>'

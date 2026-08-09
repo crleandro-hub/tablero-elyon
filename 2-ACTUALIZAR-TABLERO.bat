@@ -4,10 +4,19 @@ chcp 65001 >nul
 title GRUPO ELYON - Actualizar tablero publicado
 cd /d "%~dp0"
 
+set "LOG=%~dp0log_actualizar.txt"
+
 echo =====================================================
 echo  GRUPO ELYON - Actualizar el tablero publicado
 echo =====================================================
 echo.
+echo  Todo queda registrado en log_actualizar.txt.
+echo  Al final se muestra el detalle completo en pantalla.
+echo.
+
+echo ===================================================== > "%LOG%"
+echo  Actualizacion manual - %date% %time% >> "%LOG%"
+echo ===================================================== >> "%LOG%"
 
 call :buscarpython
 if not defined PY (
@@ -22,6 +31,7 @@ if not defined PY (
   exit /b 1
 )
 echo [OK] Python: %PY%
+echo Python: %PY% >> "%LOG%"
 
 where git >nul 2>&1
 if errorlevel 1 (
@@ -42,93 +52,108 @@ if exist ".git\index.lock"               del /f /q ".git\index.lock"
 if exist ".git\HEAD.lock"                del /f /q ".git\HEAD.lock"
 if exist ".git\objects\maintenance.lock" del /f /q ".git\objects\maintenance.lock"
 
-echo [1/8] Actualizando BCRA (TAMAR / BADLAR / UVA)...
-%PY% update_bcra_cache.py
-if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
-echo.
-echo [2/8] Actualizando serie historica UVA...
-%PY% update_uva_cache.py
-if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
+rem =====================================================
+rem  FUENTES DE DATOS
+rem  Si una falla se conserva el cache anterior y se sigue:
+rem  mejor un dato viejo que el tablero roto. verificar.py
+rem  avisa despues si algo quedo atrasado.
+rem =====================================================
+call :paso  1 "BCRA (TAMAR / BADLAR / UVA)"          update_bcra_cache.py
+call :paso  2 "Serie historica UVA"                  update_uva_cache.py
+call :paso  3 "Indice CAC"                           update_cac_cache.py
+call :paso  4 "MERVAL (pesos y dolares)"             update_merval_cache.py
+call :paso  5 "REM del BCRA (inflacion esperada)"    update_rem_cache.py
+call :paso  6 "Riesgo pais (Rava Bursatil)"          update_riesgo_cache.py
+call :paso  7 "ISAC e insumos (INDEC)"               update_isac_cache.py
+call :paso  8 "ICC de Cordoba"                       update_icc_cba_cache.py
+call :paso  9 "Registro General de Cordoba"          update_rgp_cba_cache.py
+call :paso 10 "ICC del INDEC (Gran Buenos Aires)"    update_icc_indec_cache.py
 
-echo.
-echo [3/8] Actualizando indice CAC...
-%PY% update_cac_cache.py
-if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
+rem =====================================================
+rem  ARMADO
+rem =====================================================
+echo [11/13] Generando docs\index.html y version portable...
+echo. >> "%LOG%"
+echo --- [11/13] BUILD_PUBLICAR --- >> "%LOG%"
+%PY% build_publicar.py >> "%LOG%" 2>&1
+set "RC=%errorlevel%"
+if not "%RC%"=="0" (
+  echo    [ERROR] Fallo build_publicar.py. Cancelado.
+  goto :mostrarlog
+)
+echo    [ok]
 
-echo.
-echo [4/8] Actualizando indice MERVAL (pesos y dolares)...
-%PY% update_merval_cache.py
-if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
-
-echo.
-echo [5/8] Actualizando REM del BCRA (inflacion esperada)...
-%PY% update_rem_cache.py
-if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
-
-echo.
-echo [6/9] Actualizando riesgo pais (Rava Bursatil)...
-%PY% update_riesgo_cache.py
-if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
-
-echo.
-echo [7/10] Actualizando ISAC e insumos de la construccion (INDEC)...
-%PY% update_isac_cache.py
-if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
-
-echo.
-echo [8/11] Actualizando ICC de Cordoba (Estadistica y Censos Cba)...
-%PY% update_icc_cba_cache.py
-if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
-
-echo.
-echo [9/12] Actualizando Registro General de la Propiedad de Cordoba...
-%PY% update_rgp_cba_cache.py
-if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
-
-echo.
-echo [10/12] Actualizando ICC del INDEC (Gran Buenos Aires)...
-%PY% update_icc_indec_cache.py
-if errorlevel 1 echo [AVISO] Fallo - se conservan los datos previos.
-
-echo.
-echo [11/12] Generando docs\index.html y version portable...
-%PY% build_publicar.py
-if errorlevel 1 (
-  echo [ERROR] Fallo build_publicar.py. Cancelado.
-  pause
-  exit /b 1
+rem =====================================================
+rem  VERIFICACION
+rem  0 = todo bien   1 = datos con problemas, no publicar
+rem  2 = se cayo el verificador, es un bug suyo: se publica igual
+rem =====================================================
+echo [12/13] Verificando frescura e integridad de los datos...
+echo. >> "%LOG%"
+echo --- [12/13] VERIFICAR --- >> "%LOG%"
+%PY% verificar.py >> "%LOG%" 2>&1
+set "RC=%errorlevel%"
+if "%RC%"=="1" (
+  echo    [ERROR] La verificacion encontro problemas en los datos. NO se publica.
+  goto :mostrarlog
+)
+if "%RC%"=="2" (
+  echo    [AVISO] verificar.py no pudo completarse. Se publica igual.
+) else (
+  echo    [ok]
 )
 
-echo.
-echo [12/12] Publicando en GitHub Pages...
-git add -A
-git commit -m "Actualizacion de indicadores %date% %time%" 2>nul
-if errorlevel 1 (
-  echo [INFO] No hubo cambios en los datos. Nada para subir.
-  echo.
-  pause
-  exit /b 0
+rem =====================================================
+rem  PUBLICACION
+rem =====================================================
+echo [13/13] Publicando en GitHub Pages...
+echo. >> "%LOG%"
+echo --- [13/13] GIT --- >> "%LOG%"
+git add -A >> "%LOG%" 2>&1
+git commit -m "Actualizacion de indicadores %date%" >> "%LOG%" 2>&1
+set "RC=%errorlevel%"
+if not "%RC%"=="0" (
+  echo    [INFO] No hubo cambios en los datos. Nada para subir.
+  goto :mostrarlog
 )
-git push
-if errorlevel 1 (
-  echo.
-  echo [ERROR] Fallo el push. Revisa la conexion o la autorizacion de GitHub.
-  pause
-  exit /b 1
+git push >> "%LOG%" 2>&1
+set "RC=%errorlevel%"
+if not "%RC%"=="0" (
+  echo    [ERROR] Fallo el push. Revisa la conexion o las credenciales de git.
+  goto :mostrarlog
 )
+echo    [ok] Publicado. El link se refresca en 1-2 minutos.
 
+:mostrarlog
 echo.
 echo =====================================================
-echo  LISTO - El link publico se actualiza en 1-2 minutos
-echo  https://crleandro-hub.github.io/tablero-elyon/
+echo  DETALLE COMPLETO
+echo =====================================================
+type "%LOG%"
+echo.
+echo =====================================================
+echo  Fin. El detalle quedo guardado en log_actualizar.txt
 echo =====================================================
 echo.
 pause
 exit /b 0
 
 
+rem --- Corre un update y avisa, sin frenar el ciclo ---
+:paso
+echo [%~1/13] Actualizando %~2...
+echo. >> "%LOG%"
+echo --- [%~1/13] %~2 --- >> "%LOG%"
+%PY% %~3 >> "%LOG%" 2>&1
+if errorlevel 1 (
+  echo    [AVISO] Fallo - se conservan los datos previos.
+) else (
+  echo    [ok]
+)
+exit /b 0
+
+
 :buscarpython
-rem Deja en PY el comando de Python que funcione, o vacio.
 set "PY="
 py -3 -c "import sys" >nul 2>&1     && set "PY=py -3"   && exit /b 0
 python  -c "import sys" >nul 2>&1   && set "PY=python"  && exit /b 0
@@ -137,9 +162,6 @@ for /d %%D in ("%LOCALAPPDATA%\Programs\Python\Python3*") do (
   if not defined PY if exist "%%~D\python.exe" set "PY=%%~D\python.exe"
 )
 for /d %%D in ("%ProgramFiles%\Python3*") do (
-  if not defined PY if exist "%%~D\python.exe" set "PY=%%~D\python.exe"
-)
-for /d %%D in ("C:\Python3*") do (
   if not defined PY if exist "%%~D\python.exe" set "PY=%%~D\python.exe"
 )
 exit /b 0
