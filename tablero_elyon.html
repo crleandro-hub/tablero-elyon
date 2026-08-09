@@ -170,26 +170,6 @@ body {
 .login-input:focus { border-color: var(--rojo); }
 .login-input::placeholder { color: var(--gris-txt); }
 
-/* ─── PANEL PRINCIPAL ────────────────────── */
-#screen-main .content { flex: 1; padding: 44px 32px; }
-.module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; max-width: 860px; }
-.module-card {
-  background: var(--gris-osc); border: 1px solid var(--gris-brd); border-radius: 12px;
-  padding: 34px 24px; text-align: center; cursor: pointer;
-  transition: border-color .2s, transform .15s, box-shadow .15s; position: relative; overflow: hidden;
-}
-.module-card::after {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  background: var(--rojo); opacity: 0; transition: opacity .2s;
-}
-.module-card:hover { border-color: var(--rojo); transform: translateY(-3px); box-shadow: 0 8px 24px rgba(204,0,0,.15); }
-.module-card:hover::after { opacity: 1; }
-.module-card.disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
-.module-icon { font-size: 38px; margin-bottom: 14px; }
-.module-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
-.module-desc { font-size: 11px; color: var(--gris-txt); }
-.soon-badge { display: inline-block; margin-top: 10px; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; background: var(--gris-med); color: var(--gris-txt); border-radius: 20px; padding: 3px 10px; }
-
 /* ─── INDICADORES ────────────────────────── */
 #screen-indicadores .content { flex: 1; padding: 20px 28px 48px; overflow-y: auto; }
 .ts-line { font-size: 9px; color: var(--gris-txt); text-align: right; margin: 2px 0 4px; }
@@ -253,7 +233,7 @@ body {
 
 @media (max-width: 600px) {
   .header { padding: 12px 16px; }
-  #screen-indicadores .content, #screen-main .content { padding: 18px 14px 40px; }
+  #screen-indicadores .content { padding: 18px 14px 40px; }
   .login-box { width: 95vw; padding: 36px 22px; }
 }
 
@@ -288,49 +268,16 @@ body {
 <!-- ══════════════════════════════════════
      PANEL PRINCIPAL
 ══════════════════════════════════════ -->
-<div id="screen-main" class="screen">
-  <div class="header">
-    <div>
-      <span class="logo">GRUPO <span class="r">ELYON</span></span>
-      <span class="header-sub">TABLERO DE GESTIÓN</span>
-    </div>
-    <button class="btn btn-ghost" onclick="doLogout()">Salir</button>
-  </div>
-
-  <div class="content">
-    <p style="font-size:12px;color:var(--gris-txt);margin-bottom:24px;">Seleccioná un módulo:</p>
-    <div class="module-grid">
-      <div class="module-card" onclick="showScreen('indicadores')">
-        <div class="module-icon">📊</div>
-        <div class="module-title">Indicadores Generales</div>
-        <div class="module-desc">Tipo de cambio · Inflación · Riesgo País · BADLAR · TAMAR · CAC · UVA</div>
-      </div>
-      <div class="module-card disabled">
-        <div class="module-icon">💼</div>
-        <div class="module-title">Ventas</div>
-        <div class="module-desc">Seguimiento comercial y facturación</div>
-        <div class="soon-badge">Próximamente</div>
-      </div>
-      <div class="module-card disabled">
-        <div class="module-icon">🏗️</div>
-        <div class="module-title">Avance de Obra</div>
-        <div class="module-desc">Estado y progreso de proyectos</div>
-        <div class="soon-badge">Próximamente</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="footer">© Grupo Elyon · Tablero de Gestión Interna</div>
-</div>
-
-
 <!-- ══════════════════════════════════════
      INDICADORES GENERALES
+     Es la unica pantalla del tablero. Antes habia un menu intermedio con
+     Ventas y Avance de Obra en "proximamente"; esos modulos van a vivir en
+     un tablero aparte, porque manejan informacion confidencial y este se
+     publica en un sitio publico. Sin ese menu, el login entra directo aca.
 ══════════════════════════════════════ -->
 <div id="screen-indicadores" class="screen">
   <div class="header">
     <div style="display:flex;align-items:center;gap:14px;">
-      <button class="btn-link" onclick="showScreen('main')">← Panel principal</button>
       <span class="logo" style="font-size:15px;">GRUPO <span class="r">ELYON</span>
         <span class="header-sub">Indicadores Generales</span>
       </span>
@@ -339,6 +286,7 @@ body {
       <span id="refresh-ts" style="font-size:9px;color:var(--gris-txt);"></span>
       <button class="btn btn-ghost" onclick="reloadAll()">🔄 Actualizar</button>
       <button class="btn btn-ghost" id="btn-guardar" onclick="saveSnapshot()" style="border-color:#22C55E;color:#22C55E;">💾 Guardar</button>
+      <button class="btn btn-ghost" onclick="doLogout()">Salir</button>
     </div>
   </div>
 
@@ -1237,7 +1185,7 @@ function doLogin() {
   if (document.getElementById('pwd-input').value === PASSWORD) {
     document.getElementById('login-err').textContent = '';
     sessionStorage.setItem('elyon_ok', '1');
-    showScreen('main');
+    showScreen('indicadores');
   } else {
     document.getElementById('login-err').textContent = '⚠ Contraseña incorrecta.';
   }
@@ -1250,7 +1198,7 @@ function doLogout() {
   showScreen('login');
 }
 
-if (sessionStorage.getItem('elyon_ok') === '1') showScreen('main');
+if (sessionStorage.getItem('elyon_ok') === '1') showScreen('indicadores');
 
 /* ═══════════════════════════════════════
    FORMATO NUMÉRICO

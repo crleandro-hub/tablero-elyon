@@ -76,8 +76,14 @@ Pasos para diagnosticar:
 
 ---
 
-## Una advertencia sobre la contraseña
+## Seguridad: este tablero es público
 
-La pantalla de login es decorativa. La contraseña está en el JavaScript del tablero y el sitio se publica en GitHub Pages, que es público: cualquiera que abra el código fuente la ve.
+La pantalla de login es decorativa. La contraseña está en el JavaScript y el sitio se publica en GitHub Pages, que es público: cualquiera que abra el código fuente la ve, o directamente se saltea la pantalla. Los datos ya viajaron al navegador antes de que se ejecute la validación.
 
-Hoy no importa, porque todos los datos son públicos. **Si en algún momento se le suma información interna** —flujo de caja, obras, márgenes— hay que separar en dos: lo público en Pages y lo interno solo en el portable, sin publicar.
+Con el contenido actual no importa, porque **todo lo que hay acá es información pública** del INDEC, el BCRA y la Provincia de Córdoba.
+
+**La regla, entonces: en esta carpeta no entra información confidencial.** Nada de flujo de caja, márgenes, obras ni contratos. Eso va en un proyecto separado, decidido así en agosto de 2026.
+
+El motivo no es sólo la contraseña. `actualizar_auto.bat` corre `git add -A` y `git push` todos los días hábiles a las 8:30, sin elegir archivos: **cualquier cosa que quede en esta carpeta se publica sola a la mañana siguiente.** Y git no olvida — un archivo subido una vez queda en el historial público aunque después se borre.
+
+Por eso el tablero tiene una sola pantalla. El menú con los módulos de Ventas y Avance de Obra se quitó: esos van al proyecto aparte.
