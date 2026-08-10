@@ -15,6 +15,7 @@ Series utilizadas (TNA, bancos privados):
   44 -> TAMAR  bancos privados - En porcentaje nominal anual
    7 -> BADLAR bancos privados - En porcentaje nominal anual
   31 -> UVA (en pesos)
+   1 -> Reservas internacionales del BCRA (en millones de US$)
 
 Ejecutar diariamente via tarea programada.
 """
@@ -32,6 +33,12 @@ VARS = {
     "tamar":  {"id": 44, "dec": 4, "desc": "TAMAR bancos privados - TNA"},
     "badlar": {"id": 7,  "dec": 4, "desc": "BADLAR bancos privados - TNA"},
     "uva":    {"id": 31, "dec": 2, "desc": "UVA en pesos"},
+    # Las reservas no son una tasa: se guarda ademas la variacion contra ~30
+    # dias atras, porque el nivel suelto no dice nada. Se mueven fuerte dia a
+    # dia por pagos de deuda y liquidacion del agro, asi que la lectura util
+    # es la tendencia del mes, no la rueda.
+    "reservas": {"id": 1, "dec": 0, "desc": "Reservas internacionales (US$ M)",
+                 "var30": True},
 }
 
 DIAS_ATRAS = 20  # margen por feriados / fines de semana largos
@@ -53,22 +60,54 @@ def _open(url):
         return req.urlopen(r, timeout=20, context=ctx).read().decode("utf-8")
 
 
-def fetch_serie(var_id):
-    """Devuelve (valor, fecha_iso) del ultimo dato publicado de la serie."""
+def fetch_detalle(var_id, dias):
+    """Devuelve [{fecha, valor}] descendente de los ultimos `dias`."""
     hasta = datetime.now().date()
-    desde = hasta - timedelta(days=DIAS_ATRAS)
+    desde = hasta - timedelta(days=dias)
     url = API.format(id=var_id, desde=desde.isoformat(), hasta=hasta.isoformat())
     js = json.loads(_open(url))
     results = js.get("results") or []
     if not results:
-        return None, None
+        return []
     detalle = results[0].get("detalle") or []
-    if not detalle:
-        return None, None
     # La API devuelve orden descendente, pero ordenamos por las dudas.
     detalle.sort(key=lambda d: d["fecha"], reverse=True)
+    return detalle
+
+
+def fetch_serie(var_id):
+    """Devuelve (valor, fecha_iso) del ultimo dato publicado de la serie."""
+    detalle = fetch_detalle(var_id, DIAS_ATRAS)
+    if not detalle:
+        return None, None
     ult = detalle[0]
     return float(ult["valor"]), ult["fecha"]
+
+
+def fetch_var30(var_id):
+    """(valor, fecha, var % contra ~30 dias atras) de la serie.
+
+    Se pide una ventana de 50 dias y se busca el dato publicado mas cercano a
+    30 dias antes del ultimo: si ese dia fue feriado, sirve el habil previo."""
+    detalle = fetch_detalle(var_id, 50)
+    if not detalle:
+        return None, None, None
+    ult = detalle[0]
+    valor, fecha = float(ult["valor"]), ult["fecha"]
+
+    objetivo = datetime.strptime(fecha, "%Y-%m-%d").date() - timedelta(days=30)
+    ref = None
+    for d in detalle:
+        f = datetime.strptime(d["fecha"], "%Y-%m-%d").date()
+        if f <= objetivo:
+            ref = float(d["valor"])
+            break
+    if ref is None and len(detalle) > 1:
+        # La serie no llega a 30 dias: se usa el dato mas viejo que haya
+        ref = float(detalle[-1]["valor"])
+
+    var = round((valor / ref - 1) * 100, 2) if ref else None
+    return valor, fecha, var
 
 
 def write_cache(data):
@@ -80,6 +119,7 @@ def write_cache(data):
         "   tamar = serie 44 (TNA, bancos privados)",
         "   badlar = serie 7 (TNA, bancos privados)",
         "   uva = serie 31",
+        "   reservas = serie 1 (millones de US$); var30 = % contra ~30 dias atras",
         "----------------------------------------------------------------- */",
         "window.BCRA_CACHE = {",
     ]
@@ -87,7 +127,13 @@ def write_cache(data):
         if info["valor"] is not None:
             dec = VARS[key]["dec"]
             valor = round(info["valor"], dec)
-            lines.append(f'  {key}: {{ valor: {valor}, fecha: "{info["fecha"]}" }},')
+            if dec == 0:
+                valor = int(valor)
+            extra = ""
+            if info.get("var30") is not None:
+                extra = f', var30: {info["var30"]}'
+            lines.append(
+                f'  {key}: {{ valor: {valor}, fecha: "{info["fecha"]}"{extra} }},')
         else:
             lines.append(f"  {key}: null,")
     lines.append(f'  updated: "{ts}"')
@@ -107,8 +153,12 @@ def main():
     data = {}
     ok = 0
     for key, cfg in VARS.items():
+        var30 = None
         try:
-            valor, fecha = fetch_serie(cfg["id"])
+            if cfg.get("var30"):
+                valor, fecha, var30 = fetch_var30(cfg["id"])
+            else:
+                valor, fecha = fetch_serie(cfg["id"])
         except Exception as e:
             print(f"[ERROR] {key} (serie {cfg['id']}): {e}")
             valor, fecha = None, None
@@ -116,7 +166,7 @@ def main():
             print(f"[WARN] Sin dato para {key} - {cfg['desc']}")
         else:
             ok += 1
-        data[key] = {"valor": valor, "fecha": fecha}
+        data[key] = {"valor": valor, "fecha": fecha, "var30": var30}
 
     if ok == 0:
         print("[ABORTA] Ninguna serie pudo obtenerse. Se conserva el cache anterior.")

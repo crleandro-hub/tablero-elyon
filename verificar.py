@@ -54,6 +54,8 @@ FRESCURA = {
     "merval_cache.js":    ("diaria",  6,   6),
     "riesgo_cache.js":    ("diaria",  6,   6),
     "caucion_cache.js":   ("diaria",  6,   6),
+    "rofex_cache.js":     ("diaria",  6,   6),
+    "acciones_cache.js":  ("diaria",  6,   6),
     "cac_cache.js":       ("mensual", 70,  6),
     "icc_cba_cache.js":   ("mensual", 70,  6),
     "icc_indec_cache.js": ("mensual", 70,  6),
@@ -209,8 +211,24 @@ def ultima_fecha(bloques, txt=""):
     cuatro numeros sueltos como el REM, o porque la serie esta anidada de una
     forma que el lector de arrays no agarra, como la de salarios— cae a buscar
     cualquier fecha entrecomillada en el archivo. En un cache de datos toda
-    fecha es un dato, asi que el maximo sirve igual."""
+    fecha es un dato, asi que el maximo sirve igual.
+
+    Excepcion: la curva de futuros. Ahi las fechas son VENCIMIENTOS, no ruedas:
+    apuntan al futuro por definicion y tomar el maximo daba una antiguedad
+    negativa. Lo que hay que controlar es la rueda de la que salio la curva."""
+    m = re.search(r'rueda:\s*"(\d{4}-\d{2}-\d{2})"', txt)
+    if m:
+        return a_date(m.group(1))
+
     ult = None
+    # Hay caches que son una FOTO, no una serie: el ranking de acciones del dia
+    # no tiene fechas adentro. Ahi el dato es tan viejo como la corrida que lo
+    # escribio, asi que vale el sello de `updated`.
+    if "ACCIONES_CACHE" in txt:
+        m = re.search(r'updated:\s*"(\d{4}-\d{2}-\d{2})', txt)
+        if m:
+            return a_date(m.group(1))
+
     for bloque in bloques.values():
         for f, _ in filas_de(bloque):
             d = a_date(f)

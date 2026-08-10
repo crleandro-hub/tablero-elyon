@@ -1,4 +1,4 @@
-<!-- Version autocontenida generada por build_publicar.py el 10/08/2026 18:56 - datos embebidos, no depende de archivos externos -->
+<!-- Version autocontenida generada por build_publicar.py el 10/08/2026 20:26 - datos embebidos, no depende de archivos externos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -119,13 +119,13 @@ body {
    puntos). Con auto-fit entrarian las 9 en una sola fila y quedan apretadas,
    asi que se fija la cantidad de columnas por ancho de pantalla y se deja que
    bajen a una segunda linea. */
-.kpi-macro { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 4px; }
+.kpi-macro { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 4px; }
 .kpi-macro .kpi-label { font-size: 10px; letter-spacing: .6px; margin-bottom: 7px; }
 .kpi-macro .kpi-value { font-size: 19px; }
 .kpi-macro .kpi-sub   { font-size: 10px; line-height: 1.35; }
 .kpi-macro .card      { padding: 13px 14px; min-width: 0; }
 
-@media (max-width: 1180px) { .kpi-macro { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 1180px) { .kpi-macro { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 900px)  { .kpi-macro { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 620px)  { .kpi-macro { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 380px)  { .kpi-macro { grid-template-columns: 1fr; } }
@@ -172,7 +172,8 @@ body {
 .login-input::placeholder { color: var(--gris-txt); }
 
 /* ─── INDICADORES ────────────────────────── */
-#screen-indicadores .content { flex: 1; padding: 20px 28px 48px; overflow-y: auto; }
+#screen-indicadores .content,
+#screen-herramientas .content { flex: 1; padding: 20px 28px 48px; overflow-y: auto; }
 .ts-line { font-size: 9px; color: var(--gris-txt); text-align: right; margin: 2px 0 4px; }
 
 /* DÓLAR CARDS */
@@ -234,7 +235,8 @@ body {
 
 @media (max-width: 600px) {
   .header { padding: 12px 16px; }
-  #screen-indicadores .content { padding: 18px 14px 40px; }
+  #screen-indicadores .content,
+  #screen-herramientas .content { padding: 18px 14px 40px; }
   .login-box { width: 95vw; padding: 36px 22px; }
 }
 
@@ -244,6 +246,34 @@ body {
 .cauc-col   { flex: 1; min-width: 0; }
 .cauc-plazo { font-size: 9px; font-weight: 600; color: #a8a8a8; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
 .cauc-val   { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.1; white-space: nowrap; }
+.cauc-tna   { font-size: 9px; color: #8f8f8f; margin-top: 3px; white-space: nowrap; }
+
+/* TIPO DE CAMBIO — 5 columnas: los cinco dolares arriba, y abajo los dos
+   euros con el futuro ocupando las tres columnas que sobran. */
+.kpi-cambio { grid-template-columns: repeat(5, 1fr); }
+@media (max-width: 1180px) { .kpi-cambio { grid-template-columns: repeat(3, 1fr); }
+                             #dolar-futuro { grid-column: span 3 !important; } }
+@media (max-width: 760px)  { .kpi-cambio { grid-template-columns: repeat(2, 1fr); }
+                             #dolar-futuro { grid-column: span 2 !important; } }
+@media (max-width: 380px)  { .kpi-cambio { grid-template-columns: 1fr; }
+                             #dolar-futuro { grid-column: span 1 !important; } }
+
+/* La tarjeta de futuros muestra seis vencimientos, asi que va mas compacta
+   que la de caucion: numero mas chico y columnas parejas. */
+#dolar-futuro .cauc-row { gap: 3px; }
+#dolar-futuro .cauc-col { flex: 1 1 0; text-align: center; }
+#dolar-futuro .cauc-val { font-size: 13px; }
+#dolar-futuro .cauc-plazo { font-size: 8.5px; letter-spacing: .3px; }
+#dolar-futuro .cauc-tna { font-size: 8.5px; }
+
+/* MEJORES / PEORES ACCIONES */
+.acc-lista  { display: flex; flex-direction: column; gap: 5px; margin: 2px 0 1px; }
+.acc-fila   { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.acc-tkr    { font-size: 12px; font-weight: 700; color: #fff; letter-spacing: .3px; }
+.acc-nom    { font-size: 9px; color: #8f8f8f; margin-left: 5px; font-weight: 400;
+              overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acc-izq    { display: flex; align-items: baseline; min-width: 0; }
+.acc-pct    { font-size: 13px; font-weight: 700; white-space: nowrap; }
 
 /* VARIACIONES DÓLAR */
 .dolar-vars { display:flex; align-items:center; gap:6px; margin-top:8px; font-size:10px; }
@@ -301,7 +331,7 @@ body {
 
     <!-- TIPO DE CAMBIO -->
     <div class="sec-title">Tipo de cambio</div>
-    <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(155px,1fr));">
+    <div class="kpi-grid kpi-cambio">
 
       <div class="card" id="dolar-oficial">
         <div class="kpi-label">Dólar Oficial</div>
@@ -397,6 +427,17 @@ body {
         <div class="kpi-sub" id="src-euro-blue">—</div>
       </div>
 
+      <div class="card" id="dolar-futuro" style="grid-column:span 3;">
+        <div class="kpi-label">Dólar Futuro (ROFEX)</div>
+        <div class="cauc-row" id="rofex-row">
+          <div class="cauc-col">
+            <div class="cauc-plazo">—</div>
+            <div class="cauc-val">—</div>
+          </div>
+        </div>
+        <div class="kpi-sub" id="src-rofex">Matba Rofex</div>
+      </div>
+
     </div>
     <div class="ts-line" id="dolar-ts">Cargando...</div>
 
@@ -434,26 +475,20 @@ body {
         <div class="kpi-sub" id="src-devaluacion">Mediana REM · BCRA</div>
       </div>
 
+      <div class="card" id="card-reservas">
+        <div class="kpi-label">Reservas internacionales</div>
+        <div class="kpi-value" id="val-reservas">—</div>
+        <div class="kpi-sub" id="src-reservas">Brutas · BCRA</div>
+      </div>
+
       <div class="card" id="card-riesgo">
         <div class="kpi-label">Riesgo País</div>
         <div class="kpi-value" id="val-riesgo">—</div>
         <div class="kpi-sub" id="src-riesgo">EMBI+ · JP Morgan</div>
       </div>
 
-      <div class="card" id="card-badlar">
-        <div class="kpi-label">Tasa BADLAR</div>
-        <div class="kpi-value" id="val-badlar">—</div>
-        <div class="kpi-sub" id="src-badlar">Bancos priv. · BCRA</div>
-      </div>
-
-      <div class="card" id="card-tamar">
-        <div class="kpi-label">Tasa TAMAR</div>
-        <div class="kpi-value" id="val-tamar">—</div>
-        <div class="kpi-sub" id="src-tamar">Bancos priv. · BCRA</div>
-      </div>
-
       <div class="card" id="card-caucion">
-        <div class="kpi-label">Caución (TNA)</div>
+        <div class="kpi-label">Tasa de caución TNA</div>
         <div class="cauc-row">
           <div class="cauc-col">
             <div class="cauc-plazo">1 día</div>
@@ -471,6 +506,18 @@ body {
         <div class="kpi-sub" id="src-caucion">Caución BYMA · Rava</div>
       </div>
 
+      <div class="card" id="card-badlar">
+        <div class="kpi-label">Tasa BADLAR</div>
+        <div class="kpi-value" id="val-badlar">—</div>
+        <div class="kpi-sub" id="src-badlar">Bancos priv. · BCRA</div>
+      </div>
+
+      <div class="card" id="card-tamar">
+        <div class="kpi-label">Tasa TAMAR</div>
+        <div class="kpi-value" id="val-tamar">—</div>
+        <div class="kpi-sub" id="src-tamar">Bancos priv. · BCRA</div>
+      </div>
+
       <div class="card" id="card-merval">
         <div class="kpi-label">MERVAL (pesos)</div>
         <div class="kpi-value" id="val-merval">—</div>
@@ -481,6 +528,18 @@ body {
         <div class="kpi-label">MERVAL (USD)</div>
         <div class="kpi-value" id="val-merval-usd">—</div>
         <div class="kpi-sub" id="src-merval-usd">Merval ÷ CCL</div>
+      </div>
+
+      <div class="card" id="card-acc-suben" style="grid-column:span 2;">
+        <div class="kpi-label">Mayores subas · panel líder</div>
+        <div class="acc-lista" id="lista-acc-suben"></div>
+        <div class="kpi-sub" id="src-acc-suben">Panel líder · BYMA</div>
+      </div>
+
+      <div class="card" id="card-acc-bajan" style="grid-column:span 2;">
+        <div class="kpi-label">Mayores bajas · panel líder</div>
+        <div class="acc-lista" id="lista-acc-bajan"></div>
+        <div class="kpi-sub" id="src-acc-bajan">Panel líder · BYMA</div>
       </div>
 
     </div>
@@ -549,25 +608,13 @@ body {
     </div>
 
 
-    <!-- ─── CONSULTA CAC POR PERÍODO ─── -->
-    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;">
-      <div class="sub-title" style="margin-bottom:12px;">Consulta por período</div>
-
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
-          <select id="cac-q-anio" class="cac-q-select" onchange="onCacQAnioChange()"></select>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
-          <select id="cac-q-mes" class="cac-q-select" onchange="renderCacConsulta()"></select>
-        </div>
-        <button type="button" class="cac-q-btn" onclick="cacQUltimo()">Último disponible</button>
+    <!-- ─── CONSULTA CAC POR PERÍODO · vive en la pantalla Herramientas ─── -->
+    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+      <div>
+        <div class="sub-title" style="margin-bottom:4px;">Consulta CAC por período</div>
+        <div style="font-size:11px;color:var(--gris-txt);">Buscá el índice CAC de cualquier mes desde enero de 2011.</div>
       </div>
-
-      <div id="cac-q-result">
-        <div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">Cargando...</div>
-      </div>
+      <button class="btn btn-rojo" onclick="abrirHerramienta('cac')">ABRIR &rsaquo;</button>
     </div>
 
     <!-- ── ICC CÓRDOBA ──────────────────── -->
@@ -727,29 +774,13 @@ body {
       </div>
     </div>
 
-    <!-- ─── CONSULTA UVA POR FECHA ─── -->
-    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;">
-      <div class="sub-title" style="margin-bottom:12px;">Consulta por fecha</div>
-
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
-          <select id="uva-q-anio" class="cac-q-select" onchange="onUvaQAnioChange()"></select>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
-          <select id="uva-q-mes" class="cac-q-select" onchange="onUvaQMesChange()"></select>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">DÍA</div>
-          <select id="uva-q-dia" class="cac-q-select" style="min-width:80px;" onchange="renderUvaConsulta()"></select>
-        </div>
-        <button type="button" class="cac-q-btn" onclick="uvaQHoy()">Hoy</button>
+    <!-- ─── CONSULTA UVA POR FECHA · vive en la pantalla Herramientas ─── -->
+    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+      <div>
+        <div class="sub-title" style="margin-bottom:4px;">Consulta UVA por fecha</div>
+        <div style="font-size:11px;color:var(--gris-txt);">Valor de la UVA en cualquier día desde marzo de 2016.</div>
       </div>
-
-      <div id="uva-q-result">
-        <div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">Cargando serie UVA...</div>
-      </div>
+      <button class="btn btn-rojo" onclick="abrirHerramienta('uva')">ABRIR &rsaquo;</button>
     </div>
 
     <!-- ── DÓLAR BLUE ──────────────────── -->
@@ -827,38 +858,13 @@ body {
       </div>
     </div>
 
-    <!-- ─── CONSULTA COTIZACIÓN POR FECHA ─── -->
-    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;">
-      <div class="sub-title" style="margin-bottom:12px;">Consulta por fecha</div>
-
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">COTIZACIÓN</div>
-          <select id="usd-q-casa" class="cac-q-select" onchange="onUsdQCasaChange()">
-            <option value="blue">Blue / Informal</option>
-            <option value="oficial">Oficial</option>
-            <option value="bolsa">MEP (Bolsa)</option>
-            <option value="contadoconliqui">CCL (Cable)</option>
-          </select>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
-          <select id="usd-q-anio" class="cac-q-select" onchange="onUsdQAnioChange()"></select>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
-          <select id="usd-q-mes" class="cac-q-select" onchange="onUsdQMesChange()"></select>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">DÍA</div>
-          <select id="usd-q-dia" class="cac-q-select" style="min-width:80px;" onchange="renderUsdConsulta()"></select>
-        </div>
-        <button type="button" class="cac-q-btn" onclick="usdQHoy()">Último disponible</button>
+    <!-- ─── CONSULTA DE TIPO DE CAMBIO · vive en la pantalla Herramientas ─── -->
+    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+      <div>
+        <div class="sub-title" style="margin-bottom:4px;">Consulta de tipo de cambio</div>
+        <div style="font-size:11px;color:var(--gris-txt);">Cotización del dólar oficial, blue, MEP o CCL en cualquier fecha.</div>
       </div>
-
-      <div id="usd-q-result">
-        <div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">Cargando cotizaciones...</div>
-      </div>
+      <button class="btn btn-rojo" onclick="abrirHerramienta('dolar')">ABRIR &rsaquo;</button>
     </div>
 
     <!-- ── SALARIOS DE LA CONSTRUCCIÓN ─────────────────── -->
@@ -952,55 +958,14 @@ body {
       <div id="comp-resumen" style="margin-top:14px;"></div>
     </div>
 
-    <!-- ── AJUSTE DE CONTRATOS / REDETERMINACIÓN ───────── -->
-    <div id="ajuste-section">
-      <div class="sec-title">Ajuste de contratos y presupuestos</div>
-      <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
-        Cuánto vale hoy un monto pactado en otra fecha. Se arma un polinomio: se reparte el
-        100% del monto entre los índices que mejor representan la estructura de costos del
-        contrato y cada componente se ajusta por su propia variación.
+    <!-- ─── CALCULADORA DE CONTRATOS Y PRESUPUESTOS · vive en la pantalla Herramientas ─── -->
+    <div class="sec-title">Calculadora de contratos y presupuestos</div>
+    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+      <div>
+        <div class="sub-title" style="margin-bottom:4px;">Calculadora de contratos y presupuestos</div>
+        <div style="font-size:11px;color:var(--gris-txt);">Cuánto vale hoy un monto pactado en otra fecha, con polinomio de índices.</div>
       </div>
-
-      <div class="card" style="margin-bottom:14px;">
-        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
-          <div>
-            <div class="kpi-label" style="margin-bottom:5px;">Monto original</div>
-            <input type="number" id="aj-monto" value="10000000" min="0" step="1000"
-                   oninput="renderAjuste()" class="period-select" style="width:170px;">
-          </div>
-          <div>
-            <div class="kpi-label" style="margin-bottom:5px;">Desde</div>
-            <select class="period-select" id="aj-desde" onchange="renderAjuste()" style="width:150px;"></select>
-          </div>
-          <div>
-            <div class="kpi-label" style="margin-bottom:5px;">Hasta</div>
-            <select class="period-select" id="aj-hasta" onchange="renderAjuste()" style="width:150px;"></select>
-          </div>
-          <div>
-            <div class="kpi-label" style="margin-bottom:5px;">Polinomio armado</div>
-            <select class="period-select" id="aj-preset" onchange="aplicarPresetAjuste()" style="width:230px;">
-              <option value="obra">Obra completa · CAC (45 mat / 40 MO / 15 IPC)</option>
-              <option value="obraCba">Obra completa · ICC Cba (45 mat / 40 MO / 15 IPC)</option>
-              <option value="cac">Solo CAC general</option>
-              <option value="iccCba">Solo ICC Córdoba</option>
-              <option value="dto1295">Obra pública · ICC INDEC (46 mat / 46 MO / 8 IPC)</option>
-              <option value="ipc">Solo IPC</option>
-              <option value="uva">Solo UVA</option>
-              <option value="usd">Solo dólar oficial</option>
-              <option value="libre">Personalizado</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="sub-title" style="margin-bottom:10px;">Composición (%)</div>
-        <div id="aj-pesos" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:10px;"></div>
-        <div id="aj-suma" style="font-size:11px;margin-top:12px;"></div>
-      </div>
-
-      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:14px;"
-           id="aj-kpis"></div>
-
-      <div id="aj-detalle"></div>
+      <button class="btn btn-rojo" onclick="abrirHerramienta('ajuste')">ABRIR &rsaquo;</button>
     </div>
 
     <!-- ── ISAC · ACTIVIDAD DE LA CONSTRUCCIÓN ──────────── -->
@@ -1248,6 +1213,173 @@ body {
 </div>
 
 
+
+<!-- ══════════════════════════════════════
+     HERRAMIENTAS
+     Los buscadores y la calculadora vivian intercalados en el tablero y lo
+     alargaban sin necesidad: son cosas que se usan de a ratos, no se miran
+     de un vistazo. Ahora cada uno tiene su pantalla y en el tablero queda
+     solo el boton. Es la misma pagina (no un archivo aparte) para que la
+     version portable y la de GitHub Pages sigan siendo un unico .html.
+══════════════════════════════════════ -->
+<div id="screen-herramientas" class="screen">
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span class="logo" style="font-size:15px;">GRUPO <span class="r">ELYON</span>
+        <span class="header-sub" id="herram-titulo">Herramientas</span>
+      </span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button class="btn btn-ghost" onclick="volverAlTablero()">&lsaquo; VOLVER AL TABLERO</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="tool-panel" id="tool-cac" style="display:none;">
+      <div class="sub-title" style="margin-bottom:2px;">Consulta CAC por período</div>
+      <div style="font-size:11px;color:var(--gris-txt);margin-bottom:14px;">Índice CAC · Cámara Argentina de la Construcción</div>
+    <!-- ─── CONSULTA CAC POR PERÍODO ─── -->
+    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;">
+      <div class="sub-title" style="margin-bottom:12px;">Consulta por período</div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
+          <select id="cac-q-anio" class="cac-q-select" onchange="onCacQAnioChange()"></select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
+          <select id="cac-q-mes" class="cac-q-select" onchange="renderCacConsulta()"></select>
+        </div>
+        <button type="button" class="cac-q-btn" onclick="cacQUltimo()">Último disponible</button>
+      </div>
+
+      <div id="cac-q-result">
+        <div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">Cargando...</div>
+      </div>
+    </div>
+    </div>
+    <div class="tool-panel" id="tool-uva" style="display:none;">
+      <div class="sub-title" style="margin-bottom:2px;">Consulta UVA por fecha</div>
+      <div style="font-size:11px;color:var(--gris-txt);margin-bottom:14px;">Unidad de Valor Adquisitivo · BCRA</div>
+    <!-- ─── CONSULTA UVA POR FECHA ─── -->
+    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;">
+      <div class="sub-title" style="margin-bottom:12px;">Consulta por fecha</div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
+          <select id="uva-q-anio" class="cac-q-select" onchange="onUvaQAnioChange()"></select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
+          <select id="uva-q-mes" class="cac-q-select" onchange="onUvaQMesChange()"></select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">DÍA</div>
+          <select id="uva-q-dia" class="cac-q-select" style="min-width:80px;" onchange="renderUvaConsulta()"></select>
+        </div>
+        <button type="button" class="cac-q-btn" onclick="uvaQHoy()">Hoy</button>
+      </div>
+
+      <div id="uva-q-result">
+        <div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">Cargando serie UVA...</div>
+      </div>
+    </div>
+    </div>
+    <div class="tool-panel" id="tool-dolar" style="display:none;">
+      <div class="sub-title" style="margin-bottom:2px;">Consulta de tipo de cambio</div>
+      <div style="font-size:11px;color:var(--gris-txt);margin-bottom:14px;">Oficial, blue, MEP y CCL · ArgentinaDatos</div>
+    <!-- ─── CONSULTA COTIZACIÓN POR FECHA ─── -->
+    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;">
+      <div class="sub-title" style="margin-bottom:12px;">Consulta por fecha</div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">COTIZACIÓN</div>
+          <select id="usd-q-casa" class="cac-q-select" onchange="onUsdQCasaChange()">
+            <option value="blue">Blue / Informal</option>
+            <option value="oficial">Oficial</option>
+            <option value="bolsa">MEP (Bolsa)</option>
+            <option value="contadoconliqui">CCL (Cable)</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
+          <select id="usd-q-anio" class="cac-q-select" onchange="onUsdQAnioChange()"></select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
+          <select id="usd-q-mes" class="cac-q-select" onchange="onUsdQMesChange()"></select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">DÍA</div>
+          <select id="usd-q-dia" class="cac-q-select" style="min-width:80px;" onchange="renderUsdConsulta()"></select>
+        </div>
+        <button type="button" class="cac-q-btn" onclick="usdQHoy()">Último disponible</button>
+      </div>
+
+      <div id="usd-q-result">
+        <div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">Cargando cotizaciones...</div>
+      </div>
+    </div>
+    </div>
+    <div class="tool-panel" id="tool-ajuste" style="display:none;">
+      <div class="sub-title" style="margin-bottom:2px;">Calculadora de contratos y presupuestos</div>
+      <div style="font-size:11px;color:var(--gris-txt);margin-bottom:14px;">Polinomio multi-índice · redeterminación</div>
+    <!-- ── AJUSTE DE CONTRATOS / REDETERMINACIÓN ───────── -->
+    <div id="ajuste-section">
+      <div class="sec-title">Calculadora de contratos y presupuestos</div>
+      <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
+        Cuánto vale hoy un monto pactado en otra fecha. Se arma un polinomio: se reparte el
+        100% del monto entre los índices que mejor representan la estructura de costos del
+        contrato y cada componente se ajusta por su propia variación.
+      </div>
+
+      <div class="card" style="margin-bottom:14px;">
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+          <div>
+            <div class="kpi-label" style="margin-bottom:5px;">Monto original</div>
+            <input type="number" id="aj-monto" value="10000000" min="0" step="1000"
+                   oninput="renderAjuste()" class="period-select" style="width:170px;">
+          </div>
+          <div>
+            <div class="kpi-label" style="margin-bottom:5px;">Desde</div>
+            <select class="period-select" id="aj-desde" onchange="renderAjuste()" style="width:150px;"></select>
+          </div>
+          <div>
+            <div class="kpi-label" style="margin-bottom:5px;">Hasta</div>
+            <select class="period-select" id="aj-hasta" onchange="renderAjuste()" style="width:150px;"></select>
+          </div>
+          <div>
+            <div class="kpi-label" style="margin-bottom:5px;">Polinomio armado</div>
+            <select class="period-select" id="aj-preset" onchange="aplicarPresetAjuste()" style="width:230px;">
+              <option value="obra">Obra completa · CAC (45 mat / 40 MO / 15 IPC)</option>
+              <option value="obraCba">Obra completa · ICC Cba (45 mat / 40 MO / 15 IPC)</option>
+              <option value="cac">Solo CAC general</option>
+              <option value="iccCba">Solo ICC Córdoba</option>
+              <option value="dto1295">Obra pública · ICC INDEC (46 mat / 46 MO / 8 IPC)</option>
+              <option value="ipc">Solo IPC</option>
+              <option value="uva">Solo UVA</option>
+              <option value="usd">Solo dólar oficial</option>
+              <option value="libre">Personalizado</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sub-title" style="margin-bottom:10px;">Composición (%)</div>
+        <div id="aj-pesos" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:10px;"></div>
+        <div id="aj-suma" style="font-size:11px;margin-top:12px;"></div>
+      </div>
+
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:14px;"
+           id="aj-kpis"></div>
+
+      <div id="aj-detalle"></div>
+    </div>
+    </div>
+  </div>
+</div>
+
 <script>
 /* === BCRA_CACHE embebido desde bcra_cache.js (build_publicar.py) === */
 /* -----------------------------------------------------------------
@@ -1256,12 +1388,14 @@ body {
    tamar = serie 44 (TNA, bancos privados)
    badlar = serie 7 (TNA, bancos privados)
    uva = serie 31
+   reservas = serie 1 (millones de US$); var30 = % contra ~30 dias atras
 ----------------------------------------------------------------- */
 window.BCRA_CACHE = {
   tamar: { valor: 23.375, fecha: "2026-08-07" },
   badlar: { valor: 21.5, fecha: "2026-08-07" },
   uva: { valor: 2068.01, fecha: "2026-08-10" },
-  updated: "2026-08-10T18:53:48"
+  reservas: { valor: 48834, fecha: "2026-08-06", var30: -1.42 },
+  updated: "2026-08-10T19:10:00"
 };
 </script>
 <script>
@@ -2881,6 +3015,60 @@ window.CAUCION_CACHE = {
 };
 </script>
 <script>
+/* === ROFEX_CACHE embebido desde rofex_cache.js (build_publicar.py) === */
+/* -----------------------------------------------------------------
+   rofex_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
+   Generado: 2026-08-10T19:15:00
+   Curva de dolar futuro (contratos DLR) de Matba Rofex.
+   precio = precio de ajuste (settlement) de la rueda
+   varPct = variacion % contra el ajuste anterior
+   tna    = tasa nominal anual implicita en el contrato
+----------------------------------------------------------------- */
+window.ROFEX_CACHE = {
+  rueda: "2026-08-10",
+  curva: [
+    { periodo: "2026-08", etiqueta: "ago-26", precio: 1509.5, varPct: -0.3, tna: 13.23 },
+    { periodo: "2026-09", etiqueta: "sep-26", precio: 1535.5, varPct: -0.26, tna: 17.87 },
+    { periodo: "2026-10", etiqueta: "oct-26", precio: 1563.0, varPct: -0.19, tna: 19.52 },
+    { periodo: "2026-11", etiqueta: "nov-26", precio: 1593.0, varPct: -0.19, tna: 20.65 },
+    { periodo: "2026-12", etiqueta: "dic-26", precio: 1623.0, varPct: -0.18, tna: 21.43 },
+    { periodo: "2027-01", etiqueta: "ene-27", precio: 1653.0, varPct: -0.18, tna: 21.94 },
+    { periodo: "2027-02", etiqueta: "feb-27", precio: 1681.0, varPct: -0.18, tna: 22.28 },
+    { periodo: "2027-03", etiqueta: "mar-27", precio: 1715.0, varPct: -0.12, tna: 22.68 },
+    { periodo: "2027-04", etiqueta: "abr-27", precio: 1744.0, varPct: -0.2, tna: 22.78 },
+    { periodo: "2027-05", etiqueta: "may-27", precio: 1775.0, varPct: -0.17, tna: 22.95 }
+  ],
+  fuente: "Dólar futuro · Matba Rofex",
+  updated: "2026-08-10T19:15:00"
+};
+</script>
+<script>
+/* === ACCIONES_CACHE embebido desde acciones_cache.js (build_publicar.py) === */
+/* -----------------------------------------------------------------
+   acciones_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
+   Generado: 2026-08-10T19:29:58
+   Las 3 mayores subas y las 3 mayores bajas del PANEL LIDER del
+   Merval en la rueda. Fuente: data912 (panel de BYMA).
+   pct = variacion % contra el cierre anterior
+   Los papeles que no operaron (0,00%) quedan fuera del ranking.
+----------------------------------------------------------------- */
+window.ACCIONES_CACHE = {
+  mejores: [
+    { symbol: "TXAR", nombre: "Ternium Argentina", precio: 715.5, pct: 5.29 },
+    { symbol: "CRES", nombre: "Cresud", precio: 1730.0, pct: 1.88 },
+    { symbol: "IRSA", nombre: "IRSA", precio: 2345.0, pct: 1.29 }
+  ],
+  peores: [
+    { symbol: "LOMA", nombre: "Loma Negra", precio: 3282.5, pct: -2.88 },
+    { symbol: "BMA", nombre: "Banco Macro", precio: 13260.0, pct: -2.64 },
+    { symbol: "BBAR", nombre: "Banco Francés", precio: 9000.0, pct: -1.42 }
+  ],
+  panel: 23,
+  fuente: "Panel líder · BYMA vía data912",
+  updated: "2026-08-10T19:29:58"
+};
+</script>
+<script>
 /* === ISAC_CACHE embebido desde isac_cache.js (build_publicar.py) === */
 /* ═══════════════════════════
    isac_cache.js  -  Grupo Elyon
@@ -4255,6 +4443,33 @@ function showScreen(id) {
   }
 }
 
+/* Abre una herramienta en su propia pantalla. El DOM de cada una vive en
+   #screen-herramientas desde el arranque, asi que el JS que las maneja
+   (initAjuste, las consultas por fecha) sigue encontrando sus ids igual que
+   antes: solo cambia donde se ven, no cuando se inicializan. */
+const HERRAM_TITULOS = {
+  cac:    'Consulta CAC por período',
+  uva:    'Consulta UVA por fecha',
+  dolar:  'Consulta de tipo de cambio',
+  ajuste: 'Calculadora de contratos y presupuestos',
+};
+
+function abrirHerramienta(id) {
+  document.querySelectorAll('.tool-panel').forEach(p => { p.style.display = 'none'; });
+  const panel = document.getElementById('tool-' + id);
+  if (panel) panel.style.display = '';
+  const tit = document.getElementById('herram-titulo');
+  if (tit) tit.textContent = HERRAM_TITULOS[id] || 'Herramientas';
+  showScreen('herramientas');
+  window.scrollTo(0, 0);
+  const cont = document.querySelector('#screen-herramientas .content');
+  if (cont) cont.scrollTop = 0;
+}
+
+function volverAlTablero() {
+  showScreen('indicadores');
+}
+
 function doLogin() {
   if (document.getElementById('pwd-input').value === PASSWORD) {
     document.getElementById('login-err').textContent = '';
@@ -4770,6 +4985,144 @@ async function loadTAMAR() {
     ref ? '~' + fmtN(ref.valor, 2) + '% TNA' : 'N/D',
     ref ? ref.fecha + ' · Ref. bcra_cache.js (sin API)' : 'API BCRA no disponible · Ver bcra.gob.ar',
     '');
+}
+
+/* ══════════════════════════════════════════
+   MEJORES Y PEORES ACCIONES — panel líder del Merval
+
+   Solo panel lider a proposito: en el panel general aparecen todos los dias
+   papeles ilfquidos que "suben 15%" con dos operaciones chicas. No dicen
+   nada del mercado y taparian el ranking.
+
+   De donde sale: acciones_cache.js, que escribe update_acciones_cache.py.
+   Rava muestra las acciones en un iframe que arma JavaScript, asi que se va
+   a data912, que publica el panel completo de BYMA en un solo pedido.
+
+   La nomina del panel lider la revisa BYMA cada trimestre: si entra o sale
+   un papel hay que tocar PANEL_LIDER en el script de Python.
+══════════════════════════════════════════ */
+function _pintarAcciones(contId, srcId, lista, panel) {
+  const cont = document.getElementById(contId);
+  const sEl = document.getElementById(srcId);
+  if (!cont || !sEl) return;
+
+  if (!Array.isArray(lista) || !lista.length) {
+    cont.innerHTML = '<div class="acc-fila"><span class="acc-tkr">—</span>'
+                   + '<span class="acc-pct">N/D</span></div>';
+    sEl.textContent = 'acciones_cache.js no disponible';
+    return;
+  }
+
+  cont.innerHTML = lista.map(a => {
+    const col = a.pct >= 0 ? 'var(--verde)' : 'var(--rojo-txt)';
+    const signo = a.pct >= 0 ? '+' : '';
+    return '<div class="acc-fila">'
+         + '<span class="acc-izq"><span class="acc-tkr">' + a.symbol + '</span>'
+         + '<span class="acc-nom">' + a.nombre + '</span></span>'
+         + '<span class="acc-pct" style="color:' + col + '">'
+         + signo + fmtN(a.pct, 2) + '%</span>'
+         + '</div>';
+  }).join('');
+
+  sEl.textContent = 'Panel líder · ' + (panel || '—') + ' papeles · BYMA';
+}
+
+function loadAcciones() {
+  const c = window.ACCIONES_CACHE;
+  _pintarAcciones('lista-acc-suben', 'src-acc-suben', c && c.mejores, c && c.panel);
+  _pintarAcciones('lista-acc-bajan', 'src-acc-bajan', c && c.peores, c && c.panel);
+}
+
+/* ══════════════════════════════════════════
+   DÓLAR FUTURO — curva DLR de Matba Rofex
+
+   Que es: el precio al que el mercado se compromete HOY a comprar o vender
+   dolares en una fecha futura. Es la referencia mas honesta de devaluacion
+   esperada que hay: no es una encuesta como el REM, es plata puesta.
+
+   La TNA que se muestra abajo es la tasa implicita del contrato, o sea lo
+   que rinde en pesos comprar dolares hoy y venderlos a futuro. Comparada
+   con la caucion y la TAMAR dice si conviene estar en pesos o en dolares.
+
+   De donde sale: rofex_cache.js, que escribe update_rofex_cache.py. Rava
+   muestra estos futuros dentro de un iframe que arma JavaScript, y la API
+   de Matba Rofex no habilita CORS, asi que no se puede pedir en vivo.
+
+   Ojo: el precio es el de AJUSTE (settlement) del cierre de la rueda, que
+   es el que usa el mercado para marcar posiciones. Un contrato que no opero
+   igual tiene ajuste, asi que el numero nunca queda vacio.
+══════════════════════════════════════════ */
+const ROFEX_VENC_VISIBLES = 8;
+
+function loadRofex() {
+  const cont = document.getElementById('rofex-row');
+  const sEl = document.getElementById('src-rofex');
+  if (!cont || !sEl) return;
+
+  const c = window.ROFEX_CACHE;
+  const curva = (c && Array.isArray(c.curva)) ? c.curva : [];
+
+  if (!curva.length) {
+    cont.innerHTML = '<div class="cauc-col"><div class="cauc-plazo">—</div>'
+                   + '<div class="cauc-val">N/D</div></div>';
+    sEl.textContent = 'rofex_cache.js no disponible';
+    return;
+  }
+
+  const visibles = curva.slice(0, ROFEX_VENC_VISIBLES);
+  cont.innerHTML = visibles.map(v => {
+    const col = v.varPct == null ? '#fff'
+              : v.varPct > 0 ? 'var(--rojo-txt)'
+              : v.varPct < 0 ? 'var(--verde)' : '#fff';
+    const tna = v.tna == null ? '' : fmtN(v.tna, 1) + '%';
+    return '<div class="cauc-col">'
+         + '<div class="cauc-plazo">' + v.etiqueta + '</div>'
+         + '<div class="cauc-val" style="color:' + col + '">' + fmtN(v.precio, 0) + '</div>'
+         + '<div class="cauc-tna">' + tna + '</div>'
+         + '</div>';
+  }).join('');
+
+  /* El pie compara la punta de la curva contra el ultimo vencimiento que se
+     guardo: es la devaluacion que el mercado tiene puesta hasta ahi. */
+  const ult = curva[curva.length - 1];
+  const pri = curva[0];
+  const impl = (pri.precio && ult.precio && ult !== pri)
+    ? ' · ' + (ult.precio / pri.precio - 1 >= 0 ? '+' : '')
+      + fmtN((ult.precio / pri.precio - 1) * 100, 1) + '% a ' + ult.etiqueta
+    : '';
+  sEl.textContent = fmtFecha(c.rueda) + ' · ajuste y TNA implícita · Matba Rofex' + impl;
+}
+
+/* ══════════════════════════════════════════
+   RESERVAS INTERNACIONALES — BCRA
+
+   Son las reservas BRUTAS del BCRA en millones de dolares (serie 1 de la API
+   de estadisticas monetarias). Brutas quiere decir que incluyen encajes en
+   dolares de los depositos privados y el swap con China: no es todo poder de
+   fuego propio. Para lo que nos importa (capacidad de sostener el tipo de
+   cambio) la lectura util es la tendencia, no el nivel de un dia suelto.
+
+   Por eso la tarjeta muestra el nivel y al lado la variacion del ultimo mes:
+   dia a dia se mueven fuerte por pagos de deuda y liquidacion del agro.
+══════════════════════════════════════════ */
+function loadReservas() {
+  const ref = window.BCRA_CACHE && window.BCRA_CACHE.reservas;
+  if (!ref || ref.valor == null) {
+    setMacro('val-reservas', 'src-reservas', 'N/D',
+             'API BCRA no disponible · Ver bcra.gob.ar', '');
+    return;
+  }
+
+  /* En miles de millones se lee mejor que en millones con cuatro puntos. */
+  const texto = 'US$ ' + fmtN(ref.valor / 1000, 1) + ' MM';
+
+  let pie = fmtFecha(ref.fecha) + ' · brutas · BCRA';
+  let color = '';
+  if (ref.var30 != null) {
+    pie = (ref.var30 >= 0 ? '▲ +' : '▼ ') + fmtN(ref.var30, 1) + '% en el mes · ' + pie;
+    color = ref.var30 >= 0 ? 'var(--verde)' : 'var(--rojo-txt)';
+  }
+  setMacro('val-reservas', 'src-reservas', texto, pie, color);
 }
 
 /* ══════════════════════════════════════════
@@ -6287,6 +6640,9 @@ async function reloadAll() {
     loadBADLAR(),
     loadTAMAR(),
     loadCaucion(),
+    loadRofex(),
+    loadReservas(),
+    loadAcciones(),
     loadMerval(),
     loadUVA(),
     loadBlue(),

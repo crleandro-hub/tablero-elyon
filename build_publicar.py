@@ -37,6 +37,8 @@ REM_JS = os.path.join(BASE_DIR, "rem_cache.js")
 SAL_JS = os.path.join(BASE_DIR, "salarios_cache.js")
 RIESGO_JS = os.path.join(BASE_DIR, "riesgo_cache.js")
 CAUCION_JS = os.path.join(BASE_DIR, "caucion_cache.js")
+ROFEX_JS = os.path.join(BASE_DIR, "rofex_cache.js")
+ACCIONES_JS = os.path.join(BASE_DIR, "acciones_cache.js")
 ISAC_JS = os.path.join(BASE_DIR, "isac_cache.js")
 ICC_CBA_JS = os.path.join(BASE_DIR, "icc_cba_cache.js")
 RGP_CBA_JS = os.path.join(BASE_DIR, "rgp_cba_cache.js")
@@ -92,6 +94,8 @@ def main():
     sal = leer(SAL_JS, obligatorio=False)
     riesgo = leer(RIESGO_JS, obligatorio=False)
     caucion = leer(CAUCION_JS, obligatorio=False)
+    rofex = leer(ROFEX_JS, obligatorio=False)
+    acciones = leer(ACCIONES_JS, obligatorio=False)
     isac = leer(ISAC_JS, obligatorio=False)
     icc_cba = leer(ICC_CBA_JS, obligatorio=False)
     rgp_cba = leer(RGP_CBA_JS, obligatorio=False)
@@ -106,6 +110,8 @@ def main():
     html = inline(html, "salarios_cache.js", sal, "SALARIOS_CACHE")
     html = inline(html, "riesgo_cache.js", riesgo, "RIESGO_CACHE")
     html = inline(html, "caucion_cache.js", caucion, "CAUCION_CACHE")
+    html = inline(html, "rofex_cache.js", rofex, "ROFEX_CACHE")
+    html = inline(html, "acciones_cache.js", acciones, "ACCIONES_CACHE")
     html = inline(html, "isac_cache.js", isac, "ISAC_CACHE")
     html = inline(html, "icc_cba_cache.js", icc_cba, "ICC_CBA_CACHE")
     html = inline(html, "rgp_cba_cache.js", rgp_cba, "RGP_CBA_CACHE")
@@ -152,6 +158,14 @@ def main():
     print("       TAMAR : " + val_bcra(bcra, "tamar"))
     print("       BADLAR: " + val_bcra(bcra, "badlar"))
     print("       UVA   : " + val_bcra(bcra, "uva"))
+    def val_reservas(txt):
+        if not txt:
+            return "sin datos"
+        import re as _re
+        m = _re.search(r'reservas:\s*\{\s*valor:\s*(\d+)', txt)
+        return "US$ " + m.group(1) + " M" if m else "sin datos"
+
+    print("       RESERV: " + val_reservas(bcra))
     print("       CAC   : ultimo mes " + ultimo_cac(cac))
 
     def val_simple(txt, clave, sufijo=""):
@@ -175,6 +189,28 @@ def main():
         return " / ".join(partes)
 
     print("       CAUCION: " + val_caucion(caucion))
+    def val_rofex(txt):
+        if not txt:
+            return "sin datos"
+        import re as _re
+        ms = _re.findall(r'etiqueta:\s*"([^"]+)",\s*precio:\s*([\d.]+)', txt)
+        return " / ".join(e + " " + v for e, v in ms[:3]) if ms else "sin datos"
+
+    print("       ROFEX : " + val_rofex(rofex))
+
+    def val_acciones(txt):
+        if not txt:
+            return "sin datos"
+        import re as _re
+        def top(clave):
+            m = _re.search(clave + r":\s*\[(.*?)\]", txt, _re.S)
+            if not m:
+                return "-"
+            ms = _re.findall(r'symbol:\s*"([^"]+)".*?pct:\s*(-?[\d.]+)', m.group(1))
+            return " ".join("%s %s%%" % (s, p) for s, p in ms)
+        return "suben " + top("mejores") + " | bajan " + top("peores")
+
+    print("       ACCION: " + val_acciones(acciones))
     print("       DEVAL : TCN dic " + val_simple(rem, "tcnDic", " $/US$")
           + " / " + val_simple(rem, "tcnIa", "% i.a."))
     print("       REM   : " + val_simple(rem, "anual", "% i.a. dic")
