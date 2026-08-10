@@ -67,17 +67,18 @@ call :paso  6 "Riesgo pais (Rava Bursatil)"          update_riesgo_cache.py
 call :paso  7 "Caucion 1/7/14 dias (Rava Bursatil)"  update_caucion_cache.py
 call :paso  8 "Dolar futuro (Matba Rofex)"           update_rofex_cache.py
 call :paso  9 "Acciones del panel lider (BYMA)"      update_acciones_cache.py
-call :paso 10 "ISAC e insumos (INDEC)"               update_isac_cache.py
-call :paso 11 "ICC de Cordoba"                       update_icc_cba_cache.py
-call :paso 12 "Registro General de Cordoba"          update_rgp_cba_cache.py
+call :paso 10 "Tipo de cambio (respaldo)"            update_dolar_cache.py
+call :paso 11 "ISAC e insumos (INDEC)"               update_isac_cache.py
+call :paso 12 "ICC de Cordoba"                       update_icc_cba_cache.py
+call :paso 13 "Registro General de Cordoba"          update_rgp_cba_cache.py
 call :paso 13 "ICC del INDEC (Gran Buenos Aires)"    update_icc_indec_cache.py
 
 rem =====================================================
 rem  ARMADO
 rem =====================================================
-echo [14/16] Generando docs\index.html y version portable...
+echo [15/17] Generando docs\index.html y version portable...
 echo. >> "%LOG%"
-echo --- [14/16] BUILD_PUBLICAR --- >> "%LOG%"
+echo --- [15/17] BUILD_PUBLICAR --- >> "%LOG%"
 %PY% build_publicar.py >> "%LOG%" 2>&1
 set "RC=%errorlevel%"
 if not "%RC%"=="0" (
@@ -91,9 +92,9 @@ rem  VERIFICACION
 rem  0 = todo bien   1 = datos con problemas, no publicar
 rem  2 = se cayo el verificador, es un bug suyo: se publica igual
 rem =====================================================
-echo [15/16] Verificando frescura e integridad de los datos...
+echo [16/17] Verificando frescura e integridad de los datos...
 echo. >> "%LOG%"
-echo --- [15/16] VERIFICAR --- >> "%LOG%"
+echo --- [16/17] VERIFICAR --- >> "%LOG%"
 %PY% verificar.py >> "%LOG%" 2>&1
 set "RC=%errorlevel%"
 if "%RC%"=="1" (
@@ -109,9 +110,9 @@ if "%RC%"=="2" (
 rem =====================================================
 rem  PUBLICACION
 rem =====================================================
-echo [16/16] Publicando en GitHub Pages...
+echo [17/17] Publicando en GitHub Pages...
 echo. >> "%LOG%"
-echo --- [16/16] GIT --- >> "%LOG%"
+echo --- [17/17] GIT --- >> "%LOG%"
 git add -A >> "%LOG%" 2>&1
 git commit -m "Actualizacion de indicadores %date%" >> "%LOG%" 2>&1
 set "RC=%errorlevel%"
@@ -144,9 +145,9 @@ exit /b 0
 
 rem --- Corre un update y avisa, sin frenar el ciclo ---
 :paso
-echo [%~1/16] Actualizando %~2...
+echo [%~1/17] Actualizando %~2...
 echo. >> "%LOG%"
-echo --- [%~1/16] %~2 --- >> "%LOG%"
+echo --- [%~1/17] %~2 --- >> "%LOG%"
 %PY% %~3 >> "%LOG%" 2>&1
 if errorlevel 1 (
   echo    [AVISO] Fallo - se conservan los datos previos.

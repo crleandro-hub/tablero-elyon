@@ -12,6 +12,10 @@ log_icc_indec.txt
 # encontrar el Excel del INDEC. Se puede borrar de la carpeta.
 icc_indec_manual.json
 
+# Marca de control de actualizar_auto.bat: guarda la fecha de la ultima
+# corrida en que se actualizaron las fuentes mensuales. Es local de cada PC.
+.ultima_corrida_mensual
+
 # Archivos derivados (los regenera build_publicar.py)
 tablero_elyon_portable.html
 *.bak.html

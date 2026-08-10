@@ -56,6 +56,7 @@ FRESCURA = {
     "caucion_cache.js":   ("diaria",  6,   6),
     "rofex_cache.js":     ("diaria",  6,   6),
     "acciones_cache.js":  ("diaria",  6,   6),
+    "dolar_cache.js":     ("diaria",  6,   6),
     "cac_cache.js":       ("mensual", 70,  6),
     "icc_cba_cache.js":   ("mensual", 70,  6),
     "icc_indec_cache.js": ("mensual", 70,  6),
@@ -224,7 +225,7 @@ def ultima_fecha(bloques, txt=""):
     # Hay caches que son una FOTO, no una serie: el ranking de acciones del dia
     # no tiene fechas adentro. Ahi el dato es tan viejo como la corrida que lo
     # escribio, asi que vale el sello de `updated`.
-    if "ACCIONES_CACHE" in txt:
+    if "ACCIONES_CACHE" in txt or "DOLAR_CACHE" in txt:
         m = re.search(r'updated:\s*"(\d{4}-\d{2}-\d{2})', txt)
         if m:
             return a_date(m.group(1))

@@ -1388,6 +1388,7 @@ body {
 <script src="caucion_cache.js"></script>  <!-- generado por update_caucion_cache.py -->
 <script src="rofex_cache.js"></script>  <!-- generado por update_rofex_cache.py -->
 <script src="acciones_cache.js"></script>  <!-- generado por update_acciones_cache.py -->
+<script src="dolar_cache.js"></script>  <!-- generado por update_dolar_cache.py -->
 <script src="isac_cache.js"></script>  <!-- generado por update_isac_cache.py -->
 <script src="icc_cba_cache.js"></script>  <!-- generado por update_icc_cba_cache.py -->
 <script src="rgp_cba_cache.js"></script>  <!-- generado por update_rgp_cba_cache.py -->
@@ -1572,15 +1573,35 @@ async function loadDolar() {
       (found >= 4 ? '✔' : '⚠') + ' Actualizado ' + ts + ' · dolarapi.com';
 
   } catch (e) {
+    /* Sin respuesta de la API se cae al cache que deja update_dolar_cache.py
+       en cada corrida de la tarea. Mostrar el ultimo valor conocido CON su
+       fecha es mas util que un N/D: se ve el numero y se ve que esta viejo. */
+    const c = window.DOLAR_CACHE;
+    let rescatadas = 0;
+
     ['oficial','blue','mep','ccl','cripto'].forEach(k => {
-      const c = document.getElementById('dolar-' + k);
-      if (c) {
-        c.querySelector('[data-f="compra"]').textContent = 'N/D';
-        c.querySelector('[data-f="venta"]').textContent  = 'N/D';
+      const card = document.getElementById('dolar-' + k);
+      const d = c && c[k];
+      if (d && d.venta != null) {
+        dolarVivo[k] = { compra: d.compra, venta: d.venta, fecha: d.fecha };
+        if (card) {
+          card.querySelector('[data-f="compra"]').textContent = fmtARS(d.compra);
+          card.querySelector('[data-f="venta"]').textContent  = fmtARS(d.venta);
+        }
+        setFuente('src-dolar-' + k, d.fecha, 'último dato · dolarapi.com');
+        rescatadas++;
+      } else if (card) {
+        card.querySelector('[data-f="compra"]').textContent = 'N/D';
+        card.querySelector('[data-f="venta"]').textContent  = 'N/D';
+        setFuente('src-dolar-' + k, null, 'dolarapi.com · sin respuesta');
       }
-      setFuente('src-dolar-' + k, null, 'dolarapi.com · sin respuesta');
     });
-    document.getElementById('dolar-ts').textContent = '⚠ Sin conexión — tipo de cambio no disponible';
+
+    if (c && c.mayorista && c.mayorista.venta != null) dolarVivo.mayorista = c.mayorista;
+
+    document.getElementById('dolar-ts').textContent = rescatadas
+      ? '⚠ Sin conexión — se muestra el último dato guardado (' + fmtFecha(c.updated) + ')'
+      : '⚠ Sin conexión — tipo de cambio no disponible';
   }
 }
 
@@ -1637,6 +1658,17 @@ async function loadEuro() {
         }
       }
     } catch (__) {}
+  }
+
+  /* Respaldo del cache si ninguna de las dos fuentes respondio */
+  const cD = window.DOLAR_CACHE;
+  if (ofV == null && cD && cD.euroOficial) {
+    ofC = cD.euroOficial.compra; ofV = cD.euroOficial.venta;
+    fuente = 'último dato · bluelytics'; fecha = null;
+  }
+  if (blV == null && cD && cD.euroBlue) {
+    blC = cD.euroBlue.compra; blV = cD.euroBlue.venta;
+    fuente = fuente || 'último dato · bluelytics';
   }
 
   _pintarEuro('euro-oficial', ofC, ofV);

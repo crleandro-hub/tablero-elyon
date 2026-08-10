@@ -1,4 +1,4 @@
-<!-- Version autocontenida generada por build_publicar.py el 10/08/2026 20:41 - datos embebidos, no depende de archivos externos -->
+<!-- Version autocontenida generada por build_publicar.py el 10/08/2026 20:48 - datos embebidos, no depende de archivos externos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -3069,6 +3069,29 @@ window.ACCIONES_CACHE = {
 };
 </script>
 <script>
+/* === DOLAR_CACHE embebido desde dolar_cache.js (build_publicar.py) === */
+/* -----------------------------------------------------------------
+   dolar_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
+   Generado: 2026-08-10T20:45:00
+   Respaldo del tipo de cambio. El tablero pide los valores EN VIVO a
+   dolarapi.com en cada carga; esto se usa solo si esa consulta falla,
+   para no dejar las tarjetas en N/D.
+   fecha = corte de la cotizacion segun la fuente, no de la descarga
+----------------------------------------------------------------- */
+window.DOLAR_CACHE = {
+  blue: { compra: 1505, venta: 1525, fecha: "2026-08-09" },
+  ccl: { compra: 1578.4, venta: 1580.7, fecha: "2026-08-09" },
+  cripto: { compra: 1570.65, venta: 1574.68, fecha: "2026-08-09" },
+  euroBlue: { compra: 1622, venta: 1658, fecha: "2026-08-10" },
+  euroOficial: { compra: 1598, venta: 1654, fecha: "2026-08-10" },
+  mayorista: { compra: 1489.5, venta: 1498.5, fecha: "2026-08-07" },
+  mep: { compra: 1520.3, venta: 1528.1, fecha: "2026-08-09" },
+  oficial: { compra: 1470, venta: 1520, fecha: "2026-08-07" },
+  fuente: "dolarapi.com · bluelytics",
+  updated: "2026-08-10T20:45:00"
+};
+</script>
+<script>
 /* === ISAC_CACHE embebido desde isac_cache.js (build_publicar.py) === */
 /* ═══════════════════════════
    isac_cache.js  -  Grupo Elyon
@@ -3699,7 +3722,7 @@ window.RGP_CBA_CACHE = {
 /* === ICC_INDEC_CACHE embebido desde icc_indec_cache.js (build_publicar.py) === */
 /* ═══════════════════════════
    icc_indec_cache.js  -  Grupo Elyon
-   Generado por update_icc_indec_cache.py el 10/08/2026 20:41
+   Generado por update_icc_indec_cache.py el 10/08/2026 20:48
    Fuente: INDEC - ICC Gran Buenos Aires
    https://www.indec.gob.ar/ftp/cuadros/economia/icc_variaciones_indices_2016.xls
    tipo: indice  (indice = niveles; variacion_mensual = % mes a mes)
@@ -3707,7 +3730,7 @@ window.RGP_CBA_CACHE = {
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.ICC_INDEC_CACHE = {
-  updated: "2026-08-10T20:41:25",
+  updated: "2026-08-10T20:48:26",
   source: "INDEC - ICC Gran Buenos Aires",
   tipo: "indice",
   hasta: "2026-06",
@@ -4576,15 +4599,35 @@ async function loadDolar() {
       (found >= 4 ? '✔' : '⚠') + ' Actualizado ' + ts + ' · dolarapi.com';
 
   } catch (e) {
+    /* Sin respuesta de la API se cae al cache que deja update_dolar_cache.py
+       en cada corrida de la tarea. Mostrar el ultimo valor conocido CON su
+       fecha es mas util que un N/D: se ve el numero y se ve que esta viejo. */
+    const c = window.DOLAR_CACHE;
+    let rescatadas = 0;
+
     ['oficial','blue','mep','ccl','cripto'].forEach(k => {
-      const c = document.getElementById('dolar-' + k);
-      if (c) {
-        c.querySelector('[data-f="compra"]').textContent = 'N/D';
-        c.querySelector('[data-f="venta"]').textContent  = 'N/D';
+      const card = document.getElementById('dolar-' + k);
+      const d = c && c[k];
+      if (d && d.venta != null) {
+        dolarVivo[k] = { compra: d.compra, venta: d.venta, fecha: d.fecha };
+        if (card) {
+          card.querySelector('[data-f="compra"]').textContent = fmtARS(d.compra);
+          card.querySelector('[data-f="venta"]').textContent  = fmtARS(d.venta);
+        }
+        setFuente('src-dolar-' + k, d.fecha, 'último dato · dolarapi.com');
+        rescatadas++;
+      } else if (card) {
+        card.querySelector('[data-f="compra"]').textContent = 'N/D';
+        card.querySelector('[data-f="venta"]').textContent  = 'N/D';
+        setFuente('src-dolar-' + k, null, 'dolarapi.com · sin respuesta');
       }
-      setFuente('src-dolar-' + k, null, 'dolarapi.com · sin respuesta');
     });
-    document.getElementById('dolar-ts').textContent = '⚠ Sin conexión — tipo de cambio no disponible';
+
+    if (c && c.mayorista && c.mayorista.venta != null) dolarVivo.mayorista = c.mayorista;
+
+    document.getElementById('dolar-ts').textContent = rescatadas
+      ? '⚠ Sin conexión — se muestra el último dato guardado (' + fmtFecha(c.updated) + ')'
+      : '⚠ Sin conexión — tipo de cambio no disponible';
   }
 }
 
@@ -4641,6 +4684,17 @@ async function loadEuro() {
         }
       }
     } catch (__) {}
+  }
+
+  /* Respaldo del cache si ninguna de las dos fuentes respondio */
+  const cD = window.DOLAR_CACHE;
+  if (ofV == null && cD && cD.euroOficial) {
+    ofC = cD.euroOficial.compra; ofV = cD.euroOficial.venta;
+    fuente = 'último dato · bluelytics'; fecha = null;
+  }
+  if (blV == null && cD && cD.euroBlue) {
+    blC = cD.euroBlue.compra; blV = cD.euroBlue.venta;
+    fuente = fuente || 'último dato · bluelytics';
   }
 
   _pintarEuro('euro-oficial', ofC, ofV);
