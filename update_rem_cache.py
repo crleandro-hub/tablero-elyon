@@ -128,6 +128,48 @@ def _bloque_ipc_general(filas):
     return header, datos
 
 
+def _bloque_tcn(filas):
+    """Ubica el cuadro de tipo de cambio nominal y devuelve (header, filas).
+
+    En la planilla del BCRA el cuadro se titula "Tipo de cambio nominal
+    ($/US$)". A diferencia del IPC, aca la mediana NO es una variacion sino
+    el nivel esperado del dolar mayorista (A3500) promedio de cada mes."""
+    inicio = None
+    for i, fila in enumerate(filas):
+        texto = " ".join(sin_tildes(c) for c in fila if c is not None)
+        if "tipo de cambio nominal" in texto:
+            inicio = i
+            break
+    if inicio is None:
+        return None, []
+
+    header = hdr_idx = None
+    for j in range(inicio + 1, min(inicio + 8, len(filas))):
+        texto = " ".join(sin_tildes(c) for c in filas[j] if c is not None)
+        if "periodo" in texto or "referencia" in texto:
+            header, hdr_idx = filas[j], j
+            break
+    if header is None:
+        return None, []
+
+    datos, vacias = [], 0
+    for k in range(hdr_idx + 1, len(filas)):
+        fila = filas[k]
+        texto = " ".join(sin_tildes(c) for c in fila if c is not None)
+        if not texto:
+            vacias += 1
+            if vacias >= 2:
+                break
+            continue
+        vacias = 0
+        # El cuadro siguiente arranca con otro titulo: ahi se corta
+        if "tasa de interes" in texto or "precios minoristas" in texto \
+           or "actividad economica" in texto or "ipc nivel general" in texto:
+            break
+        datos.append(fila)
+    return header, datos
+
+
 def _col_mediana(header):
     for i, c in enumerate(header):
         if c is not None and "mediana" in sin_tildes(c):
@@ -161,6 +203,38 @@ def parsear_xlsx(contenido, anio):
             res["anual"] = valor(fila)
         elif per[:4].isdigit() and "-" in per and res["mensual"] is None:
             res["mensual"] = valor(fila)
+
+    # ── Tipo de cambio nominal esperado ──────────────────────────
+    # Se guarda el NIVEL de dic del año en curso (por ej. 1652 $/US$). La
+    # devaluacion en % la calcula el tablero, que es el unico que sabe contra
+    # que quiere compararla.
+    res["tcnDic"] = None
+    res["tcnIa"] = None
+    hdr_t, datos_t = _bloque_tcn(filas)
+    if datos_t:
+        col_t = _col_mediana(hdr_t)
+
+        def valor_t(fila):
+            v = fila[col_t] if col_t < len(fila) else None
+            try:
+                return round(float(v), 2)
+            except (TypeError, ValueError):
+                return None
+
+        # Diciembre del año en curso y, si la planilla lo trae como referencia,
+        # el de diciembre anterior: con los dos sale la devaluacion i.a.
+        tcn_prev = None
+        for fila in datos_t:
+            per = sin_tildes(fila[0]) if fila and fila[0] is not None else ""
+            if re.match(r"^%d-12" % anio, per) or re.match(r"^dic-%s" % str(anio)[2:], per):
+                res["tcnDic"] = valor_t(fila)
+            elif re.match(r"^%d-12" % (anio - 1), per) \
+                    or re.match(r"^dic-%s" % str(anio - 1)[2:], per):
+                tcn_prev = valor_t(fila)
+
+        if res["tcnDic"] and tcn_prev:
+            res["tcnIa"] = round((res["tcnDic"] / tcn_prev - 1) * 100, 1)
+
     return res
 
 
@@ -323,6 +397,10 @@ def desde_api():
         "mensual": mediana(lambda p: p[:4].isdigit() and len(p) >= 7),
         "relev":   _relev_desde_referencia(datos),
         "fuente":  "bcra-rem-api",
+        # La API de respaldo solo normaliza el cuadro de IPC. Sin TCN, el
+        # tablero deja la tarjeta de devaluacion en N/D en vez de inventar.
+        "tcnDic":  None,
+        "tcnIa":   None,
     }
     if res["m12"] is None and res["anual"] is None:
         return None
@@ -371,11 +449,15 @@ def main():
         "   Fuente: " + res["fuente"] + "\n"
         "   m12   = var. % i.a. esperada para los proximos 12 meses\n"
         "   anual = var. % i.a. esperada a diciembre del año en curso\n"
+        "   tcnDic = tipo de cambio nominal ($/US$) esperado para dic del año\n"
+        "   tcnIa  = devaluacion % i.a. esperada a dic contra dic anterior\n"
         "----------------------------------------------------------------- */\n"
         "window.REM_CACHE = {\n"
         "  m12: " + js(res["m12"]) + ",\n"
         "  anual: " + js(res["anual"]) + ",\n"
         "  mensual: " + js(res["mensual"]) + ",\n"
+        "  tcnDic: " + js(res.get("tcnDic")) + ",\n"
+        "  tcnIa: " + js(res.get("tcnIa")) + ",\n"
         "  relev: " + js(res["relev"]) + ",\n"
         "  anio: " + str(anio) + ",\n"
         "  fuente: " + js(res["fuente"]) + ",\n"
@@ -387,8 +469,9 @@ def main():
         f.write(contenido)
 
     print("[OK] rem_cache.js  ->  relevamiento %s  |  prox. 12 meses: %s%%"
-          "  |  dic-%s: %s%%"
-          % (res["relev"], res["m12"], str(anio)[2:], res["anual"]))
+          "  |  dic-%s: %s%%  |  TCN dic: %s"
+          % (res["relev"], res["m12"], str(anio)[2:], res["anual"],
+             res.get("tcnDic") or "N/D"))
 
 
 if __name__ == "__main__":

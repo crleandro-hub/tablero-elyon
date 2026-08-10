@@ -427,6 +427,12 @@ body {
         <div class="kpi-sub" id="src-rem">Mediana REM · BCRA</div>
       </div>
 
+      <div class="card" id="card-devaluacion">
+        <div class="kpi-label">Devaluación esperada (REM)</div>
+        <div class="kpi-value" id="val-devaluacion">—</div>
+        <div class="kpi-sub" id="src-devaluacion">Mediana REM · BCRA</div>
+      </div>
+
       <div class="card" id="card-riesgo">
         <div class="kpi-label">Riesgo País</div>
         <div class="kpi-value" id="val-riesgo">—</div>
@@ -489,113 +495,6 @@ body {
       Más abajo está el detalle de cada uno.
     </div>
     <div class="res-grid" id="resumen-construccion"></div>
-
-    <!-- ── ISAC · ACTIVIDAD DE LA CONSTRUCCIÓN ──────────── -->
-    <div class="sec-title">Actividad de la construcción</div>
-    <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
-      Indicador sintético de la actividad de la construcción (ISAC) del INDEC, base 2004=100.
-      Mide el consumo aparente de 13 insumos, o sea el <strong style="color:#bbb;">volumen físico</strong>
-      de obra. El CAC dice cuánto cuesta construir; el ISAC, cuánto se está construyendo.
-      <span id="isac-datasource" style="display:block;margin-top:5px;font-size:10px;"></span>
-    </div>
-
-    <div id="isac-section">
-      <div class="kpi-grid">
-        <div class="card">
-          <div class="kpi-label">ISAC nivel general</div>
-          <div class="kpi-value" id="kpi-isac-idx">—</div>
-          <div class="kpi-sub" id="kpi-isac-fecha">—</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Var. interanual</div>
-          <div class="kpi-value" id="kpi-isac-ia">—</div>
-          <div class="kpi-sub">vs. mismo mes año ant.</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Acum. en el año</div>
-          <div class="kpi-value" id="kpi-isac-acum">—</div>
-          <div class="kpi-sub" id="kpi-isac-acum-sub">vs. igual período año ant.</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Desestacionalizada</div>
-          <div class="kpi-value" id="kpi-isac-desest">—</div>
-          <div class="kpi-sub">vs. mes anterior</div>
-        </div>
-      </div>
-
-      <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div class="sub-title">Evolución del ISAC</div>
-        <select class="period-select" id="isac-range" onchange="renderIsacChart()">
-          <option value="24">Últimos 2 años</option>
-          <option value="60" selected>Últimos 5 años</option>
-          <option value="120">Últimos 10 años</option>
-          <option value="0">Histórico completo</option>
-        </select>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="chart-isac" role="img" aria-label="Evolución del ISAC, serie original y desestacionalizada"></canvas>
-      </div>
-
-      <!-- ─── INSUMOS ─── -->
-      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:24px 0 10px;flex-wrap:wrap;gap:8px;">
-        <div>
-          <div class="sub-title">Insumos para la construcción</div>
-          <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;" id="isac-ins-sub">
-            Consumo aparente por insumo · variación interanual y acumulada del año
-          </div>
-        </div>
-      </div>
-
-      <div class="ins-grid" id="isac-insumos"></div>
-
-      <div style="margin:18px 0 8px;">
-        <div class="sub-title">Interanual por insumo</div>
-      </div>
-      <div class="chart-wrap" style="height:340px;">
-        <canvas id="chart-isac-ins" role="img" aria-label="Variación interanual por insumo de la construcción"></canvas>
-      </div>
-
-      <!-- ─── EMPLEO Y PERMISOS ─── -->
-      <div style="margin:24px 0 10px;">
-        <div class="sub-title">Empleo registrado y permisos de edificación</div>
-        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;" id="isac-ep-sub">
-          Complementos del informe mensual del INDEC · un mes más de rezago que el ISAC
-        </div>
-      </div>
-
-      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
-        <div class="card">
-          <div class="kpi-label">Puestos registrados</div>
-          <div class="kpi-value" id="kpi-emp-val">—</div>
-          <div class="kpi-sub" id="kpi-emp-fecha">sector privado</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Empleo · interanual</div>
-          <div class="kpi-value" id="kpi-emp-ia">—</div>
-          <div class="kpi-sub">vs. mismo mes año ant.</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Empleo · acum. año</div>
-          <div class="kpi-value" id="kpi-emp-acum">—</div>
-          <div class="kpi-sub">vs. igual período año ant.</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Superficie autorizada</div>
-          <div class="kpi-value" id="kpi-per-val">—</div>
-          <div class="kpi-sub" id="kpi-per-fecha">m² · 246 municipios</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Permisos · interanual</div>
-          <div class="kpi-value" id="kpi-per-ia">—</div>
-          <div class="kpi-sub" id="kpi-per-cant">—</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Permisos · acum. año</div>
-          <div class="kpi-value" id="kpi-per-acum">—</div>
-          <div class="kpi-sub">m² vs. igual período año ant.</div>
-        </div>
-      </div>
-    </div>
 
     <!-- ── ÍNDICE CAC ──────────────────── -->
     <div class="sec-title">Índice CAC</div>
@@ -1103,6 +1002,113 @@ body {
       <div id="aj-detalle"></div>
     </div>
 
+    <!-- ── ISAC · ACTIVIDAD DE LA CONSTRUCCIÓN ──────────── -->
+    <div class="sec-title">Actividad de la construcción</div>
+    <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
+      Indicador sintético de la actividad de la construcción (ISAC) del INDEC, base 2004=100.
+      Mide el consumo aparente de 13 insumos, o sea el <strong style="color:#bbb;">volumen físico</strong>
+      de obra. El CAC dice cuánto cuesta construir; el ISAC, cuánto se está construyendo.
+      <span id="isac-datasource" style="display:block;margin-top:5px;font-size:10px;"></span>
+    </div>
+
+    <div id="isac-section">
+      <div class="kpi-grid">
+        <div class="card">
+          <div class="kpi-label">ISAC nivel general</div>
+          <div class="kpi-value" id="kpi-isac-idx">—</div>
+          <div class="kpi-sub" id="kpi-isac-fecha">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Var. interanual</div>
+          <div class="kpi-value" id="kpi-isac-ia">—</div>
+          <div class="kpi-sub">vs. mismo mes año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Acum. en el año</div>
+          <div class="kpi-value" id="kpi-isac-acum">—</div>
+          <div class="kpi-sub" id="kpi-isac-acum-sub">vs. igual período año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Desestacionalizada</div>
+          <div class="kpi-value" id="kpi-isac-desest">—</div>
+          <div class="kpi-sub">vs. mes anterior</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución del ISAC</div>
+        <select class="period-select" id="isac-range" onchange="renderIsacChart()">
+          <option value="24">Últimos 2 años</option>
+          <option value="60" selected>Últimos 5 años</option>
+          <option value="120">Últimos 10 años</option>
+          <option value="0">Histórico completo</option>
+        </select>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-isac" role="img" aria-label="Evolución del ISAC, serie original y desestacionalizada"></canvas>
+      </div>
+
+      <!-- ─── INSUMOS ─── -->
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:24px 0 10px;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div class="sub-title">Insumos para la construcción</div>
+          <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;" id="isac-ins-sub">
+            Consumo aparente por insumo · variación interanual y acumulada del año
+          </div>
+        </div>
+      </div>
+
+      <div class="ins-grid" id="isac-insumos"></div>
+
+      <div style="margin:18px 0 8px;">
+        <div class="sub-title">Interanual por insumo</div>
+      </div>
+      <div class="chart-wrap" style="height:340px;">
+        <canvas id="chart-isac-ins" role="img" aria-label="Variación interanual por insumo de la construcción"></canvas>
+      </div>
+
+      <!-- ─── EMPLEO Y PERMISOS ─── -->
+      <div style="margin:24px 0 10px;">
+        <div class="sub-title">Empleo registrado y permisos de edificación</div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;" id="isac-ep-sub">
+          Complementos del informe mensual del INDEC · un mes más de rezago que el ISAC
+        </div>
+      </div>
+
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
+        <div class="card">
+          <div class="kpi-label">Puestos registrados</div>
+          <div class="kpi-value" id="kpi-emp-val">—</div>
+          <div class="kpi-sub" id="kpi-emp-fecha">sector privado</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Empleo · interanual</div>
+          <div class="kpi-value" id="kpi-emp-ia">—</div>
+          <div class="kpi-sub">vs. mismo mes año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Empleo · acum. año</div>
+          <div class="kpi-value" id="kpi-emp-acum">—</div>
+          <div class="kpi-sub">vs. igual período año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Superficie autorizada</div>
+          <div class="kpi-value" id="kpi-per-val">—</div>
+          <div class="kpi-sub" id="kpi-per-fecha">m² · 246 municipios</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Permisos · interanual</div>
+          <div class="kpi-value" id="kpi-per-ia">—</div>
+          <div class="kpi-sub" id="kpi-per-cant">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Permisos · acum. año</div>
+          <div class="kpi-value" id="kpi-per-acum">—</div>
+          <div class="kpi-sub">m² vs. igual período año ant.</div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── MERCADO INMOBILIARIO Y CRÉDITO ──────────────── -->
     <div class="sec-title" id="rgp-titulo">Mercado inmobiliario y crédito</div>
     <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
@@ -1369,6 +1375,10 @@ async function loadDolar() {
     bolsa:            'mep',
     contadoconliqui:  'ccl',
     cripto:           'cripto',
+    /* El mayorista no tiene tarjeta propia, pero se guarda igual en
+       dolarVivo: es el tipo de cambio que proyecta el REM, asi que la
+       tarjeta de devaluacion esperada lo necesita. */
+    mayorista:        'mayorista',
   };
 
   try {
@@ -1380,12 +1390,16 @@ async function loadDolar() {
     data.forEach(item => {
       const k = km[(item.casa || '').toLowerCase()];
       if (!k) return;
+
+      /* Primero se guarda el valor: hay casas sin tarjeta (el mayorista) que
+         igual las usa otra parte del tablero. Recien despues se pinta. */
+      const fISO = String(item.fechaActualizacion || '').slice(0, 10);
+      dolarVivo[k] = { compra: Number(item.compra), venta: Number(item.venta), fecha: fISO };
+
       const card = document.getElementById('dolar-' + k);
       if (!card) return;
       card.querySelector('[data-f="compra"]').textContent = fmtARS(item.compra);
       card.querySelector('[data-f="venta"]').textContent  = fmtARS(item.venta);
-      const fISO = String(item.fechaActualizacion || '').slice(0, 10);
-      dolarVivo[k] = { compra: Number(item.compra), venta: Number(item.venta), fecha: fISO };
       setFuente('src-dolar-' + k, fISO, 'dolarapi.com');
       found++;
     });
@@ -1806,6 +1820,64 @@ async function loadTAMAR() {
     ref ? '~' + fmtN(ref.valor, 2) + '% TNA' : 'N/D',
     ref ? ref.fecha + ' · Ref. bcra_cache.js (sin API)' : 'API BCRA no disponible · Ver bcra.gob.ar',
     '');
+}
+
+/* ══════════════════════════════════════════
+   DEVALUACIÓN ESPERADA — REM del BCRA
+
+   El REM releva a mas de 40 consultoras y bancos, y publica la mediana del
+   tipo de cambio nominal ($/US$, mayorista A3500) esperado para cada mes.
+   De ahi sale la devaluacion esperada a diciembre del año en curso.
+
+   Ojo: el REM proyecta el MAYORISTA, no el blue ni el CCL. Comparar ese
+   numero contra el dolar financiero de hoy es mezclar dos cosas distintas,
+   asi que el pie de la tarjeta aclara siempre contra que se mide.
+
+   Si el cache no trae la variacion i.a. (la API de respaldo del REM solo
+   normaliza el cuadro de IPC, no el de tipo de cambio), se cae a calcular
+   cuanto falta subir desde el mayorista de hoy hasta el TCN esperado, que
+   es un dato igual de util y siempre disponible.
+══════════════════════════════════════════ */
+function loadDevaluacion() {
+  const vEl = document.getElementById('val-devaluacion');
+  const sEl = document.getElementById('src-devaluacion');
+  if (!vEl || !sEl) return;
+
+  const c = window.REM_CACHE;
+  const anio = (c && c.anio) || new Date().getFullYear();
+
+  if (!c || c.tcnDic == null) {
+    vEl.textContent = 'N/D';
+    vEl.style.color = '';
+    sEl.textContent = 'REM sin tipo de cambio · BCRA';
+    return;
+  }
+
+  const relev = c.relev ? fmtMes(c.relev + '-01') : null;
+  const tcn = 'US$ = $' + fmtN(c.tcnDic, 0) + ' a dic-' + String(anio).slice(2);
+
+  if (c.tcnIa != null) {
+    vEl.textContent = (c.tcnIa >= 0 ? '+' : '') + fmtN(c.tcnIa, 1) + '%';
+    vEl.style.color = c.tcnIa >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+    sEl.textContent = tcn + ' · i.a. vs dic-' + String(anio - 1).slice(2)
+                      + (relev ? ' · REM ' + relev : '');
+    return;
+  }
+
+  /* Sin i.a. en el cache: cuanto falta subir desde el mayorista de hoy. */
+  const may = dolarVivo.mayorista && dolarVivo.mayorista.venta;
+  if (may) {
+    const pct = (c.tcnDic / may - 1) * 100;
+    vEl.textContent = (pct >= 0 ? '+' : '') + fmtN(pct, 1) + '%';
+    vEl.style.color = pct >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+    sEl.textContent = tcn + ' · desde el mayorista de hoy'
+                      + (relev ? ' · REM ' + relev : '');
+  } else {
+    vEl.textContent = '$' + fmtN(c.tcnDic, 0);
+    vEl.style.color = '';
+    sEl.textContent = 'TCN esperado dic-' + String(anio).slice(2)
+                      + (relev ? ' · REM ' + relev : '') + ' · BCRA';
+  }
 }
 
 /* ══════════════════════════════════════════
@@ -3257,7 +3329,7 @@ async function reloadAll() {
   await Promise.allSettled([
     /* El euro va DESPUES del dolar: el cruce EUR/USD de cada tarjeta necesita
        el valor vivo del dolar que deja loadDolar en dolarVivo. */
-    (async () => { await loadDolar(); await loadEuro(); })(),
+    (async () => { await loadDolar(); await loadEuro(); loadDevaluacion(); })(),
     loadDolarVariaciones(),
     loadInflacion(),
     loadREM(),

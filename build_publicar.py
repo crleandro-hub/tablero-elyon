@@ -175,6 +175,8 @@ def main():
         return " / ".join(partes)
 
     print("       CAUCION: " + val_caucion(caucion))
+    print("       DEVAL : TCN dic " + val_simple(rem, "tcnDic", " $/US$")
+          + " / " + val_simple(rem, "tcnIa", "% i.a."))
     print("       REM   : " + val_simple(rem, "anual", "% i.a. dic")
           + " (relevamiento " + (re.search(r'relev:\s*"([^"]+)"', rem or "").group(1)
                                  if rem and re.search(r'relev:\s*"([^"]+)"', rem)
