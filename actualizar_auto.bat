@@ -42,54 +42,58 @@ if exist ".git\index.lock"               del /f /q ".git\index.lock"
 if exist ".git\HEAD.lock"                del /f /q ".git\HEAD.lock"
 if exist ".git\objects\maintenance.lock" del /f /q ".git\objects\maintenance.lock"
 
-call :log "[1/13] BCRA - valores del dia (TAMAR / BADLAR / UVA)..."
+call :log "[1/14] BCRA - valores del dia (TAMAR / BADLAR / UVA)..."
 %PY% update_bcra_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_bcra_cache.py - se conservan los datos previos."
 
-call :log "[2/13] BCRA - serie historica UVA..."
+call :log "[2/14] BCRA - serie historica UVA..."
 %PY% update_uva_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_uva_cache.py - se conserva la serie previa."
 
-call :log "[3/13] Indice CAC..."
+call :log "[3/14] Indice CAC..."
 %PY% update_cac_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_cac_cache.py - se conservan los datos previos."
 
-call :log "[4/13] Indice MERVAL (pesos y dolares)..."
+call :log "[4/14] Indice MERVAL (pesos y dolares)..."
 %PY% update_merval_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_merval_cache.py - se conservan los datos previos."
 
-call :log "[5/13] REM del BCRA (inflacion esperada)..."
+call :log "[5/14] REM del BCRA (inflacion esperada)..."
 %PY% update_rem_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_rem_cache.py - se conservan los datos previos."
 
-call :log "[6/13] Riesgo pais (Rava Bursatil)..."
+call :log "[6/14] Riesgo pais (Rava Bursatil)..."
 %PY% update_riesgo_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_riesgo_cache.py - se conservan los datos previos."
 
-call :log "[7/13] ISAC e insumos de la construccion (INDEC)..."
+call :log "[7/14] Caucion a 1, 7 y 14 dias (Rava Bursatil)..."
+%PY% update_caucion_cache.py >> "%LOG%" 2>&1
+if errorlevel 1 call :log "[AVISO] Fallo update_caucion_cache.py - se conservan los datos previos."
+
+call :log "[8/14] ISAC e insumos de la construccion (INDEC)..."
 %PY% update_isac_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_isac_cache.py - se conservan los datos previos."
 
-call :log "[8/13] ICC de Cordoba (Estadistica y Censos Cba)..."
+call :log "[9/14] ICC de Cordoba (Estadistica y Censos Cba)..."
 %PY% update_icc_cba_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_icc_cba_cache.py - se conservan los datos previos."
 
-call :log "[9/13] Registro General de la Propiedad de Cordoba..."
+call :log "[10/14] Registro General de la Propiedad de Cordoba..."
 %PY% update_rgp_cba_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_rgp_cba_cache.py - se conservan los datos previos."
 
-call :log "[10/13] ICC del INDEC (Gran Buenos Aires)..."
+call :log "[11/14] ICC del INDEC (Gran Buenos Aires)..."
 %PY% update_icc_indec_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_icc_indec_cache.py - se conservan los datos previos."
 
-call :log "[11/13] Generando docs\index.html y version portable..."
+call :log "[12/14] Generando docs\index.html y version portable..."
 %PY% build_publicar.py >> "%LOG%" 2>&1
 if errorlevel 1 (
   call :log "[ERROR] Fallo build_publicar.py. No se publica."
   goto :fin
 )
 
-call :log "[12/13] Verificando frescura e integridad de los datos..."
+call :log "[13/14] Verificando frescura e integridad de los datos..."
 %PY% verificar.py >> "%LOG%" 2>&1
 rem  0 = todo bien   1 = datos con problemas, no publicar
 rem  2 = se cayo el verificador, es un bug suyo: se publica igual
@@ -102,7 +106,7 @@ if "%RC%"=="1" (
   goto :fin
 )
 
-call :log "[13/13] Publicando en GitHub Pages..."
+call :log "[14/14] Publicando en GitHub Pages..."
 git add -A >> "%LOG%" 2>&1
 git commit -m "Actualizacion automatica de indicadores %date%" >> "%LOG%" 2>&1
 if errorlevel 1 (

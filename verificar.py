@@ -53,6 +53,7 @@ FRESCURA = {
     "uva_cache.js":       ("diaria",  6,   6),
     "merval_cache.js":    ("diaria",  6,   6),
     "riesgo_cache.js":    ("diaria",  6,   6),
+    "caucion_cache.js":   ("diaria",  6,   6),
     "cac_cache.js":       ("mensual", 70,  6),
     "icc_cba_cache.js":   ("mensual", 70,  6),
     "icc_indec_cache.js": ("mensual", 70,  6),

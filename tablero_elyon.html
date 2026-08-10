@@ -238,6 +238,12 @@ body {
 }
 
 
+/* CAUCIÓN — tres plazos en una sola tarjeta */
+.cauc-row   { display: flex; gap: 6px; align-items: flex-end; }
+.cauc-col   { flex: 1; min-width: 0; }
+.cauc-plazo { font-size: 9px; font-weight: 600; color: #a8a8a8; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
+.cauc-val   { font-size: 16px; font-weight: 700; color: #fff; line-height: 1.1; white-space: nowrap; }
+
 /* VARIACIONES DÓLAR */
 .dolar-vars { display:flex; align-items:center; gap:6px; margin-top:8px; font-size:10px; }
 .var-badge   { font-weight:700; color:var(--gris-txt); }
@@ -307,6 +313,7 @@ body {
           <span class="var-sep">|</span>
           <span class="var-badge" id="var-oficial-ia">—</span>
         </div>
+        <div class="kpi-sub" id="src-dolar-oficial">—</div>
       </div>
 
       <div class="card" id="dolar-blue">
@@ -320,6 +327,7 @@ body {
           <span class="var-sep">|</span>
           <span class="var-badge" id="var-blue-ia">—</span>
         </div>
+        <div class="kpi-sub" id="src-dolar-blue">—</div>
       </div>
 
       <div class="card" id="dolar-mep">
@@ -333,6 +341,7 @@ body {
           <span class="var-sep">|</span>
           <span class="var-badge" id="var-mep-ia">—</span>
         </div>
+        <div class="kpi-sub" id="src-dolar-mep">—</div>
       </div>
 
       <div class="card" id="dolar-ccl">
@@ -346,6 +355,45 @@ body {
           <span class="var-sep">|</span>
           <span class="var-badge" id="var-ccl-ia">—</span>
         </div>
+        <div class="kpi-sub" id="src-dolar-ccl">—</div>
+      </div>
+
+      <div class="card" id="dolar-cripto">
+        <div class="kpi-label">Dólar Cripto</div>
+        <div class="dolar-row">
+          <div><div class="d-side-label">Compra</div><div class="d-val compra" data-f="compra">—</div></div>
+          <div style="text-align:right;"><div class="d-side-label">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
+        </div>
+        <div class="dolar-vars">
+          <span class="var-badge" id="var-cripto-dia">—</span>
+          <span class="var-sep">|</span>
+          <span class="var-badge" id="var-cripto-ia">—</span>
+        </div>
+        <div class="kpi-sub" id="src-dolar-cripto">—</div>
+      </div>
+
+      <div class="card" id="euro-oficial">
+        <div class="kpi-label">Euro Oficial</div>
+        <div class="dolar-row">
+          <div><div class="d-side-label">Compra</div><div class="d-val compra" data-f="compra">—</div></div>
+          <div style="text-align:right;"><div class="d-side-label">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
+        </div>
+        <div class="dolar-vars">
+          <span class="var-badge na" id="cross-euro-oficial">—</span>
+        </div>
+        <div class="kpi-sub" id="src-euro-oficial">—</div>
+      </div>
+
+      <div class="card" id="euro-blue">
+        <div class="kpi-label">Euro Blue</div>
+        <div class="dolar-row">
+          <div><div class="d-side-label">Compra</div><div class="d-val compra" data-f="compra">—</div></div>
+          <div style="text-align:right;"><div class="d-side-label">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
+        </div>
+        <div class="dolar-vars">
+          <span class="var-badge na" id="cross-euro-blue">—</span>
+        </div>
+        <div class="kpi-sub" id="src-euro-blue">—</div>
       </div>
 
     </div>
@@ -395,6 +443,25 @@ body {
         <div class="kpi-label">Tasa TAMAR</div>
         <div class="kpi-value" id="val-tamar">—</div>
         <div class="kpi-sub" id="src-tamar">Bancos priv. · BCRA</div>
+      </div>
+
+      <div class="card" id="card-caucion">
+        <div class="kpi-label">Caución (TNA)</div>
+        <div class="cauc-row">
+          <div class="cauc-col">
+            <div class="cauc-plazo">1 día</div>
+            <div class="cauc-val" id="val-cauc-d1">—</div>
+          </div>
+          <div class="cauc-col">
+            <div class="cauc-plazo">7 días</div>
+            <div class="cauc-val" id="val-cauc-d7">—</div>
+          </div>
+          <div class="cauc-col">
+            <div class="cauc-plazo">14 días</div>
+            <div class="cauc-val" id="val-cauc-d14">—</div>
+          </div>
+        </div>
+        <div class="kpi-sub" id="src-caucion">Caución BYMA · Rava</div>
       </div>
 
       <div class="card" id="card-merval">
@@ -548,10 +615,12 @@ body {
         <div class="card">
           <div class="kpi-label">Materiales</div>
           <div class="kpi-value" id="kpi-cac-mat">—</div>
+          <div class="kpi-sub" id="kpi-cac-mat-src">—</div>
         </div>
         <div class="card">
           <div class="kpi-label">Mano de Obra</div>
           <div class="kpi-value" id="kpi-cac-mo">—</div>
+          <div class="kpi-sub" id="kpi-cac-mo-src">—</div>
         </div>
         <div class="card">
           <div class="kpi-label">Var. interanual CAC</div>
@@ -1178,6 +1247,7 @@ body {
 <script src="merval_cache.js"></script>  <!-- generado por update_merval_cache.py -->
 <script src="rem_cache.js"></script>  <!-- generado por update_rem_cache.py -->
 <script src="riesgo_cache.js"></script>  <!-- generado por update_riesgo_cache.py -->
+<script src="caucion_cache.js"></script>  <!-- generado por update_caucion_cache.py -->
 <script src="isac_cache.js"></script>  <!-- generado por update_isac_cache.py -->
 <script src="icc_cba_cache.js"></script>  <!-- generado por update_icc_cba_cache.py -->
 <script src="rgp_cba_cache.js"></script>  <!-- generado por update_rgp_cba_cache.py -->
@@ -1278,14 +1348,27 @@ const fmtMes = iso => {
 /* ═══════════════════════════════════════
    TIPO DE CAMBIO — dolarapi.com
    Claves API: oficial, blue, bolsa (MEP),
-               contadoconliqui (CCL)
+               contadoconliqui (CCL), cripto
 ═══════════════════════════════════════ */
+let dolarVivo = {};   // {casa: {compra, venta}} de la ultima corrida de loadDolar
+
+/* Pie de fuente de cada tarjeta. La fecha va adelante porque dolarapi
+   publica cada casa con su propio horario de corte: el oficial puede ser del
+   cierre de ayer mientras el blue es de hace cinco minutos, y eso hay que
+   poder verlo sin salir del tablero. */
+function setFuente(id, fechaISO, fuente) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = (fechaISO ? fmtFecha(fechaISO) + ' · ' : '') + fuente;
+}
+
 async function loadDolar() {
   const km = {
     oficial:          'oficial',
     blue:             'blue',
     bolsa:            'mep',
     contadoconliqui:  'ccl',
+    cripto:           'cripto',
   };
 
   try {
@@ -1301,6 +1384,9 @@ async function loadDolar() {
       if (!card) return;
       card.querySelector('[data-f="compra"]').textContent = fmtARS(item.compra);
       card.querySelector('[data-f="venta"]').textContent  = fmtARS(item.venta);
+      const fISO = String(item.fechaActualizacion || '').slice(0, 10);
+      dolarVivo[k] = { compra: Number(item.compra), venta: Number(item.venta), fecha: fISO };
+      setFuente('src-dolar-' + k, fISO, 'dolarapi.com');
       found++;
     });
 
@@ -1308,18 +1394,85 @@ async function loadDolar() {
       day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
     });
     document.getElementById('dolar-ts').textContent =
-      (found >= 3 ? '✔' : '⚠') + ' Actualizado ' + ts + ' · dolarapi.com';
+      (found >= 4 ? '✔' : '⚠') + ' Actualizado ' + ts + ' · dolarapi.com';
 
   } catch (e) {
-    ['oficial','blue','mep','ccl'].forEach(k => {
+    ['oficial','blue','mep','ccl','cripto'].forEach(k => {
       const c = document.getElementById('dolar-' + k);
       if (c) {
         c.querySelector('[data-f="compra"]').textContent = 'N/D';
         c.querySelector('[data-f="venta"]').textContent  = 'N/D';
       }
+      setFuente('src-dolar-' + k, null, 'dolarapi.com · sin respuesta');
     });
     document.getElementById('dolar-ts').textContent = '⚠ Sin conexión — tipo de cambio no disponible';
   }
+}
+
+/* ═══════════════════════════════════════
+   EURO — Bluelytics (oficial y blue)
+
+   Por que otra fuente: dolarapi solo publica el euro OFICIAL
+   (/v1/cotizaciones) y no tiene euro blue. Bluelytics devuelve los dos en
+   un solo pedido (oficial_euro / blue_euro) y habilita CORS. Si Bluelytics
+   no responde, se cae al euro oficial de dolarapi y el blue queda en N/D.
+
+   En la fila inferior de cada tarjeta va el cruce EUR/USD implicito
+   (euro venta ÷ dolar venta del mismo segmento). Es el dato que permite ver
+   si el euro local esta caro o barato contra el cruce internacional.
+═══════════════════════════════════════ */
+function _pintarEuro(id, compra, venta) {
+  const card = document.getElementById(id);
+  if (!card) return;
+  card.querySelector('[data-f="compra"]').textContent = compra != null ? fmtARS(compra) : 'N/D';
+  card.querySelector('[data-f="venta"]').textContent  = venta  != null ? fmtARS(venta)  : 'N/D';
+}
+
+function _pintarCruceEuro(spanId, eurVenta, usdCasa) {
+  const el = document.getElementById(spanId);
+  if (!el) return;
+  const usd = dolarVivo[usdCasa] && dolarVivo[usdCasa].venta;
+  if (!eurVenta || !usd) { el.textContent = 'EUR/USD N/D'; el.className = 'var-badge na'; return; }
+  el.textContent = 'EUR/USD ' + fmtN(eurVenta / usd, 3);
+  el.className   = 'var-badge na';
+}
+
+async function loadEuro() {
+  let ofC = null, ofV = null, blC = null, blV = null, fuente = null, fecha = null;
+
+  try {
+    const res = await fetch('https://api.bluelytics.com.ar/v2/latest');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const j = await res.json();
+    if (j.oficial_euro) { ofC = Number(j.oficial_euro.value_buy); ofV = Number(j.oficial_euro.value_sell); }
+    if (j.blue_euro)    { blC = Number(j.blue_euro.value_buy);    blV = Number(j.blue_euro.value_sell); }
+    fuente = 'bluelytics.com.ar';
+    fecha  = j.last_update ? new Date(j.last_update) : null;
+  } catch (_) {
+    /* Respaldo: euro oficial de dolarapi. El blue no tiene equivalente ahi. */
+    try {
+      const res = await fetch('https://dolarapi.com/v1/cotizaciones');
+      if (res.ok) {
+        const arr = await res.json();
+        const eur = (Array.isArray(arr) ? arr : []).find(r => (r.moneda || '') === 'EUR');
+        if (eur) {
+          ofC = Number(eur.compra); ofV = Number(eur.venta);
+          fuente = 'dolarapi.com (solo oficial)';
+          fecha  = eur.fechaActualizacion ? new Date(eur.fechaActualizacion) : null;
+        }
+      }
+    } catch (__) {}
+  }
+
+  _pintarEuro('euro-oficial', ofC, ofV);
+  _pintarEuro('euro-blue',    blC, blV);
+  _pintarCruceEuro('cross-euro-oficial', ofV, 'oficial');
+  _pintarCruceEuro('cross-euro-blue',    blV, 'blue');
+
+  const fISO = fecha ? uvaISO(fecha.getFullYear(), fecha.getMonth(), fecha.getDate()) : null;
+  setFuente('src-euro-oficial', ofV ? fISO : null, fuente || 'sin conexión');
+  setFuente('src-euro-blue',    blV ? fISO : null,
+            blV ? (fuente || '') : 'sin dato de euro blue');
 }
 
 /* ═══════════════════════════════════════
@@ -1356,6 +1509,7 @@ async function loadDolarVariaciones() {
     ['blue',    'blue'],
     ['mep',     'bolsa'],
     ['ccl',     'contadoconliqui'],
+    ['cripto',  'cripto'],
   ];
 
   await Promise.allSettled(casas.map(async ([id, casa]) => {
@@ -1655,6 +1809,65 @@ async function loadTAMAR() {
 }
 
 /* ══════════════════════════════════════════
+   CAUCIÓN BURSÁTIL — 1, 7 y 14 días (TNA)
+
+   Que es: un prestamo de muy corto plazo garantizado con titulos dentro de
+   BYMA. Es el piso de referencia del costo del dinero a dias, asi que sirve
+   para decidir si conviene dejar la caja quieta, colocarla, o tomar plata
+   contra los excedentes de obra.
+
+   De donde sale: caucion_cache.js, que escribe update_caucion_cache.py con
+   los datos de Rava Bursatil. No se puede pedir en vivo desde el navegador
+   porque Rava no habilita CORS.
+
+   Ojo con el dato: la caucion a 1 dia es MUY volatil intradiario (en la
+   misma rueda puede ir de 9% a 40%). Lo que se muestra es el ultimo valor
+   operado, igual que la pagina de Rava, no un promedio ponderado por monto.
+   Por eso cada plazo puede traer fecha distinta y el pie las aclara.
+══════════════════════════════════════════ */
+function loadCaucion() {
+  const c = window.CAUCION_CACHE;
+  const claves = ['d1', 'd7', 'd14'];
+
+  if (!c) {
+    claves.forEach(k => {
+      const el = document.getElementById('val-cauc-' + k);
+      if (el) el.textContent = 'N/D';
+    });
+    const sEl0 = document.getElementById('src-caucion');
+    if (sEl0) sEl0.textContent = 'caucion_cache.js no disponible';
+    return;
+  }
+
+  const fechas = [];
+  claves.forEach(k => {
+    const el = document.getElementById('val-cauc-' + k);
+    if (!el) return;
+    const d = c[k];
+    if (!d || d.valor == null) { el.textContent = 'N/D'; return; }
+    el.textContent = fmtN(d.valor, 1) + '%';
+    /* Se colorea contra la rueda anterior: la tasa que sube encarece tomar
+       y mejora colocar, asi que va en verde igual que el resto del tablero. */
+    el.style.color = d.varPp == null ? '#fff'
+                   : d.varPp > 0 ? 'var(--verde)'
+                   : d.varPp < 0 ? 'var(--rojo-txt)' : '#fff';
+    if (d.fecha) fechas.push(d.fecha);
+  });
+
+  /* Si los tres plazos son de la misma rueda alcanza con una fecha; si no,
+     se muestra la mas reciente aclarando que hay plazos con menos movimiento. */
+  const unicas = [...new Set(fechas)].sort();
+  const pie = !unicas.length ? 'Sin datos'
+    : unicas.length === 1
+      ? fmtFecha(unicas[0]) + ' · Caución BYMA · Rava'
+      : 'Últ. ' + fmtFecha(unicas[unicas.length - 1]) + ' (desde ' +
+        fmtFecha(unicas[0]) + ') · Caución BYMA · Rava';
+
+  const sEl = document.getElementById('src-caucion');
+  if (sEl) sEl.textContent = pie;
+}
+
+/* ══════════════════════════════════════════
    MERVAL — índice S&P Merval (BYMA)
    En pesos: cierre diario del ticker ^MERV.
    En dólares: Merval en pesos dividido el CCL (contado con liqui) de la
@@ -1726,9 +1939,17 @@ function _pintarMerval(d) {
   if (d.usd == null) {
     setMacro('val-merval-usd', 'src-merval-usd', 'N/D', 'CCL no disponible', '');
   } else {
+    /* El pie dice de que rueda salio el CCL usado. Si el CCL no es de la misma
+       rueda que el indice, el valor en dolares NO es comparable con el que
+       publica el broker y hay que saberlo: por eso se muestra la fecha. */
+    const pieUsd = d.ccl == null
+      ? 'Merval ÷ CCL'
+      : (d.cclFecha && d.cclFecha !== d.fecha
+          ? 'CCL ' + fmtFecha(d.cclFecha) + ' · ' + fmtN(d.ccl, 0)
+          : 'Merval ÷ CCL ' + fmtN(d.ccl, 0));
     setMacro('val-merval-usd', 'src-merval-usd',
       'US$ ' + fmtN(d.usd, 0),
-      badge(d.usdVar) + fmtFecha(d.fecha) + ' · Merval ÷ CCL',
+      badge(d.usdVar) + fmtFecha(d.fecha) + ' · ' + pieUsd,
       color(d.usdVar));
   }
 }
@@ -1766,17 +1987,46 @@ async function loadMerval() {
     fuente: 'S&P Merval · BYMA',
   };
 
-  /* Merval en dolares = Merval en pesos ÷ CCL de la misma rueda */
+  /* Merval en dolares = Merval en pesos ÷ CCL de la MISMA rueda.
+
+     El problema que teniamos: ArgentinaDatos publica el CCL con un dia de
+     rezago (y algunas ruedas directamente le faltan), mientras que Yahoo trae
+     el Merval en vivo. Al dividir el indice de HOY por el CCL de AYER el
+     resultado se iba de lo que muestra el broker por todo lo que se movio el
+     CCL en el medio, y ademas la variacion en dolares quedaba clavada igual a
+     la variacion en pesos (mismo divisor arriba y abajo).
+
+     Solucion: para la rueda en curso se usa el CCL EN VIVO de dolarapi
+     (dolarVivo.ccl), que es el mismo que muestran las tarjetas de arriba.
+     Solo se cae al historico si no hubo respuesta en vivo, y en ese caso la
+     tarjeta aclara de que fecha es el CCL que se uso. */
   await loadUsdSerie('contadoconliqui');
-  const cclHoy  = buscarUsd('contadoconliqui', hoy.fecha);
+
+  const cclSerieHoy = buscarUsd('contadoconliqui', hoy.fecha);
+  let cclHoy = null, cclFechaHoy = null;
+
+  if (cclSerieHoy && cclSerieHoy.exacta && cclSerieHoy.venta) {
+    cclHoy = cclSerieHoy.venta;  cclFechaHoy = hoy.fecha;
+  } else if (dolarVivo.ccl && dolarVivo.ccl.venta) {
+    cclHoy = dolarVivo.ccl.venta;
+    cclFechaHoy = dolarVivo.ccl.fecha || hoy.fecha;
+  } else if (cclSerieHoy && cclSerieHoy.venta) {
+    cclHoy = cclSerieHoy.venta;  cclFechaHoy = cclSerieHoy.fecha;
+  }
+
   const cclPrev = prev ? buscarUsd('contadoconliqui', prev.fecha) : null;
-  if (cclHoy && cclHoy.venta) {
-    d.usd = hoy.cierre / cclHoy.venta;
-    if (prev && cclPrev && cclPrev.venta) {
+
+  if (cclHoy) {
+    d.usd      = hoy.cierre / cclHoy;
+    d.ccl      = cclHoy;
+    d.cclFecha = cclFechaHoy;
+    /* La variacion en dolares solo tiene sentido si los dos CCL son de ruedas
+       distintas; si no, estariamos repitiendo la variacion en pesos. */
+    if (prev && cclPrev && cclPrev.venta && cclPrev.fecha !== cclFechaHoy) {
       d.usdVar = (d.usd / (prev.cierre / cclPrev.venta) - 1) * 100;
     }
   } else if (c && c.usd != null && c.fecha === hoy.fecha) {
-    d.usd = c.usd; d.usdVar = c.usdVar;
+    d.usd = c.usd; d.usdVar = c.usdVar; d.ccl = c.ccl; d.cclFecha = c.cclFecha;
   }
 
   _pintarMerval(d);
@@ -3005,13 +3255,16 @@ async function reloadAll() {
   document.getElementById('refresh-ts').textContent = 'Actualizado ' + ts;
 
   await Promise.allSettled([
-    loadDolar(),
+    /* El euro va DESPUES del dolar: el cruce EUR/USD de cada tarjeta necesita
+       el valor vivo del dolar que deja loadDolar en dolarVivo. */
+    (async () => { await loadDolar(); await loadEuro(); })(),
     loadDolarVariaciones(),
     loadInflacion(),
     loadREM(),
     loadRiesgo(),
     loadBADLAR(),
     loadTAMAR(),
+    loadCaucion(),
     loadMerval(),
     loadUVA(),
     loadBlue(),
@@ -3514,8 +3767,13 @@ function renderCacKpis(data, sourceLabel) {
     last.mat != null ? fmtN(last.mat, 0) : 'N/D';
   document.getElementById('kpi-cac-mo').textContent =
     last.mo  != null ? fmtN(last.mo,  0) : 'N/D';
-  document.getElementById('kpi-cac-fecha').textContent =
-    last.fecha.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+  const cacPie = last.fecha.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
+                 + ' · Cámara Argentina de la Construcción';
+  document.getElementById('kpi-cac-fecha').textContent   = cacPie;
+  const cacMatSrc = document.getElementById('kpi-cac-mat-src');
+  const cacMoSrc  = document.getElementById('kpi-cac-mo-src');
+  if (cacMatSrc) cacMatSrc.textContent = cacPie;
+  if (cacMoSrc)  cacMoSrc.textContent  = cacPie;
 
   if (prevYear && last.cacGen != null && prevYear.cacGen != null) {
     const ia = (last.cacGen / prevYear.cacGen - 1) * 100;

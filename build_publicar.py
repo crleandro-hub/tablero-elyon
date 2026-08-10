@@ -36,6 +36,7 @@ MERVAL_JS = os.path.join(BASE_DIR, "merval_cache.js")
 REM_JS = os.path.join(BASE_DIR, "rem_cache.js")
 SAL_JS = os.path.join(BASE_DIR, "salarios_cache.js")
 RIESGO_JS = os.path.join(BASE_DIR, "riesgo_cache.js")
+CAUCION_JS = os.path.join(BASE_DIR, "caucion_cache.js")
 ISAC_JS = os.path.join(BASE_DIR, "isac_cache.js")
 ICC_CBA_JS = os.path.join(BASE_DIR, "icc_cba_cache.js")
 RGP_CBA_JS = os.path.join(BASE_DIR, "rgp_cba_cache.js")
@@ -90,6 +91,7 @@ def main():
     rem = leer(REM_JS, obligatorio=False)
     sal = leer(SAL_JS, obligatorio=False)
     riesgo = leer(RIESGO_JS, obligatorio=False)
+    caucion = leer(CAUCION_JS, obligatorio=False)
     isac = leer(ISAC_JS, obligatorio=False)
     icc_cba = leer(ICC_CBA_JS, obligatorio=False)
     rgp_cba = leer(RGP_CBA_JS, obligatorio=False)
@@ -103,6 +105,7 @@ def main():
     html = inline(html, "rem_cache.js", rem, "REM_CACHE")
     html = inline(html, "salarios_cache.js", sal, "SALARIOS_CACHE")
     html = inline(html, "riesgo_cache.js", riesgo, "RIESGO_CACHE")
+    html = inline(html, "caucion_cache.js", caucion, "CAUCION_CACHE")
     html = inline(html, "isac_cache.js", isac, "ISAC_CACHE")
     html = inline(html, "icc_cba_cache.js", icc_cba, "ICC_CBA_CACHE")
     html = inline(html, "rgp_cba_cache.js", rgp_cba, "RGP_CBA_CACHE")
@@ -161,6 +164,17 @@ def main():
 
     print("       MERVAL: " + val_simple(merval, "ars", " pts")
           + " / USD " + val_simple(merval, "usd"))
+    def val_caucion(txt):
+        if not txt:
+            return "sin datos"
+        import re as _re
+        partes = []
+        for clave, etiqueta in (("d1", "1d"), ("d7", "7d"), ("d14", "14d")):
+            m = _re.search(clave + r":\s*\{.*?valor:\s*([-\d.]+)", txt, _re.S)
+            partes.append(etiqueta + " " + (m.group(1) + "%" if m else "N/D"))
+        return " / ".join(partes)
+
+    print("       CAUCION: " + val_caucion(caucion))
     print("       REM   : " + val_simple(rem, "anual", "% i.a. dic")
           + " (relevamiento " + (re.search(r'relev:\s*"([^"]+)"', rem or "").group(1)
                                  if rem and re.search(r'relev:\s*"([^"]+)"', rem)

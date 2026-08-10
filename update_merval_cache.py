@@ -226,12 +226,22 @@ def serie_ccl():
 
 def ccl_en(ccl, fecha):
     """CCL de esa fecha o, si no cotizo, el habil anterior mas cercano."""
+    v = ccl_en2(ccl, fecha)
+    return v[0] if v else None
+
+
+def ccl_en2(ccl, fecha):
+    """(valor, fecha_efectiva) del CCL de esa rueda o del habil anterior.
+
+    Devolver tambien la fecha importa: si el CCL no es de la misma rueda que
+    el indice, el 'Merval en dolares' no es comparable con el que publica el
+    broker y el tablero tiene que poder aclararlo."""
     from datetime import date, timedelta
     d = date.fromisoformat(fecha)
     for _ in range(11):
         f = d.isoformat()
         if f in ccl:
-            return ccl[f]
+            return (ccl[f], f)
         d -= timedelta(days=1)
     return None
 
@@ -256,18 +266,30 @@ def main():
     ars = round(hoy[1], 2)
     ars_var = round((hoy[1] / prev[1] - 1) * 100, 4) if prev and prev[1] else None
 
-    c_hoy = ccl_en(ccl, hoy[0]) if ccl else None
-    c_prev = ccl_en(ccl, prev[0]) if (ccl and prev) else None
+    r_hoy = ccl_en2(ccl, hoy[0]) if ccl else None
+    r_prev = ccl_en2(ccl, prev[0]) if (ccl and prev) else None
+    c_hoy, f_hoy = r_hoy if r_hoy else (None, None)
+    c_prev, f_prev = r_prev if r_prev else (None, None)
 
     usd = round(hoy[1] / c_hoy, 2) if c_hoy else None
+
+    # La variacion en dolares solo tiene sentido si los dos CCL son de ruedas
+    # distintas. Cuando falta el CCL del dia y se arrastra el anterior, el
+    # divisor es el mismo arriba y abajo y la "variacion en dolares" terminaba
+    # dando identica a la variacion en pesos, que es un dato falso.
     usd_var = None
-    if usd is not None and prev and c_prev:
+    if usd is not None and prev and c_prev and f_prev != f_hoy:
         usd_var = round((usd / (prev[1] / c_prev) - 1) * 100, 4)
 
-    # Serie diaria [fecha, merval_ars, merval_usd] para uso futuro del tablero
+    # Serie diaria [fecha, merval_ars, merval_usd] para uso futuro del tablero.
+    # Si a una rueda le falta el CCL (ArgentinaDatos tiene huecos) se arrastra
+    # el ultimo disponible en vez de dejar null, que cortaba el grafico.
     filas = []
     for f, v in serie:
         c = ccl.get(f)
+        if c is None:
+            r = ccl_en2(ccl, f) if ccl else None
+            c = r[0] if r else None
         filas.append('["%s",%s,%s]' % (f, round(v, 2),
                                        round(v / c, 2) if c else "null"))
 
@@ -286,6 +308,8 @@ def main():
         "  arsVar: " + (str(ars_var) if ars_var is not None else "null") + ",\n"
         "  usd: " + (str(usd) if usd is not None else "null") + ",\n"
         "  usdVar: " + (str(usd_var) if usd_var is not None else "null") + ",\n"
+        "  ccl: " + (str(round(c_hoy, 2)) if c_hoy else "null") + ",\n"
+        '  cclFecha: ' + ('"' + f_hoy + '"' if f_hoy else "null") + ",\n"
         '  fuente: "S&P Merval · BYMA · merval_cache.js",\n'
         '  updated: "' + datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + '",\n'
         "  serie: [\n    " + ",\n    ".join(filas) + "\n  ]\n"
