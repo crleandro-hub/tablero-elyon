@@ -40,6 +40,7 @@ ISAC_JS = os.path.join(BASE_DIR, "isac_cache.js")
 ICC_CBA_JS = os.path.join(BASE_DIR, "icc_cba_cache.js")
 RGP_CBA_JS = os.path.join(BASE_DIR, "rgp_cba_cache.js")
 ICC_INDEC_JS = os.path.join(BASE_DIR, "icc_indec_cache.js")
+CEDUC_JS = os.path.join(BASE_DIR, "ceduc_cache.js")
 
 DOCS_DIR = os.path.join(BASE_DIR, "docs")
 OUT_PAGES = os.path.join(DOCS_DIR, "index.html")
@@ -93,6 +94,7 @@ def main():
     icc_cba = leer(ICC_CBA_JS, obligatorio=False)
     rgp_cba = leer(RGP_CBA_JS, obligatorio=False)
     icc_indec = leer(ICC_INDEC_JS, obligatorio=False)
+    ceduc = leer(CEDUC_JS, obligatorio=False)
 
     html = inline(html, "bcra_cache.js", bcra, "BCRA_CACHE")
     html = inline(html, "cac_cache.js", cac, "CAC_CACHE")
@@ -105,6 +107,7 @@ def main():
     html = inline(html, "icc_cba_cache.js", icc_cba, "ICC_CBA_CACHE")
     html = inline(html, "rgp_cba_cache.js", rgp_cba, "RGP_CBA_CACHE")
     html = inline(html, "icc_indec_cache.js", icc_indec, "ICC_INDEC_CACHE")
+    html = inline(html, "ceduc_cache.js", ceduc, "CEDUC_CACHE")
 
     ts = datetime.now().strftime("%d/%m/%Y %H:%M")
     sello = (

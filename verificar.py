@@ -58,6 +58,10 @@ FRESCURA = {
     "icc_indec_cache.js": ("mensual", 70,  6),
     "isac_cache.js":      ("mensual", 80,  6),
     "rgp_cba_cache.js":   ("mensual", 80,  6),
+    # CEDUC se carga desde un .txt que se arma a mano con el PDF del informe,
+    # y la camara publica de forma irregular. Por eso no se controla cuando
+    # corrio el script y el limite del dato es holgado: 150 dias.
+    "ceduc_cache.js":     ("mensual", 150, None),
     # El REM hoy se carga a mano: update_rem_cache.py todavia no funciona en
     # esta PC. Por eso no se controla hace cuanto corrio el script, solo que
     # el relevamiento no quede viejo.
@@ -68,7 +72,8 @@ FRESCURA = {
 # Series donde un salto grande es normal y no hay que avisar:
 # son conteos de operaciones, no indices de precios. Febrero y diciembre
 # pegan saltos enormes todos los años por estacionalidad.
-SIN_CONTROL_SALTO = {"transferencias", "hipotecas", "empleo", "permisos", "serie_riesgo"}
+SIN_CONTROL_SALTO = {"transferencias", "hipotecas", "empleo", "permisos", "serie_riesgo",
+                     "original", "desest"}   # CEDUC: son volumenes de venta, saltan solos
 
 UMBRAL_SALTO = 0.60      # 60% mes a mes
 MESES_SIN_NULOS = 12

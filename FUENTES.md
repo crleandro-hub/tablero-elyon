@@ -39,6 +39,7 @@ Cada corrida deja constancia en `log_actualizacion.txt` (automática) o `log_act
 | MERVAL | Yahoo → Rava → Stooq | `update_merval_cache.py` | `merval_cache.js` | Diario hábil | Scraping, 3 respaldos |
 | Riesgo país | Rava, con argentinadatos de respaldo | `update_riesgo_cache.py` | `riesgo_cache.js` | Diario hábil | Scraping HTML |
 | REM (inflación esperada) | BCRA | `update_rem_cache.py` | `rem_cache.js` | Mensual | Planilla xlsx |
+| Ventas de desarrollistas | CEDUC / Economic Trends | `update_ceduc_cache.py` | `ceduc_cache.js` | Mensual, publicación irregular | **Texto pegado del PDF** |
 | Escalas UOCRA / UECARA | Paritarias homologadas | — | `salarios_cache.js` | 2 a 4 veces por año | **Carga manual** |
 | Inflación, dólares, crédito hipotecario | datos.gob.ar, dolarapi, ArgentinaDatos | — | — | Diario / mensual | **En vivo desde el navegador** |
 
@@ -87,6 +88,14 @@ Remove-Item .git\*.lock, .git\objects\maintenance.lock -Force -ErrorAction Silen
 - `Indicador CAC_serie histórica.xls` — serie del CAC. Se pisa cuando sale un mes nuevo.
 - `salarios_cache.js` — escalas de convenio. Instrucciones en el encabezado del archivo.
 - `isac_manual.json` — empleo y permisos del informe del INDEC.
+- `ceduc/ceduc-AAAA-MM.txt` — el informe de CEDUC pasado a texto. Se abre el PDF,
+  Ctrl+A, Ctrl+C, se pega en el Bloc de notas y se guarda ahí. Después se corre
+  `python update_ceduc_cache.py`. Cada informe trae la serie completa desde 2010,
+  así que con el último alcanza.
+
+  **No está en el ciclo automático a propósito**: como el archivo lo armás vos,
+  correrlo todos los días solo reescribiría el mismo dato con fecha nueva y
+  generaría un commit diario sin cambios reales.
 
 **Ciclo automático**
 

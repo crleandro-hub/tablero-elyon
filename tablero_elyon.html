@@ -1119,6 +1119,52 @@ body {
           <div class="kpi-sub" id="kpi-cred-tasa-sub">nominal anual</div>
         </div>
       </div>
+
+      <!-- ─── CEDUC · VENTAS DE DESARROLLISTAS ─── -->
+      <div id="ceduc-bloque">
+        <div style="margin:26px 0 10px;">
+          <div class="sub-title">Ventas de desarrollistas · CEDUC</div>
+          <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;" id="ceduc-datasource"></div>
+        </div>
+
+        <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(175px,1fr));">
+          <div class="card" style="border-left:3px solid var(--rojo);">
+            <div class="kpi-label">Deptos y casas</div>
+            <div class="kpi-value" id="kpi-ceduc-dep">—</div>
+            <div class="kpi-sub" id="kpi-ceduc-dep-sub">interanual</div>
+          </div>
+          <div class="card">
+            <div class="kpi-label">Deptos · no financiadas</div>
+            <div class="kpi-value" id="kpi-ceduc-dep-nf">—</div>
+            <div class="kpi-sub" id="kpi-ceduc-dep-nf-sub">interanual</div>
+          </div>
+          <div class="card">
+            <div class="kpi-label">Deptos · financiadas</div>
+            <div class="kpi-value" id="kpi-ceduc-dep-f">—</div>
+            <div class="kpi-sub" id="kpi-ceduc-dep-f-sub">interanual</div>
+          </div>
+          <div class="card">
+            <div class="kpi-label">Cocheras</div>
+            <div class="kpi-value" id="kpi-ceduc-coch">—</div>
+            <div class="kpi-sub" id="kpi-ceduc-coch-sub">interanual</div>
+          </div>
+        </div>
+
+        <div id="ceduc-contexto" style="font-size:10.5px;color:var(--gris-txt);margin-top:10px;line-height:1.6;"></div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 8px;flex-wrap:wrap;gap:8px;">
+          <div class="sub-title">Ventas de departamentos y casas</div>
+          <select class="period-select" id="ceduc-range" onchange="renderCeducChart()">
+            <option value="36">Últimos 3 años</option>
+            <option value="60" selected>Últimos 5 años</option>
+            <option value="120">Últimos 10 años</option>
+            <option value="0">Desde 2011</option>
+          </select>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chart-ceduc" role="img" aria-label="Ventas de departamentos y casas en Córdoba, serie desestacionalizada"></canvas>
+        </div>
+      </div>
     </div>
 
   </div><!-- /content -->
@@ -1136,6 +1182,7 @@ body {
 <script src="icc_cba_cache.js"></script>  <!-- generado por update_icc_cba_cache.py -->
 <script src="rgp_cba_cache.js"></script>  <!-- generado por update_rgp_cba_cache.py -->
 <script src="icc_indec_cache.js"></script>  <!-- generado por update_icc_indec_cache.py -->
+<script src="ceduc_cache.js"></script>  <!-- generado por update_ceduc_cache.py -->
 <script src="salarios_cache.js"></script>  <!-- escalas UOCRA / UECARA, se edita a mano -->
 <!-- ══════════════════════════════════════
      JAVASCRIPT
@@ -1172,6 +1219,7 @@ function showScreen(id) {
     initIccCba();     // ICC de Córdoba (dato local, pinta al toque)
     initIccIndec();   // ICC del INDEC · Gran Buenos Aires (dato local)
     initRgp();        // Registro General de Córdoba (dato local)
+    initCeduc();      // ventas de desarrollistas · CEDUC (dato local)
     renderResumenConstruccion();   // CAC / ICC Cba / ICC INDEC ya están; la UVA entra después
     revisarFuentes();  // avisa si algún cache quedó viejo
     initSalarios();   // escalas de convenio (dato local, pinta al toque)
@@ -2567,6 +2615,8 @@ const SNAP_IDS = [
   'kpi-hipo','kpi-hipo-fecha','kpi-hipo-ia','kpi-hipo-acum','kpi-hipo-acum-sub',
   'kpi-cred-stock','kpi-cred-fecha','kpi-cred-ia','kpi-cred-real',
   'kpi-cred-tasa','kpi-cred-tasa-sub',
+  'kpi-ceduc-dep','kpi-ceduc-dep-sub','kpi-ceduc-dep-nf','kpi-ceduc-dep-nf-sub',
+  'kpi-ceduc-dep-f','kpi-ceduc-dep-f-sub','kpi-ceduc-coch','kpi-ceduc-coch-sub',
   'kpi-isac-idx','kpi-isac-fecha','kpi-isac-ia','kpi-isac-acum','kpi-isac-acum-sub',
   'kpi-isac-desest',
   'kpi-emp-val','kpi-emp-fecha','kpi-emp-ia','kpi-emp-acum',
@@ -4312,6 +4362,165 @@ function renderRgpChart() {
               title: { display: true, text: 'Transferencias', color: '#60a5fa', font: { size: 9 } } },
         y2: { position: 'right', ticks: { color: '#22c55e', font: { size: 9 } }, grid: { display: false },
               title: { display: true, text: 'Hipotecas', color: '#22c55e', font: { size: 9 } } },
+      },
+    },
+  });
+}
+
+/* ══════════════════════════════════════════
+   CEDUC — VENTAS DE DESARROLLISTAS DE CÓRDOBA
+
+   Indice de ventas de Economic Trends para la CEDUC, base oct-2011 = 100.
+   Mide VOLUMEN en unidades homogeneas de m2, no precios. Son operaciones
+   efectivamente realizadas, escrituradas o no, asi que no arrastra el rezago
+   de los indices basados en escrituras.
+
+   Dos cosas a tener presentes al leerlo:
+
+   · El indice TOTAL mezcla departamentos, cocheras y lotes, y los lotes lo
+     dominan. Para Elyon, que vende departamentos, el total es un numero
+     engañoso: en junio 2026 marcaba -39,1% mientras departamentos caia -18,6%
+     y en el trimestre crecia 57%. Por eso el total va como contexto y no
+     como titular.
+   · CEDUC no separa departamentos de casas: los informa juntos.
+
+   Y una sutileza del informe: el interanual se calcula sobre la serie
+   ORIGINAL, aunque el cuadro de sintesis diga "desestacionalizadas". Solo la
+   comparacion de 3 meses contra 3 meses previos usa la ajustada. Se replica
+   igual para que los numeros coincidan con el informe.
+
+   Columnas de cada fila (1 a 12):
+     no financiado: deptos, cocheras, lotes, indice   -> 1  2  3  4
+     financiado:    deptos, cocheras, lotes, indice   -> 5  6  7  8
+     total:         deptos, cocheras, lotes, indice   -> 9 10 11 12
+══════════════════════════════════════════ */
+const CEDUC_COL = {
+  depNf: 1, cochNf: 2, lotNf: 3, idxNf: 4,
+  depF:  5, cochF:  6, lotF:  7, idxF:  8,
+  dep:   9, coch:  10, lot:  11, idx:  12,
+};
+
+let ceducChart = null;
+
+/* Interanual sobre la serie original, como lo calcula el informe */
+function ceducIA(col) {
+  const c = window.CEDUC_CACHE;
+  if (!c || !c.original || !c.original.length) return null;
+  const m = new Map(c.original.map(r => [String(r[0]).slice(0, 7), r[col]]));
+  const ym = [...m.keys()].sort();
+  const ult = ym[ym.length - 1];
+  const prev = m.get((+ult.slice(0, 4) - 1) + '-' + ult.slice(5, 7));
+  const v = m.get(ult);
+  return (prev && v != null) ? (v / prev - 1) * 100 : null;
+}
+
+/* Ultimos 3 meses contra los 3 previos, sobre la serie desestacionalizada */
+function ceduc3m(col) {
+  const c = window.CEDUC_CACHE;
+  if (!c || !c.desest || c.desest.length < 6) return null;
+  const s = c.desest;
+  const suma = filas => filas.reduce((t, r) => t + (r[col] || 0), 0);
+  const ult = suma(s.slice(-3)), prev = suma(s.slice(-6, -3));
+  return prev ? (ult / prev - 1) * 100 : null;
+}
+
+function initCeduc() {
+  const c = window.CEDUC_CACHE;
+  const bloque = document.getElementById('ceduc-bloque');
+  if (!bloque) return;
+  if (!c || !c.original || !c.original.length) {
+    bloque.style.display = 'none';
+    return;
+  }
+
+  const pct = v => v == null || isNaN(v)
+    ? '—' : (v >= 0 ? '+' : '') + fmtN(v, 1) + '%';
+  // Son ventas: que suban es buena noticia
+  const color = v => v == null || isNaN(v) ? '#888'
+    : (v >= 0 ? 'var(--verde)' : 'var(--rojo-txt)');
+
+  const pintar = (id, col) => {
+    const el = document.getElementById('kpi-' + id);
+    const sub = document.getElementById('kpi-' + id + '-sub');
+    if (!el) return;
+    const ia = ceducIA(col), tri = ceduc3m(col);
+    el.textContent = pct(ia);
+    el.style.color = color(ia);
+    if (sub) {
+      sub.innerHTML = 'interanual · <span style="color:' + color(tri) + ';">'
+                    + pct(tri) + '</span> el trimestre';
+    }
+  };
+
+  pintar('ceduc-dep',    CEDUC_COL.dep);
+  pintar('ceduc-dep-nf', CEDUC_COL.depNf);
+  pintar('ceduc-dep-f',  CEDUC_COL.depF);
+  pintar('ceduc-coch',   CEDUC_COL.coch);
+
+  const ctx = document.getElementById('ceduc-contexto');
+  if (ctx) {
+    ctx.innerHTML =
+        'Contexto, fuera del segmento: <strong style="color:#bbb;">lotes</strong> '
+      + pct(ceducIA(CEDUC_COL.lot)) + ' interanual y ' + pct(ceduc3m(CEDUC_COL.lot))
+      + ' el trimestre. El <strong style="color:#bbb;">índice total</strong> de CEDUC da '
+      + pct(ceducIA(CEDUC_COL.idx)) + ', pero mezcla las tres tipologías y lo dominan '
+      + 'los lotes: no es la lectura de tu mercado.';
+  }
+
+  const src = document.getElementById('ceduc-datasource');
+  if (src) {
+    src.innerHTML = '📊 ' + (c.source || 'CEDUC') + ' · base oct-2011=100 · último dato '
+      + isacMesLargo((c.hasta || '') + '-01')
+      + '<br>Mide volumen de ventas en unidades homogéneas de m², no precios. '
+      + 'CEDUC informa departamentos y casas juntos, sin separar.';
+  }
+
+  renderCeducChart();
+}
+
+function renderCeducChart() {
+  const c = window.CEDUC_CACHE;
+  if (!c || !c.desest || !c.desest.length) return;
+  const rangeEl = document.getElementById('ceduc-range');
+  const meses = rangeEl ? parseInt(rangeEl.value) : 60;
+  const slice = meses > 0 ? c.desest.slice(-meses) : c.desest;
+  const el = document.getElementById('chart-ceduc');
+  if (!el) return;
+  if (ceducChart) ceducChart.destroy();
+
+  ceducChart = new Chart(el.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: slice.map(r => {
+        const m = String(r[0]).match(/^(\d{4})-(\d{2})/);
+        return m ? ISAC_MESES[+m[2] - 1].slice(0, 3) + '-' + m[1].slice(2) : r[0];
+      }),
+      datasets: [
+        { label: 'Deptos y casas · total', data: slice.map(r => r[CEDUC_COL.dep]),
+          borderColor: '#FF5F5F', backgroundColor: 'rgba(255,95,95,0.10)',
+          borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true },
+        { label: 'No financiadas', data: slice.map(r => r[CEDUC_COL.depNf]),
+          borderColor: '#60a5fa', backgroundColor: 'transparent',
+          borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false },
+        { label: 'Financiadas', data: slice.map(r => r[CEDUC_COL.depF]),
+          borderColor: '#4ade80', backgroundColor: 'transparent',
+          borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#aaa', font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: '#1C1C1C', borderColor: '#383838', borderWidth: 1,
+          titleColor: '#fff', bodyColor: '#aaa',
+          callbacks: { label: x => ` ${x.dataset.label}: ${fmtN(x.parsed.y, 1)}` },
+        },
+      },
+      scales: {
+        x: { ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 12 }, grid: { color: '#222' } },
+        y: { ticks: { color: '#555', font: { size: 9 } }, grid: { color: '#222' } },
       },
     },
   });
