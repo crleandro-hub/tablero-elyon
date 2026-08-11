@@ -1,20 +1,20 @@
 /* -----------------------------------------------------------------
    dolar_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-08-10T20:55:08
+   Generado: 2026-08-11T15:02:32
    Respaldo del tipo de cambio. El tablero pide los valores EN VIVO a
    dolarapi.com en cada carga; esto se usa solo si esa consulta falla,
    para no dejar las tarjetas en N/D.
    fecha = corte de la cotizacion segun la fuente, no de la descarga
 ----------------------------------------------------------------- */
 window.DOLAR_CACHE = {
-  blue: { compra: 1515.0, venta: 1535.0, fecha: "2026-08-10" },
-  ccl: { compra: 1580.4, venta: 1583.2, fecha: "2026-08-10" },
-  cripto: { compra: 1567.92, venta: 1571.88, fecha: "2026-08-10" },
-  euroBlue: { compra: 1633.0, venta: 1668.0, fecha: "2026-08-10" },
-  euroOficial: { compra: 1597.0, venta: 1653.0, fecha: "2026-08-10" },
-  mayorista: { compra: 1487.0, venta: 1496.0, fecha: "2026-08-10" },
-  mep: { compra: 1522.2, venta: 1526.1, fecha: "2026-08-10" },
-  oficial: { compra: 1470.0, venta: 1520.0, fecha: "2026-08-10" },
+  blue: { compra: 1530.0, venta: 1550.0, fecha: "2026-08-11" },
+  ccl: { compra: 1580.9, venta: 1581.7, fecha: "2026-08-11" },
+  cripto: { compra: 1576.0, venta: 1579.0, fecha: "2026-08-11" },
+  euroBlue: { compra: 1649.0, venta: 1685.0, fecha: "2026-08-11" },
+  euroOficial: { compra: 1594.0, venta: 1651.0, fecha: "2026-08-11" },
+  mayorista: { compra: 1484.0, venta: 1493.0, fecha: "2026-08-11" },
+  mep: { compra: 1522.3, venta: 1523.1, fecha: "2026-08-11" },
+  oficial: { compra: 1470.0, venta: 1520.0, fecha: "2026-08-11" },
   fuente: "dolarapi.com · bluelytics",
-  updated: "2026-08-10T20:55:08"
+  updated: "2026-08-11T15:02:32"
 };
