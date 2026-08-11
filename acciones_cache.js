@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------
    acciones_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-08-11T15:02:31
+   Generado: 2026-08-11T16:00:56
    Las 3 mayores subas y las 3 mayores bajas del PANEL LIDER del
    Merval en la rueda. Fuente: data912 (panel de BYMA).
    pct = variacion % contra el cierre anterior
@@ -8,16 +8,16 @@
 ----------------------------------------------------------------- */
 window.ACCIONES_CACHE = {
   mejores: [
-    { symbol: "METR", nombre: "Metrogas", precio: 2131.0, pct: 7.19 },
-    { symbol: "CVH", nombre: "Cablevisión Holding", precio: 9450.0, pct: -0.21 },
-    { symbol: "VALO", nombre: "Grupo Financiero Valores", precio: 592.0, pct: -0.83 }
+    { symbol: "METR", nombre: "Metrogas", precio: 2157.0, pct: 8.5 },
+    { symbol: "TXAR", nombre: "Ternium Argentina", precio: 760.0, pct: 0.72 },
+    { symbol: "CVH", nombre: "Cablevisión Holding", precio: 9450.0, pct: -0.21 }
   ],
   peores: [
-    { symbol: "TECO2", nombre: "Telecom", precio: 4257.5, pct: -5.8 },
-    { symbol: "TGSU2", nombre: "Transportadora Gas del Sur", precio: 8855.0, pct: -5.09 },
-    { symbol: "TRAN", nombre: "Transener", precio: 3440.0, pct: -4.64 }
+    { symbol: "TECO2", nombre: "Telecom", precio: 4200.0, pct: -7.07 },
+    { symbol: "EDN", nombre: "Edenor", precio: 1805.0, pct: -5.49 },
+    { symbol: "TGSU2", nombre: "Transportadora Gas del Sur", precio: 8820.0, pct: -5.46 }
   ],
   panel: 23,
   fuente: "Panel líder · BYMA vía data912",
-  updated: "2026-08-11T15:02:31"
+  updated: "2026-08-11T16:00:56"
 };
