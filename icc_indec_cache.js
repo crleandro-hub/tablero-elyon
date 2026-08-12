@@ -8,7 +8,7 @@
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.ICC_INDEC_CACHE = {
-  updated: "2026-08-12T11:00:31",
+  updated: "2026-08-12T11:00:43",
   source: "INDEC - ICC Gran Buenos Aires",
   tipo: "indice",
   hasta: "2026-06",
