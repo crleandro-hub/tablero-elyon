@@ -1,4 +1,4 @@
-<!-- Version autocontenida generada por build_publicar.py el 13/08/2026 10:46 - datos embebidos, no depende de archivos externos -->
+<!-- Version autocontenida generada por build_publicar.py el 13/08/2026 11:00 - datos embebidos, no depende de archivos externos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -731,6 +731,58 @@ body {
       </div>
     </div>
 
+    <!-- ── ÍNDICE UVA ──────────────────── -->
+    <div class="sec-title">Índice UVA</div>
+
+    <!-- UVA en tiempo real (datos.gob.ar / BCRA) -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(155px,1fr));margin-bottom:4px;">
+      <div class="card">
+        <div class="kpi-label">UVA (valor actual)</div>
+        <div class="kpi-value" id="val-uva">—</div>
+        <div class="kpi-sub" id="src-uva">BCRA · datos.gob.ar</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Variación mensual</div>
+        <div class="kpi-value" id="val-uva-m">—</div>
+        <div class="kpi-sub">vs. 30 días atrás</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Variación interanual</div>
+        <div class="kpi-value" id="val-uva-ia">—</div>
+        <div class="kpi-sub">vs. mismo día año ant.</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Acum. en el año</div>
+        <div class="kpi-value" id="val-uva-ytd">—</div>
+        <div class="kpi-sub" id="val-uva-ytd-sub">vs. 31-dic año ant.</div>
+      </div>
+    </div>
+
+    <!-- Gráfico UVA desde API -->
+    <div id="uva-chart-section" style="margin-top:4px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución del índice UVA</div>
+        <select class="period-select" id="uva-range" onchange="renderUvaChart()">
+          <option value="365">Último año</option>
+          <option value="1095">Últimos 3 años</option>
+          <option value="1825">Últimos 5 años</option>
+          <option value="0">Histórico completo</option>
+        </select>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-uva" role="img" aria-label="Evolución del índice UVA"></canvas>
+      </div>
+    </div>
+
+    <!-- ─── CONSULTA UVA POR FECHA · vive en la pantalla Herramientas ─── -->
+    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+      <div>
+        <div class="sub-title" style="margin-bottom:4px;">Consulta UVA por fecha</div>
+        <div style="font-size:11px;color:var(--gris-txt);">Valor de la UVA en cualquier día desde marzo de 2016.</div>
+      </div>
+      <button class="btn btn-rojo" onclick="abrirHerramienta('uva')">ABRIR &rsaquo;</button>
+    </div>
+
     <!-- ── COSTO DEL M² · APYMECO ──────────────── -->
     <div class="sec-title" id="apymeco-titulo">Costo del m² · APYMECO</div>
     <div id="apymeco-section">
@@ -808,58 +860,6 @@ body {
                 aria-label="Comparación de CAC, ICC Córdoba, ICC INDEC y APYMECO"></canvas>
       </div>
       <div style="font-size:10px;color:var(--gris-txt);margin-top:8px;line-height:1.6;" id="comp-costos-nota"></div>
-    </div>
-
-    <!-- ── ÍNDICE UVA ──────────────────── -->
-    <div class="sec-title">Índice UVA</div>
-
-    <!-- UVA en tiempo real (datos.gob.ar / BCRA) -->
-    <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(155px,1fr));margin-bottom:4px;">
-      <div class="card">
-        <div class="kpi-label">UVA (valor actual)</div>
-        <div class="kpi-value" id="val-uva">—</div>
-        <div class="kpi-sub" id="src-uva">BCRA · datos.gob.ar</div>
-      </div>
-      <div class="card">
-        <div class="kpi-label">Variación mensual</div>
-        <div class="kpi-value" id="val-uva-m">—</div>
-        <div class="kpi-sub">vs. 30 días atrás</div>
-      </div>
-      <div class="card">
-        <div class="kpi-label">Variación interanual</div>
-        <div class="kpi-value" id="val-uva-ia">—</div>
-        <div class="kpi-sub">vs. mismo día año ant.</div>
-      </div>
-      <div class="card">
-        <div class="kpi-label">Acum. en el año</div>
-        <div class="kpi-value" id="val-uva-ytd">—</div>
-        <div class="kpi-sub" id="val-uva-ytd-sub">vs. 31-dic año ant.</div>
-      </div>
-    </div>
-
-    <!-- Gráfico UVA desde API -->
-    <div id="uva-chart-section" style="margin-top:4px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div class="sub-title">Evolución del índice UVA</div>
-        <select class="period-select" id="uva-range" onchange="renderUvaChart()">
-          <option value="365">Último año</option>
-          <option value="1095">Últimos 3 años</option>
-          <option value="1825">Últimos 5 años</option>
-          <option value="0">Histórico completo</option>
-        </select>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="chart-uva" role="img" aria-label="Evolución del índice UVA"></canvas>
-      </div>
-    </div>
-
-    <!-- ─── CONSULTA UVA POR FECHA · vive en la pantalla Herramientas ─── -->
-    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
-      <div>
-        <div class="sub-title" style="margin-bottom:4px;">Consulta UVA por fecha</div>
-        <div style="font-size:11px;color:var(--gris-txt);">Valor de la UVA en cualquier día desde marzo de 2016.</div>
-      </div>
-      <button class="btn btn-rojo" onclick="abrirHerramienta('uva')">ABRIR &rsaquo;</button>
     </div>
 
     <!-- ── DÓLAR BLUE ──────────────────── -->
@@ -3150,7 +3150,7 @@ window.CAUCION_CACHE = {
 /* === ROFEX_CACHE embebido desde rofex_cache.js (build_publicar.py) === */
 /* -----------------------------------------------------------------
    rofex_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-08-13T10:45:59
+   Generado: 2026-08-13T11:00:04
    Curva de dolar futuro (contratos DLR) de Matba Rofex.
    precio = precio de ajuste (settlement) de la rueda
    varPct = variacion % contra el ajuste anterior
@@ -3171,14 +3171,14 @@ window.ROFEX_CACHE = {
     { periodo: "2027-05", etiqueta: "may-27", precio: 1778.5, varPct: 0.4, tna: 23.95 }
   ],
   fuente: "Dólar futuro · Matba Rofex",
-  updated: "2026-08-13T10:45:59"
+  updated: "2026-08-13T11:00:04"
 };
 </script>
 <script>
 /* === ACCIONES_CACHE embebido desde acciones_cache.js (build_publicar.py) === */
 /* -----------------------------------------------------------------
    acciones_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-08-13T10:46:00
+   Generado: 2026-08-13T11:00:06
    Las 3 mayores subas y las 3 mayores bajas del PANEL LIDER del
    Merval en la rueda. Fuente: data912 (panel de BYMA).
    pct = variacion % contra el cierre anterior
@@ -3186,25 +3186,25 @@ window.ROFEX_CACHE = {
 ----------------------------------------------------------------- */
 window.ACCIONES_CACHE = {
   mejores: [
-    { symbol: "METR", nombre: "Metrogas", precio: 2335.0, pct: 2.9 },
-    { symbol: "TECO2", nombre: "Telecom", precio: 4350.0, pct: 1.87 },
-    { symbol: "EDN", nombre: "Edenor", precio: 1831.0, pct: 1.38 }
+    { symbol: "METR", nombre: "Metrogas", precio: 2370.0, pct: 4.45 },
+    { symbol: "EDN", nombre: "Edenor", precio: 1831.0, pct: 1.38 },
+    { symbol: "TGNO4", nombre: "Transportadora Gas del Norte", precio: 3555.0, pct: 1.13 }
   ],
   peores: [
-    { symbol: "TXAR", nombre: "Ternium Argentina", precio: 740.0, pct: -1.33 },
-    { symbol: "IRSA", nombre: "IRSA", precio: 2310.0, pct: -0.64 },
-    { symbol: "TRAN", nombre: "Transener", precio: 3495.0, pct: -0.28 }
+    { symbol: "TXAR", nombre: "Ternium Argentina", precio: 743.0, pct: -0.93 },
+    { symbol: "TRAN", nombre: "Transener", precio: 3485.0, pct: -0.57 },
+    { symbol: "YPFD", nombre: "YPF", precio: 7730.0, pct: -0.51 }
   ],
   panel: 23,
   fuente: "Panel líder · BYMA vía data912",
-  updated: "2026-08-13T10:46:00"
+  updated: "2026-08-13T11:00:06"
 };
 </script>
 <script>
 /* === DOLAR_CACHE embebido desde dolar_cache.js (build_publicar.py) === */
 /* -----------------------------------------------------------------
    dolar_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-08-13T10:46:00
+   Generado: 2026-08-13T11:00:06
    Respaldo del tipo de cambio. El tablero pide los valores EN VIVO a
    dolarapi.com en cada carga; esto se usa solo si esa consulta falla,
    para no dejar las tarjetas en N/D.
@@ -3220,20 +3220,20 @@ window.DOLAR_CACHE = {
   mep: { compra: 1521.7, venta: 1529.2, fecha: "2026-08-13" },
   oficial: { compra: 1465.0, venta: 1515.0, fecha: "2026-08-13" },
   fuente: "dolarapi.com · bluelytics",
-  updated: "2026-08-13T10:46:00"
+  updated: "2026-08-13T11:00:06"
 };
 </script>
 <script>
 /* === ISAC_CACHE embebido desde isac_cache.js (build_publicar.py) === */
 /* ═══════════════════════════
    isac_cache.js  -  Grupo Elyon
-   Generado por update_isac_cache.py el 13/08/2026 10:46
+   Generado por update_isac_cache.py el 13/08/2026 11:00
    Fuente: INDEC via apis.datos.gob.ar (SSPM)
    NO editar a mano: se pisa en cada corrida.
    (Empleo y permisos se editan en isac_manual.json)
 ═══════════════════════════ */
 window.ISAC_CACHE = {
-  updated: "2026-08-13T10:46:07",
+  updated: "2026-08-13T11:00:07",
   source: "INDEC via apis.datos.gob.ar (SSPM)",
   hasta: "2026-06",
   serie: [

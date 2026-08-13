@@ -730,6 +730,58 @@ body {
       </div>
     </div>
 
+    <!-- ── ÍNDICE UVA ──────────────────── -->
+    <div class="sec-title">Índice UVA</div>
+
+    <!-- UVA en tiempo real (datos.gob.ar / BCRA) -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(155px,1fr));margin-bottom:4px;">
+      <div class="card">
+        <div class="kpi-label">UVA (valor actual)</div>
+        <div class="kpi-value" id="val-uva">—</div>
+        <div class="kpi-sub" id="src-uva">BCRA · datos.gob.ar</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Variación mensual</div>
+        <div class="kpi-value" id="val-uva-m">—</div>
+        <div class="kpi-sub">vs. 30 días atrás</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Variación interanual</div>
+        <div class="kpi-value" id="val-uva-ia">—</div>
+        <div class="kpi-sub">vs. mismo día año ant.</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Acum. en el año</div>
+        <div class="kpi-value" id="val-uva-ytd">—</div>
+        <div class="kpi-sub" id="val-uva-ytd-sub">vs. 31-dic año ant.</div>
+      </div>
+    </div>
+
+    <!-- Gráfico UVA desde API -->
+    <div id="uva-chart-section" style="margin-top:4px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución del índice UVA</div>
+        <select class="period-select" id="uva-range" onchange="renderUvaChart()">
+          <option value="365">Último año</option>
+          <option value="1095">Últimos 3 años</option>
+          <option value="1825">Últimos 5 años</option>
+          <option value="0">Histórico completo</option>
+        </select>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-uva" role="img" aria-label="Evolución del índice UVA"></canvas>
+      </div>
+    </div>
+
+    <!-- ─── CONSULTA UVA POR FECHA · vive en la pantalla Herramientas ─── -->
+    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+      <div>
+        <div class="sub-title" style="margin-bottom:4px;">Consulta UVA por fecha</div>
+        <div style="font-size:11px;color:var(--gris-txt);">Valor de la UVA en cualquier día desde marzo de 2016.</div>
+      </div>
+      <button class="btn btn-rojo" onclick="abrirHerramienta('uva')">ABRIR &rsaquo;</button>
+    </div>
+
     <!-- ── COSTO DEL M² · APYMECO ──────────────── -->
     <div class="sec-title" id="apymeco-titulo">Costo del m² · APYMECO</div>
     <div id="apymeco-section">
@@ -807,58 +859,6 @@ body {
                 aria-label="Comparación de CAC, ICC Córdoba, ICC INDEC y APYMECO"></canvas>
       </div>
       <div style="font-size:10px;color:var(--gris-txt);margin-top:8px;line-height:1.6;" id="comp-costos-nota"></div>
-    </div>
-
-    <!-- ── ÍNDICE UVA ──────────────────── -->
-    <div class="sec-title">Índice UVA</div>
-
-    <!-- UVA en tiempo real (datos.gob.ar / BCRA) -->
-    <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(155px,1fr));margin-bottom:4px;">
-      <div class="card">
-        <div class="kpi-label">UVA (valor actual)</div>
-        <div class="kpi-value" id="val-uva">—</div>
-        <div class="kpi-sub" id="src-uva">BCRA · datos.gob.ar</div>
-      </div>
-      <div class="card">
-        <div class="kpi-label">Variación mensual</div>
-        <div class="kpi-value" id="val-uva-m">—</div>
-        <div class="kpi-sub">vs. 30 días atrás</div>
-      </div>
-      <div class="card">
-        <div class="kpi-label">Variación interanual</div>
-        <div class="kpi-value" id="val-uva-ia">—</div>
-        <div class="kpi-sub">vs. mismo día año ant.</div>
-      </div>
-      <div class="card">
-        <div class="kpi-label">Acum. en el año</div>
-        <div class="kpi-value" id="val-uva-ytd">—</div>
-        <div class="kpi-sub" id="val-uva-ytd-sub">vs. 31-dic año ant.</div>
-      </div>
-    </div>
-
-    <!-- Gráfico UVA desde API -->
-    <div id="uva-chart-section" style="margin-top:4px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div class="sub-title">Evolución del índice UVA</div>
-        <select class="period-select" id="uva-range" onchange="renderUvaChart()">
-          <option value="365">Último año</option>
-          <option value="1095">Últimos 3 años</option>
-          <option value="1825">Últimos 5 años</option>
-          <option value="0">Histórico completo</option>
-        </select>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="chart-uva" role="img" aria-label="Evolución del índice UVA"></canvas>
-      </div>
-    </div>
-
-    <!-- ─── CONSULTA UVA POR FECHA · vive en la pantalla Herramientas ─── -->
-    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
-      <div>
-        <div class="sub-title" style="margin-bottom:4px;">Consulta UVA por fecha</div>
-        <div style="font-size:11px;color:var(--gris-txt);">Valor de la UVA en cualquier día desde marzo de 2016.</div>
-      </div>
-      <button class="btn btn-rojo" onclick="abrirHerramienta('uva')">ABRIR &rsaquo;</button>
     </div>
 
     <!-- ── DÓLAR BLUE ──────────────────── -->
