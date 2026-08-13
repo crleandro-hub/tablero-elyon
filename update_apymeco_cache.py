@@ -62,6 +62,7 @@ import os
 import re
 import ssl
 import sys
+import time
 import urllib.request as req
 from datetime import datetime
 
@@ -94,29 +95,82 @@ COLUMNAS = [
 
 
 # ── Descarga ─────────────────────────────────────────────────────────────
-def bajar(url):
-    """GET con reintento sin verificar certificado (algunas PC corporativas
-    tienen el store de certificados desactualizado y falla el handshake)."""
+def _get(url, sin_verificar=False):
     r = req.Request(url, headers={
         "User-Agent": UA,
         "Accept": "text/html,application/xhtml+xml",
         "Accept-Language": "es-AR,es;q=0.9",
     })
-    try:
-        with req.urlopen(r, timeout=TIMEOUT) as resp:
-            crudo = resp.read()
-    except Exception:
+    ctx = None
+    if sin_verificar:
+        # Algunas PC corporativas tienen el store de certificados
+        # desactualizado y falla el handshake.
         ctx = ssl.create_default_context()
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
-        with req.urlopen(r, timeout=TIMEOUT, context=ctx) as resp:
-            crudo = resp.read()
+    with req.urlopen(r, timeout=TIMEOUT, context=ctx) as resp:
+        crudo = resp.read()
     for enc in ("utf-8", "latin-1"):
         try:
             return crudo.decode(enc)
         except UnicodeDecodeError:
             continue
     return crudo.decode("utf-8", "replace")
+
+
+def bajar(url):
+    """GET con reintentos.
+
+    Un corte de conexion suelto no puede costar el dato del mes: la pagina de
+    APYMECO solo publica 13 meses y este script acumula historico, asi que
+    cada corrida perdida es historia que despues hay que reconstruir a mano.
+    Por eso se reintenta antes de darse por vencido, alternando con el modo
+    sin verificacion de certificado, y esperando un poco mas cada vez.
+
+    Los errores tipicos que esto absorbe son el 10054 (conexion cerrada por el
+    host) y el 10060 (timeout), que aparecen de a rachas cuando la conexion se
+    pone inestable y no significan que la fuente se haya roto."""
+    intentos = [(False, 0), (True, 3), (False, 8)]
+    ultimo = None
+    for i, (sin_verificar, espera) in enumerate(intentos, 1):
+        if espera:
+            time.sleep(espera)
+        try:
+            return _get(url, sin_verificar)
+        except Exception as e:
+            ultimo = e
+            print("   [intento %d de %d] fallo la descarga: %s"
+                  % (i, len(intentos), e))
+    raise ultimo
+
+
+def diagnosticar_html(html):
+    """Cuando el parseo no encuentra nada, dice QUE fue lo que llego.
+
+    Importa distinguir dos casos que se parecen en el log y no se arreglan
+    igual: la pagina cambio de formato (hay que tocar el script) o llego
+    cualquier otra cosa —una pagina de error del proxy, una respuesta cortada,
+    el sitio caido— y con reintentar alcanza."""
+    if html is None:
+        return "no llego ningun contenido"
+    texto = limpiar(html)
+    n = len(html)
+    if n < 500:
+        return ("la respuesta tiene solo %d caracteres: llego cortada o el "
+                "sitio devolvio un error. Proba de nuevo mas tarde. "
+                "Empieza con: %r" % (n, texto[:200]))
+    if "apymeco" not in sin_tildes(texto.lower()):
+        return ("llegaron %d caracteres pero no dicen APYMECO por ningun lado: "
+                "lo mas probable es una pagina de error del proxy o del "
+                "proveedor de internet, no la fuente. Empieza con: %r"
+                % (n, texto[:200]))
+    if "<tr" not in html.lower():
+        return ("llego la pagina de APYMECO (%d caracteres) pero sin ninguna "
+                "tabla: el sitio cambio la maqueta. Hay que revisar el parseo."
+                % n)
+    return ("llego la pagina con tabla (%d caracteres) pero ninguna fila tenia "
+            "un mes reconocible: cambiaron el formato de la primera columna."
+            % n)
 
 
 # ── Utilidades de texto ──────────────────────────────────────────────────
@@ -298,14 +352,15 @@ def mezclar(nuevas, previas):
 
 
 # ── Controles antes de escribir ──────────────────────────────────────────
-def controlar(filas, bajadas):
+def controlar(filas, bajadas, html=None):
     """Aborta si la serie no tiene sentido. Vale mas quedarse con el cache
     viejo que pisarlo con un parseo roto."""
     if len(bajadas) < MIN_FILAS:
         raise SystemExit(
-            "[ERROR] Solo se parsearon %d meses de la pagina (minimo %d). "
-            "Cambio el formato. Se conserva el apymeco_cache.js anterior."
-            % (len(bajadas), MIN_FILAS))
+            "[ERROR] Se parsearon %d meses de la pagina y el minimo es %d.\n"
+            "        Motivo: %s\n"
+            "        Se conserva el apymeco_cache.js anterior."
+            % (len(bajadas), MIN_FILAS, diagnosticar_html(html)))
 
     m2s = [f[1] for f in filas if f[1] is not None]
     if not m2s or min(m2s) <= 0:
@@ -410,20 +465,26 @@ def main():
     try:
         html = bajar(URL)
     except Exception as e:
-        raise SystemExit("[ERROR] No se pudo bajar la pagina (%s). "
-                         "Se conserva el apymeco_cache.js anterior." % e)
+        raise SystemExit(
+            "[ERROR] No se pudo bajar la pagina despues de varios intentos (%s).\n"
+            "        Si el error es 10054 o 10060, es la conexion, no la fuente:\n"
+            "        con volver a correr la actualizacion mas tarde alcanza.\n"
+            "        Se conserva el apymeco_cache.js anterior." % e)
 
     bajadas = parsear(html)
     if diagnostico:
+        print("   Caracteres recibidos: %d" % len(html or ""))
         print("   Filas parseadas de la pagina: %d" % len(bajadas))
         for f in bajadas:
             print("     %s  m2=%s  idx=%s  var=%s" % f)
+        if not bajadas:
+            print("   Diagnostico: %s" % diagnosticar_html(html))
         print("\n[DIAGNOSTICO] No se escribio nada.")
         return
 
     previas = leer_cache()
     filas = mezclar(bajadas, previas)
-    ratio = controlar(filas, bajadas)
+    ratio = controlar(filas, bajadas, html)
 
     with open(CACHE_PATH, "w", encoding="utf-8") as f:
         f.write(emitir(filas, ratio))
