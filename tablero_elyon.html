@@ -666,8 +666,8 @@ body {
       <div style="display:flex;align-items:center;justify-content:space-between;margin:22px 0 8px;flex-wrap:wrap;gap:8px;">
         <div class="sub-title">Evolución del ICC Córdoba</div>
         <select class="period-select" id="icc-cba-range" onchange="renderIccCbaChart()">
-          <option value="12">Último año</option>
-          <option value="36" selected>Últimos 3 años</option>
+          <option value="12" selected>Último año</option>
+          <option value="36">Últimos 3 años</option>
           <option value="60">Últimos 5 años</option>
           <option value="0">Histórico completo</option>
         </select>
@@ -723,8 +723,8 @@ body {
       <div style="display:flex;align-items:center;justify-content:space-between;margin:22px 0 8px;flex-wrap:wrap;gap:8px;">
         <div class="sub-title">Evolución del ICC INDEC</div>
         <select class="period-select" id="icc-indec-range" onchange="renderIccIndecChart()">
-          <option value="12">Último año</option>
-          <option value="36" selected>Últimos 3 años</option>
+          <option value="12" selected>Último año</option>
+          <option value="36">Últimos 3 años</option>
           <option value="60">Últimos 5 años</option>
           <option value="0">Histórico completo</option>
         </select>
@@ -787,7 +787,7 @@ body {
     </div>
 
     <!-- ── COSTO DEL M² · APYMECO ──────────────── -->
-    <div class="sec-title" id="apymeco-titulo">Costo del m² · APYMECO</div>
+    <div class="sec-title" id="apymeco-titulo">APYMECO - Costo del m²</div>
     <div id="apymeco-section">
       <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
         Precio de obra por metro cuadrado que releva <strong style="color:#bbb;">APYMECO</strong>,
@@ -837,8 +837,8 @@ body {
             <option value="base">Índice base 100</option>
           </select>
           <select class="period-select" id="comp-costos-range" onchange="renderCompCostos()">
-            <option value="12">Último año</option>
-            <option value="24" selected>Últimos 2 años</option>
+            <option value="12" selected>Último año</option>
+            <option value="24">Últimos 2 años</option>
             <option value="36">Últimos 3 años</option>
           </select>
         </div>
@@ -957,7 +957,7 @@ body {
           <select class="period-select" id="sal-cat" onchange="renderSalChart()"></select>
           <select class="period-select" id="sal-unidad" onchange="renderSalChart()">
             <option value="ars">Pesos corrientes</option>
-            <option value="real">Pesos constantes (deflactado por IPC)</option>
+            <option value="real" selected>Pesos constantes (deflactado por IPC)</option>
             <option value="usd">Dólares (blue)</option>
             <option value="idx">Índice base 100</option>
           </select>
@@ -1902,7 +1902,7 @@ async function loadInflacion() {
     if (data.length >= 2) {
       const pctM = (data[0][1] / data[1][1] - 1) * 100;
       setMacro('val-inf-m', 'src-inf-m',
-        fmtN(pctM, 2) + '%',
+        fmtN(pctM, 1) + '%',
         fmtMes(data[0][0]) + ' · INDEC',
         'var(--rojo-txt)');
     }
@@ -3987,7 +3987,7 @@ async function renderSalChart() {
   if (!ctx || typeof Chart === 'undefined') return;
 
   const cat    = (document.getElementById('sal-cat')   || {}).value || 'oficial';
-  const unidad = (document.getElementById('sal-unidad')|| {}).value || 'ars';
+  let   unidad = (document.getElementById('sal-unidad')|| {}).value || 'real';
   const meses  = parseInt((document.getElementById('sal-range') || {}).value || '36', 10);
   const nota   = document.getElementById('sal-nota');
 
@@ -4001,7 +4001,19 @@ async function renderSalChart() {
   const ipc  = unidad === 'real' ? compIpc() : null;
   const usd  = unidad === 'usd'  ? compUsd('blue') : null;
 
-  if (unidad === 'real' && !ipc) { if (nota) nota.textContent = 'No se pudo bajar el IPC para deflactar. Probá de nuevo con el botón Actualizar.'; return; }
+  /* Pesos constantes es la vista por defecto, pero el deflactor sale del IPC,
+     que se baja por API. Sin conexion —la version portable, sobre todo— antes
+     esto dejaba el grafico en blanco: la seccion parecia rota cuando en
+     realidad el dato local de las escalas estaba entero. Ahora cae a pesos
+     corrientes, deja el selector sincronizado y lo dice en la nota. */
+  let avisoFallback = '';
+  if (unidad === 'real' && !ipc) {
+    unidad = 'ars';
+    const selU = document.getElementById('sal-unidad');
+    if (selU) selU.value = 'ars';
+    avisoFallback = 'Sin el IPC no se puede deflactar, así que se muestran pesos corrientes; '
+      + 'probá de nuevo con el botón Actualizar para volver a pesos constantes. ';
+  }
   if (unidad === 'usd'  && !usd) { if (nota) nota.textContent = 'No se pudo bajar la serie del dólar blue. Probá de nuevo con el botón Actualizar.'; return; }
 
   let ys = [...base.keys()].sort();
@@ -4066,7 +4078,7 @@ async function renderSalChart() {
       usd:  'Jornal dividido por el dólar blue de cierre de cada mes. Es la referencia útil cuando el ingreso de la obra está dolarizado.',
       idx:  'Todo arranca en 100 en el primer mes del período elegido, para ver la variación acumulada.',
     }[unidad];
-    nota.textContent = txt + ' Fuente: ' + window.SALARIOS_CACHE.uocra.fuente
+    nota.textContent = avisoFallback + txt + ' Fuente: ' + window.SALARIOS_CACHE.uocra.fuente
                      + ' · actualizado ' + window.SALARIOS_CACHE.actualizado + '.';
   }
 }

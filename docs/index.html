@@ -1,4 +1,4 @@
-<!-- Version autocontenida generada por build_publicar.py el 13/08/2026 13:02 - datos embebidos, no depende de archivos externos -->
+<!-- Version autocontenida generada por build_publicar.py el 13/08/2026 14:00 - datos embebidos, no depende de archivos externos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -667,8 +667,8 @@ body {
       <div style="display:flex;align-items:center;justify-content:space-between;margin:22px 0 8px;flex-wrap:wrap;gap:8px;">
         <div class="sub-title">Evolución del ICC Córdoba</div>
         <select class="period-select" id="icc-cba-range" onchange="renderIccCbaChart()">
-          <option value="12">Último año</option>
-          <option value="36" selected>Últimos 3 años</option>
+          <option value="12" selected>Último año</option>
+          <option value="36">Últimos 3 años</option>
           <option value="60">Últimos 5 años</option>
           <option value="0">Histórico completo</option>
         </select>
@@ -724,8 +724,8 @@ body {
       <div style="display:flex;align-items:center;justify-content:space-between;margin:22px 0 8px;flex-wrap:wrap;gap:8px;">
         <div class="sub-title">Evolución del ICC INDEC</div>
         <select class="period-select" id="icc-indec-range" onchange="renderIccIndecChart()">
-          <option value="12">Último año</option>
-          <option value="36" selected>Últimos 3 años</option>
+          <option value="12" selected>Último año</option>
+          <option value="36">Últimos 3 años</option>
           <option value="60">Últimos 5 años</option>
           <option value="0">Histórico completo</option>
         </select>
@@ -788,7 +788,7 @@ body {
     </div>
 
     <!-- ── COSTO DEL M² · APYMECO ──────────────── -->
-    <div class="sec-title" id="apymeco-titulo">Costo del m² · APYMECO</div>
+    <div class="sec-title" id="apymeco-titulo">APYMECO - Costo del m²</div>
     <div id="apymeco-section">
       <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
         Precio de obra por metro cuadrado que releva <strong style="color:#bbb;">APYMECO</strong>,
@@ -838,8 +838,8 @@ body {
             <option value="base">Índice base 100</option>
           </select>
           <select class="period-select" id="comp-costos-range" onchange="renderCompCostos()">
-            <option value="12">Último año</option>
-            <option value="24" selected>Últimos 2 años</option>
+            <option value="12" selected>Último año</option>
+            <option value="24">Últimos 2 años</option>
             <option value="36">Últimos 3 años</option>
           </select>
         </div>
@@ -958,7 +958,7 @@ body {
           <select class="period-select" id="sal-cat" onchange="renderSalChart()"></select>
           <select class="period-select" id="sal-unidad" onchange="renderSalChart()">
             <option value="ars">Pesos corrientes</option>
-            <option value="real">Pesos constantes (deflactado por IPC)</option>
+            <option value="real" selected>Pesos constantes (deflactado por IPC)</option>
             <option value="usd">Dólares (blue)</option>
             <option value="idx">Índice base 100</option>
           </select>
@@ -3136,7 +3136,7 @@ window.CAUCION_CACHE = {
 /* === ROFEX_CACHE embebido desde rofex_cache.js (build_publicar.py) === */
 /* -----------------------------------------------------------------
    rofex_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-08-13T13:02:41
+   Generado: 2026-08-13T14:00:04
    Curva de dolar futuro (contratos DLR) de Matba Rofex.
    precio = precio de ajuste (settlement) de la rueda
    varPct = variacion % contra el ajuste anterior
@@ -3157,14 +3157,14 @@ window.ROFEX_CACHE = {
     { periodo: "2027-05", etiqueta: "may-27", precio: 1778.5, varPct: 0.4, tna: 23.95 }
   ],
   fuente: "Dólar futuro · Matba Rofex",
-  updated: "2026-08-13T13:02:41"
+  updated: "2026-08-13T14:00:04"
 };
 </script>
 <script>
 /* === ACCIONES_CACHE embebido desde acciones_cache.js (build_publicar.py) === */
 /* -----------------------------------------------------------------
    acciones_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-08-13T13:02:42
+   Generado: 2026-08-13T14:00:06
    Las 3 mayores subas y las 3 mayores bajas del PANEL LIDER del
    Merval en la rueda. Fuente: data912 (panel de BYMA).
    pct = variacion % contra el cierre anterior
@@ -3172,25 +3172,25 @@ window.ROFEX_CACHE = {
 ----------------------------------------------------------------- */
 window.ACCIONES_CACHE = {
   mejores: [
-    { symbol: "EDN", nombre: "Edenor", precio: 1880.0, pct: 4.09 },
-    { symbol: "METR", nombre: "Metrogas", precio: 2346.0, pct: 3.39 },
-    { symbol: "VALO", nombre: "Grupo Financiero Valores", precio: 584.0, pct: 0.34 }
+    { symbol: "METR", nombre: "Metrogas", precio: 2350.0, pct: 3.56 },
+    { symbol: "EDN", nombre: "Edenor", precio: 1867.0, pct: 3.37 },
+    { symbol: "VALO", nombre: "Grupo Financiero Valores", precio: 584.5, pct: 0.42 }
   ],
   peores: [
-    { symbol: "BMA", nombre: "Banco Macro", precio: 12430.0, pct: -1.5 },
-    { symbol: "CRES", nombre: "Cresud", precio: 1669.0, pct: -1.47 },
-    { symbol: "TXAR", nombre: "Ternium Argentina", precio: 739.0, pct: -1.46 }
+    { symbol: "LOMA", nombre: "Loma Negra", precio: 2982.5, pct: -2.61 },
+    { symbol: "TXAR", nombre: "Ternium Argentina", precio: 731.0, pct: -2.53 },
+    { symbol: "SUPV", nombre: "Grupo Supervielle", precio: 2580.0, pct: -1.99 }
   ],
   panel: 23,
   fuente: "Panel líder · BYMA vía data912",
-  updated: "2026-08-13T13:02:42"
+  updated: "2026-08-13T14:00:06"
 };
 </script>
 <script>
 /* === DOLAR_CACHE embebido desde dolar_cache.js (build_publicar.py) === */
 /* -----------------------------------------------------------------
    dolar_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-08-13T13:02:43
+   Generado: 2026-08-13T14:00:06
    Respaldo del tipo de cambio. El tablero pide los valores EN VIVO a
    dolarapi.com en cada carga; esto se usa solo si esa consulta falla,
    para no dejar las tarjetas en N/D.
@@ -3198,15 +3198,15 @@ window.ACCIONES_CACHE = {
 ----------------------------------------------------------------- */
 window.DOLAR_CACHE = {
   blue: { compra: 1520.0, venta: 1540.0, fecha: "2026-08-13" },
-  ccl: { compra: 1585.4, venta: 1586.1, fecha: "2026-08-13" },
-  cripto: { compra: 1581.64, venta: 1584.69, fecha: "2026-08-13" },
-  euroBlue: { compra: 1635.0, venta: 1671.0, fecha: "2026-08-13" },
+  ccl: { compra: 1586.2, venta: 1586.9, fecha: "2026-08-13" },
+  cripto: { compra: 1580.36, venta: 1584.46, fecha: "2026-08-13" },
+  euroBlue: { compra: 1638.0, venta: 1674.0, fecha: "2026-08-13" },
   euroOficial: { compra: 1592.0, venta: 1647.0, fecha: "2026-08-13" },
   mayorista: { compra: 1483.0, venta: 1492.0, fecha: "2026-08-13" },
-  mep: { compra: 1524.6, venta: 1527.7, fecha: "2026-08-13" },
+  mep: { compra: 1525.6, venta: 1526.6, fecha: "2026-08-13" },
   oficial: { compra: 1465.0, venta: 1515.0, fecha: "2026-08-13" },
   fuente: "dolarapi.com · bluelytics",
-  updated: "2026-08-13T13:02:43"
+  updated: "2026-08-13T14:00:06"
 };
 </script>
 <script>
@@ -5094,7 +5094,7 @@ async function loadInflacion() {
     if (data.length >= 2) {
       const pctM = (data[0][1] / data[1][1] - 1) * 100;
       setMacro('val-inf-m', 'src-inf-m',
-        fmtN(pctM, 2) + '%',
+        fmtN(pctM, 1) + '%',
         fmtMes(data[0][0]) + ' · INDEC',
         'var(--rojo-txt)');
     }
@@ -7179,7 +7179,7 @@ async function renderSalChart() {
   if (!ctx || typeof Chart === 'undefined') return;
 
   const cat    = (document.getElementById('sal-cat')   || {}).value || 'oficial';
-  const unidad = (document.getElementById('sal-unidad')|| {}).value || 'ars';
+  let   unidad = (document.getElementById('sal-unidad')|| {}).value || 'real';
   const meses  = parseInt((document.getElementById('sal-range') || {}).value || '36', 10);
   const nota   = document.getElementById('sal-nota');
 
@@ -7193,7 +7193,19 @@ async function renderSalChart() {
   const ipc  = unidad === 'real' ? compIpc() : null;
   const usd  = unidad === 'usd'  ? compUsd('blue') : null;
 
-  if (unidad === 'real' && !ipc) { if (nota) nota.textContent = 'No se pudo bajar el IPC para deflactar. Probá de nuevo con el botón Actualizar.'; return; }
+  /* Pesos constantes es la vista por defecto, pero el deflactor sale del IPC,
+     que se baja por API. Sin conexion —la version portable, sobre todo— antes
+     esto dejaba el grafico en blanco: la seccion parecia rota cuando en
+     realidad el dato local de las escalas estaba entero. Ahora cae a pesos
+     corrientes, deja el selector sincronizado y lo dice en la nota. */
+  let avisoFallback = '';
+  if (unidad === 'real' && !ipc) {
+    unidad = 'ars';
+    const selU = document.getElementById('sal-unidad');
+    if (selU) selU.value = 'ars';
+    avisoFallback = 'Sin el IPC no se puede deflactar, así que se muestran pesos corrientes; '
+      + 'probá de nuevo con el botón Actualizar para volver a pesos constantes. ';
+  }
   if (unidad === 'usd'  && !usd) { if (nota) nota.textContent = 'No se pudo bajar la serie del dólar blue. Probá de nuevo con el botón Actualizar.'; return; }
 
   let ys = [...base.keys()].sort();
@@ -7258,7 +7270,7 @@ async function renderSalChart() {
       usd:  'Jornal dividido por el dólar blue de cierre de cada mes. Es la referencia útil cuando el ingreso de la obra está dolarizado.',
       idx:  'Todo arranca en 100 en el primer mes del período elegido, para ver la variación acumulada.',
     }[unidad];
-    nota.textContent = txt + ' Fuente: ' + window.SALARIOS_CACHE.uocra.fuente
+    nota.textContent = avisoFallback + txt + ' Fuente: ' + window.SALARIOS_CACHE.uocra.fuente
                      + ' · actualizado ' + window.SALARIOS_CACHE.actualizado + '.';
   }
 }
