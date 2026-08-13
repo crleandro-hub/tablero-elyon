@@ -921,9 +921,10 @@ body {
       a la inflación, si el dólar quedó atrasado contra el CAC, si la mano de obra en Córdoba
       se despegó de los materiales, y así.
       <span style="display:block;margin-top:5px;font-size:10px;">
-        Se pueden abrir CAC e ICC Córdoba por rubro, y sumar el jornal UOCRA, el MERVAL
-        y el ISAC. Este último es el único que no mide precios sino volumen físico de obra:
-        se compara para ver si la actividad acompaña o no a la escalada de costos.
+        Se pueden abrir CAC e ICC Córdoba por rubro, y sumar el jornal UOCRA, el MERVAL,
+        el ISAC y el Índice Construya. Estos dos últimos son los únicos que no miden precios
+        sino volumen físico de obra: se comparan para ver si la actividad acompaña o no a la
+        escalada de costos.
       </span>
     </div>
 
@@ -1072,6 +1073,57 @@ body {
           <div class="kpi-sub">m² vs. igual período año ant.</div>
         </div>
       </div>
+    </div>
+
+    <!-- ── ÍNDICE CONSTRUYA · ADELANTO PRIVADO DEL ISAC ── -->
+    <div class="sec-title">Índice Construya</div>
+    <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
+      Volumen físico vendido al <strong style="color:#bbb;">sector privado</strong> por las empresas
+      líderes de materiales (ladrillos, cemento, cal, aceros largos, aberturas, adhesivos, pinturas,
+      sanitarios, griferías, caños y revestimientos). Mide lo mismo que el ISAC, pero se publica
+      alrededor del día 10 del mes siguiente: <strong style="color:#bbb;">adelanta al INDEC casi un
+      mes</strong>. No toma obra pública, así que leído contra el ISAC muestra cuánto del movimiento
+      es privado.
+      <span id="construya-datasource" style="display:block;margin-top:5px;font-size:10px;"></span>
+    </div>
+
+    <div id="construya-section">
+      <div class="kpi-grid">
+        <div class="card">
+          <div class="kpi-label">Índice Construya</div>
+          <div class="kpi-value" id="kpi-cy-idx">—</div>
+          <div class="kpi-sub" id="kpi-cy-fecha">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Var. interanual</div>
+          <div class="kpi-value" id="kpi-cy-ia">—</div>
+          <div class="kpi-sub">vs. mismo mes año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Acum. en el año</div>
+          <div class="kpi-value" id="kpi-cy-acum">—</div>
+          <div class="kpi-sub" id="kpi-cy-acum-sub">vs. igual período año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Desestacionalizada</div>
+          <div class="kpi-value" id="kpi-cy-desest">—</div>
+          <div class="kpi-sub">vs. mes anterior</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución del Índice Construya</div>
+        <select class="period-select" id="construya-range" onchange="renderConstruyaChart()">
+          <option value="24">Últimos 2 años</option>
+          <option value="60" selected>Últimos 5 años</option>
+          <option value="0">Histórico completo</option>
+        </select>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-construya" role="img" aria-label="Evolución del Índice Construya, serie con estacionalidad y desestacionalizada"></canvas>
+      </div>
+
+      <div style="font-size:10px;color:var(--gris-txt);margin-top:10px;line-height:1.6;" id="construya-informe"></div>
     </div>
 
     <!-- ── MERCADO INMOBILIARIO Y CRÉDITO ──────────────── -->
@@ -1390,6 +1442,7 @@ body {
 <script src="acciones_cache.js"></script>  <!-- generado por update_acciones_cache.py -->
 <script src="dolar_cache.js"></script>  <!-- generado por update_dolar_cache.py -->
 <script src="isac_cache.js"></script>  <!-- generado por update_isac_cache.py -->
+<script src="construya_cache.js"></script>  <!-- generado por update_construya_cache.py -->
 <script src="icc_cba_cache.js"></script>  <!-- generado por update_icc_cba_cache.py -->
 <script src="rgp_cba_cache.js"></script>  <!-- generado por update_rgp_cba_cache.py -->
 <script src="icc_indec_cache.js"></script>  <!-- generado por update_icc_indec_cache.py -->
@@ -1431,6 +1484,7 @@ function showScreen(id) {
     initIccIndec();   // ICC del INDEC · Gran Buenos Aires (dato local)
     initRgp();        // Registro General de Córdoba (dato local)
     initCeduc();      // ventas de desarrollistas · CEDUC (dato local)
+    loadConstruya();  // Índice Construya (dato local, no tiene API)
     renderResumenConstruccion();   // CAC / ICC Cba / ICC INDEC ya están; la UVA entra después
     revisarFuentes();  // avisa si algún cache quedó viejo
     initSalarios();   // escalas de convenio (dato local, pinta al toque)
@@ -3272,6 +3326,7 @@ const SNAP_IDS = [
   'kpi-ceduc-dep-f','kpi-ceduc-dep-f-sub','kpi-ceduc-coch','kpi-ceduc-coch-sub',
   'kpi-isac-idx','kpi-isac-fecha','kpi-isac-ia','kpi-isac-acum','kpi-isac-acum-sub',
   'kpi-isac-desest',
+  'kpi-cy-idx','kpi-cy-fecha','kpi-cy-ia','kpi-cy-acum','kpi-cy-acum-sub','kpi-cy-desest',
   'kpi-emp-val','kpi-emp-fecha','kpi-emp-ia','kpi-emp-acum',
   'kpi-per-val','kpi-per-fecha','kpi-per-ia','kpi-per-acum','kpi-per-cant',
 ];
@@ -3391,6 +3446,7 @@ const COMP_SERIES = {
   contadoconliqui: { label: 'Dólar CCL',    color: '#f97316', get: () => compUsd('contadoconliqui') },
   merval:    { label: 'MERVAL (pesos)',     color: '#38bdf8', get: () => compMerval() },
   isac:      { label: 'ISAC (actividad)',   color: '#94a3b8', get: () => compIsac() },
+  construya: { label: 'Construya (actividad)', color: '#eab308', get: () => compConstruya() },
 };
 
 /* Los que mas se miran juntos en obra: costo nacional, costo local,
@@ -3456,6 +3512,18 @@ function compIsac() {
   if (!isacSerie.length) return null;
   const m = new Map();
   isacSerie.forEach(r => {
+    if (r[1] != null) m.set(String(r[0]).slice(0, 7), Number(r[1]));
+  });
+  return m.size ? m : null;
+}
+
+/* Construya, misma logica que el ISAC. Se usa la serie CON estacionalidad:
+   el comparador ya normaliza todo a base 100, y la desestacionalizada mezclaria
+   dos criterios distintos en un mismo grafico. */
+function compConstruya() {
+  if (!construyaSerie.length) return null;
+  const m = new Map();
+  construyaSerie.forEach(r => {
     if (r[1] != null) m.set(String(r[0]).slice(0, 7), Number(r[1]));
   });
   return m.size ? m : null;
@@ -4613,6 +4681,7 @@ const FUENTES = [
   ['ICC_CBA_CACHE',   'ICC Córdoba',                       85,   6],
   ['ICC_INDEC_CACHE', 'ICC INDEC',                         85,   6],
   ['ISAC_CACHE',      'ISAC (actividad)',                  80,   6],
+  ['CONSTRUYA_CACHE', 'Índice Construya',                  60,   6],
   ['RGP_CBA_CACHE',   'Registro General de Córdoba',       80,   6],
   ['SALARIOS_CACHE',  'Escalas UOCRA / UECARA',           240, null],  // carga manual
 ];
@@ -5573,6 +5642,120 @@ function pintarIsacEmpleoPermisos() {
     sub.textContent = 'Cuadros 3 y 4 del informe del INDEC (' + c.informe +
                       ') · no están en la API, se cargan con el informe mensual';
   }
+}
+
+/* ══════════════════════════════════════════
+   ÍNDICE CONSTRUYA — ADELANTO PRIVADO DE LA ACTIVIDAD
+
+   No hay API ni archivo descargable: la serie la deja construya_cache.js,
+   que genera update_construya_cache.py parseando la tabla de
+   grupoconstruya.com.ar. Por eso esta sección no tiene "fuente en vivo":
+   si el cache no está, se oculta entera en vez de mostrar tarjetas vacías.
+
+   Cada fila del cache es:
+     [fecha, con estacionalidad, desestacionalizado,
+      var. interanual, var. acumulada, var. mensual]   ascendente
+   Las tres variaciones son las PUBLICADAS por la cámara. Acá se recalculan
+   desde el índice con el mismo criterio que se usa para el ISAC, así las dos
+   secciones son comparables; las publicadas quedan de control.
+══════════════════════════════════════════ */
+let construyaSerie = [];   // [[fecha, conEstacionalidad, desestacionalizada], ...]
+let construyaChart = null;
+
+function loadConstruya() {
+  const c = window.CONSTRUYA_CACHE;
+  const sec = document.getElementById('construya-section');
+  const src = document.getElementById('construya-datasource');
+
+  construyaSerie = (c && Array.isArray(c.serie)) ? c.serie : [];
+
+  if (!construyaSerie.length) {
+    if (sec) sec.style.display = 'none';
+    if (src) src.textContent = '⚠ Sin datos del Índice Construya (falta construya_cache.js).';
+    return;
+  }
+  if (sec) sec.style.display = '';
+
+  if (src) {
+    src.textContent = '📊 Grupo Construya · construya_cache.js · serie desde ' +
+                      String(construyaSerie[0][0]).slice(0, 4) +
+                      ' · dato hasta ' + isacMesLargo(construyaSerie[construyaSerie.length - 1][0]);
+  }
+
+  const inf = document.getElementById('construya-informe');
+  if (inf) inf.textContent = c.informe || '';
+
+  pintarConstruyaKpis();
+  renderConstruyaChart();
+}
+
+/* ── Tarjetas ── */
+function pintarConstruyaKpis() {
+  const conEst = isacMapa(construyaSerie.map(f => [f[0], f[1]]));
+  const desest = isacMapa(construyaSerie.map(f => [f[0], f[2]]));
+  const ult    = isacUltimoMes(conEst);
+  if (!ult) return;
+
+  document.getElementById('kpi-cy-idx').textContent   = fmtN(conEst.get(ult), 1);
+  document.getElementById('kpi-cy-fecha').textContent = isacMesLargo(ult) + ' · base 2002=100';
+
+  isacPintarPct('kpi-cy-ia',   isacVarIA(conEst));
+  isacPintarPct('kpi-cy-acum', isacVarAcum(conEst));
+
+  const sub = document.getElementById('kpi-cy-acum-sub');
+  if (sub) {
+    sub.textContent = 'ene-' + ISAC_MESES[+ult.slice(5, 7) - 1].slice(0, 3) +
+                      ' vs. igual período ' + (+ult.slice(0, 4) - 1);
+  }
+
+  const mesesD = [...desest.keys()].sort();
+  const uD = mesesD[mesesD.length - 1], pD = mesesD[mesesD.length - 2];
+  isacPintarPct('kpi-cy-desest',
+    (uD && pD && desest.get(pD)) ? (desest.get(uD) / desest.get(pD) - 1) * 100 : null);
+}
+
+/* ── Gráfico ── */
+function renderConstruyaChart() {
+  if (!construyaSerie.length) return;
+  const rangeEl = document.getElementById('construya-range');
+  const meses   = rangeEl ? parseInt(rangeEl.value) : 60;
+  const slice   = meses > 0 ? construyaSerie.slice(-meses) : construyaSerie;
+  const ctx = document.getElementById('chart-construya');
+  if (!ctx) return;
+  if (construyaChart) construyaChart.destroy();
+  construyaChart = new Chart(ctx.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: slice.map(f => {
+        const m = String(f[0]).match(/^(\d{4})-(\d{2})/);
+        return m ? ISAC_MESES[+m[2] - 1].slice(0, 3) + '-' + m[1].slice(2) : f[0];
+      }),
+      datasets: [
+        { label: 'Con estacionalidad', data: slice.map(f => f[1]),
+          borderColor: '#eab308', backgroundColor: 'rgba(234,179,8,0.10)',
+          borderWidth: 2, pointRadius: 0, tension: 0.25, fill: true },
+        { label: 'Desestacionalizada', data: slice.map(f => f[2]),
+          borderColor: '#60a5fa', backgroundColor: 'transparent',
+          borderWidth: 1.5, pointRadius: 0, tension: 0.25, fill: false },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#aaa', font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: '#1C1C1C', borderColor: '#383838', borderWidth: 1,
+          titleColor: '#fff', bodyColor: '#aaa',
+          callbacks: { label: c => ` ${c.dataset.label}: ${fmtN(c.parsed.y, 1)}` },
+        },
+      },
+      scales: {
+        x: { ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 12 }, grid: { color: '#222' } },
+        y: { ticks: { color: '#555', font: { size: 9 } }, grid: { color: '#222' } },
+      },
+    },
+  });
 }
 
 </script>

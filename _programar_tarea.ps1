@@ -6,7 +6,7 @@ $nombre  = "Tablero Elyon - Actualizar y publicar"
 
 Write-Host ""
 Write-Host "=====================================================" -ForegroundColor Cyan
-Write-Host " GRUPO ELYON - Actualizar cada hora, de 11 a 18"        -ForegroundColor Cyan
+Write-Host " GRUPO ELYON - Actualizar cada 2 horas, de 11 a 17"     -ForegroundColor Cyan
 Write-Host "=====================================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -19,12 +19,13 @@ if (-not (Test-Path $bat)) {
 try {
     $accion = New-ScheduledTaskAction -Execute $bat -WorkingDirectory $carpeta
 
-    # Una corrida por hora, de 11 a 18. Un trigger no admite varias horas, asi
-    # que se arma uno por horario y se registran todos juntos: es una sola
-    # tarea con ocho disparadores, no ocho tareas separadas.
+    # Una corrida cada 2 horas, de 11 a 17. Un trigger no admite varias horas,
+    # asi que se arma uno por horario y se registran todos juntos: es una sola
+    # tarea con cuatro disparadores, no cuatro tareas separadas.
     #
-    # Para cambiar la frecuencia alcanza con tocar este rango.
-    $horarios = 11..18 | ForEach-Object { "{0:00}:00" -f $_ }
+    # Para cambiar la frecuencia alcanza con tocar este rango y el paso.
+    # 11..18 con paso 1 era la version anterior (una corrida por hora).
+    $horarios = 11, 13, 15, 17 | ForEach-Object { "{0:00}:00" -f $_ }
     $trigger = foreach ($h in $horarios) {
         New-ScheduledTaskTrigger -Weekly `
             -DaysOfWeek Monday,Tuesday,Wednesday,Thursday,Friday `
@@ -40,12 +41,12 @@ try {
 
     Register-ScheduledTask -TaskName $nombre `
         -Action $accion -Trigger $trigger -Settings $settings `
-        -Description "Actualiza las fuentes del Tablero Elyon (BCRA, UVA, CAC, MERVAL, caucion, dolar futuro, acciones, REM, riesgo pais e indices de la construccion), regenera docs\index.html y lo publica en GitHub Pages. Corre lunes a viernes, cada hora de 11 a 18." `
+        -Description "Actualiza las fuentes del Tablero Elyon (BCRA, UVA, CAC, MERVAL, caucion, dolar futuro, acciones, REM, riesgo pais e indices de la construccion, incluido el Indice Construya), regenera docs\index.html y lo publica en GitHub Pages. Corre lunes a viernes, cada 2 horas de 11 a 17." `
         -Force | Out-Null
 
     Write-Host "[OK] Tarea creada: '$nombre'" -ForegroundColor Green
     Write-Host ""
-    Write-Host ("  Cuando  : lunes a viernes, cada hora de {0} a {1}" -f $horarios[0], $horarios[-1]) -ForegroundColor Gray
+    Write-Host ("  Cuando  : lunes a viernes, cada 2 horas de {0} a {1}" -f $horarios[0], $horarios[-1]) -ForegroundColor Gray
     Write-Host "  Si la PC estaba apagada, corre apenas la prendas." -ForegroundColor Gray
     Write-Host ("  Corridas por dia: {0}" -f $horarios.Count) -ForegroundColor Gray
     Write-Host "  Si se solapan dos corridas, la segunda se descarta." -ForegroundColor Gray

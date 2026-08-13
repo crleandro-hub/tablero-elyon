@@ -41,6 +41,7 @@ ROFEX_JS = os.path.join(BASE_DIR, "rofex_cache.js")
 ACCIONES_JS = os.path.join(BASE_DIR, "acciones_cache.js")
 DOLAR_JS = os.path.join(BASE_DIR, "dolar_cache.js")
 ISAC_JS = os.path.join(BASE_DIR, "isac_cache.js")
+CONSTRUYA_JS = os.path.join(BASE_DIR, "construya_cache.js")
 ICC_CBA_JS = os.path.join(BASE_DIR, "icc_cba_cache.js")
 RGP_CBA_JS = os.path.join(BASE_DIR, "rgp_cba_cache.js")
 ICC_INDEC_JS = os.path.join(BASE_DIR, "icc_indec_cache.js")
@@ -83,6 +84,17 @@ def inline(html, tag_src, contenido, etiqueta):
     return patron.sub(lambda _: bloque, html, count=1)
 
 
+def ultimo_construya(txt):
+    """Ultimo mes e indice del Indice Construya, para el resumen del log."""
+    if not txt:
+        return "sin datos"
+    filas = re.findall(r'\["(\d{4})-(\d{2})-\d{2}",\s*([-\d.]+)', txt)
+    if not filas:
+        return "sin datos"
+    a, m, v = filas[-1]
+    return v + " (" + m + "/" + a + ")"
+
+
 def main():
     print("Generando version autocontenida del tablero...")
 
@@ -99,6 +111,7 @@ def main():
     acciones = leer(ACCIONES_JS, obligatorio=False)
     dolar = leer(DOLAR_JS, obligatorio=False)
     isac = leer(ISAC_JS, obligatorio=False)
+    construya = leer(CONSTRUYA_JS, obligatorio=False)
     icc_cba = leer(ICC_CBA_JS, obligatorio=False)
     rgp_cba = leer(RGP_CBA_JS, obligatorio=False)
     icc_indec = leer(ICC_INDEC_JS, obligatorio=False)
@@ -116,6 +129,7 @@ def main():
     html = inline(html, "acciones_cache.js", acciones, "ACCIONES_CACHE")
     html = inline(html, "dolar_cache.js", dolar, "DOLAR_CACHE")
     html = inline(html, "isac_cache.js", isac, "ISAC_CACHE")
+    html = inline(html, "construya_cache.js", construya, "CONSTRUYA_CACHE")
     html = inline(html, "icc_cba_cache.js", icc_cba, "ICC_CBA_CACHE")
     html = inline(html, "rgp_cba_cache.js", rgp_cba, "RGP_CBA_CACHE")
     html = inline(html, "icc_indec_cache.js", icc_indec, "ICC_INDEC_CACHE")
@@ -170,6 +184,7 @@ def main():
 
     print("       RESERV: " + val_reservas(bcra))
     print("       CAC   : ultimo mes " + ultimo_cac(cac))
+    print("       CONSTR: " + ultimo_construya(construya))
 
     def val_simple(txt, clave, sufijo=""):
         if not txt:

@@ -8,7 +8,7 @@ actualizacion y antes de publicar.
 
 Por que existe
 --------------
-El .bat actualiza doce fuentes distintas. Cuando una falla escribe un
+El .bat actualiza quince fuentes distintas. Cuando una falla escribe un
 "[AVISO] Fallo" en el log, conserva el cache anterior y sigue. Eso esta bien
 para no romper el tablero, pero significa que una fuente puede estar muerta
 hace meses sin que nadie se entere: la tarjeta sigue mostrando el ultimo
@@ -62,6 +62,10 @@ FRESCURA = {
     "icc_indec_cache.js": ("mensual", 85,  6),
     "isac_cache.js":      ("mensual", 80,  6),
     "rgp_cba_cache.js":   ("mensual", 80,  6),
+    # El Indice Construya sale alrededor del dia 10 del mes siguiente, mas
+    # rapido que cualquier fuente oficial. Si el ultimo dato pasa los 55 dias
+    # es que la camara cambio la pagina y el parseo dejo de encontrar la tabla.
+    "construya_cache.js": ("mensual", 55,  6),
     # CEDUC se carga desde un .txt que se arma a mano con el PDF del informe,
     # y la camara publica de forma irregular. Por eso no se controla cuando
     # corrio el script y el limite del dato es holgado: 150 dias.

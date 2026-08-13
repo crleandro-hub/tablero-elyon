@@ -10,14 +10,16 @@ Documento único: qué mide cada indicador, de dónde sale, cómo se publica y q
 
 ## Cómo se actualiza
 
-Una tarea del Programador de tareas de Windows llamada **"Tablero Elyon - Actualizar y publicar"** corre de lunes a viernes a las 8:30 y ejecuta `actualizar_auto.bat`. Si la PC estaba apagada, la tarea corre apenas la prendas. El link público se refresca uno o dos minutos después del push.
+Una tarea del Programador de tareas de Windows llamada **"Tablero Elyon - Actualizar y publicar"** corre de lunes a viernes a las 11, 13, 15 y 17 y ejecuta `actualizar_auto.bat`. Si la PC estaba apagada, la tarea corre apenas la prendas. El link público se refresca uno o dos minutos después del push.
 
-El ciclo tiene 13 pasos: diez fuentes de datos, el armado del HTML, la verificación y la publicación.
+El ciclo tiene 18 pasos: quince fuentes de datos, el armado del HTML, la verificación y la publicación.
 
-Si una fuente falla, **no frena el ciclo**: conserva el cache anterior y sigue. Mejor un dato viejo que el tablero roto. La verificación del paso 12 avisa después si algo quedó atrasado, y si encuentra problemas reales en los datos **frena la publicación**.
+Las fuentes **mensuales** (CAC, REM, ISAC, los dos ICC, el Registro General y el Índice Construya) corren solo en la primera vuelta del día: pedirles el dato cada dos horas es tiempo perdido. La marca es el archivo `.ultima_corrida_mensual`.
+
+Si una fuente falla, **no frena el ciclo**: conserva el cache anterior y sigue. Mejor un dato viejo que el tablero roto. La verificación del paso 17 avisa después si algo quedó atrasado, y si encuentra problemas reales en los datos **frena la publicación**.
 
 - A mano, con todo en pantalla: **`2-ACTUALIZAR-TABLERO.bat`**
-- Recrear la tarea programada: **`3-PROGRAMAR-TAREA-8-30.bat`**
+- Recrear la tarea programada: **`3-PROGRAMAR-TAREA-CADA-2-HORAS.bat`**
 - Ver o modificar la tarea: Inicio → "Programador de tareas"
 
 Cada corrida deja constancia en `log_actualizacion.txt` (automática) o `log_actualizar.txt` (manual). Ninguno se sube al repositorio.
@@ -34,6 +36,7 @@ Cada corrida deja constancia en `log_actualizacion.txt` (automática) o `log_act
 | ICC Córdoba | Estadística y Censos de Córdoba | `update_icc_cba_cache.py` | `icc_cba_cache.js` | Mensual, ~día 17 | CSV vía CKAN |
 | ICC INDEC (GBA) | INDEC | `update_icc_indec_cache.py` | `icc_indec_cache.js` | Mensual, ~día 17 | Excel de nombre fijo |
 | ISAC + insumos | INDEC vía SSPM | `update_isac_cache.py` | `isac_cache.js` | Mensual, ~5 semanas de rezago | API de series |
+| Índice Construya | Grupo Construya | `update_construya_cache.py` | `construya_cache.js` | Mensual, ~día 10 | **Scraping de tabla HTML** |
 | ISAC: empleo y permisos | INDEC (cuadros 3 y 4) | — | `isac_manual.json` | Mensual | **Carga manual** |
 | Registro General de Córdoba | Registro General de la Provincia | `update_rgp_cba_cache.py` | `rgp_cba_cache.js` | Mensual, ~día 23 | CSV vía CKAN |
 | MERVAL | Yahoo → Rava → Stooq | `update_merval_cache.py` | `merval_cache.js` | Diario hábil | Scraping, 3 respaldos |
@@ -50,6 +53,8 @@ Son las que van a romperse primero.
 **Riesgo país y MERVAL** dependen de scraping de HTML: si Rava rediseña la página, el script deja de encontrar el número. El de MERVAL tiene tres fuentes en cascada, así que aguanta más.
 
 **Los CSV de Córdoba** se bajan de un link que redirige a un S3 firmado que vence en una hora. Los scripts resuelven el link por la API de CKAN antes de usar el directo, porque el nombre del archivo del Registro General lleva el mes adentro.
+
+**El Índice Construya** no tiene API ni archivo descargable: sale de parsear la tabla HTML de `grupoconstruya.com.ar`. El parser se guía por los **encabezados** de la tabla, no por el orden de las columnas, y antes de escribir controla que la variación interanual publicada coincida con la que sale de dividir los índices. Si no cierra, aborta y deja el cache anterior intacto.
 
 **El Excel del ICC INDEC** viene transpuesto: capítulos en filas y meses en columnas. El parser busca la fila de años y la de meses en vez de asumir posiciones, y valida contra junio 2026 antes de escribir. Si el INDEC cambia el formato, aborta y vuelca la estructura.
 
@@ -101,19 +106,20 @@ Remove-Item .git\*.lock, .git\objects\maintenance.lock -Force -ErrorAction Silen
 
 - `actualizar_auto.bat` — lo que corre la tarea programada.
 - `2-ACTUALIZAR-TABLERO.bat` — lo mismo, a mano y con pantalla.
-- `3-PROGRAMAR-TAREA-8-30.bat` + `_programar_tarea.ps1` — dan de alta la tarea.
+- `3-PROGRAMAR-TAREA-CADA-2-HORAS.bat` + `_programar_tarea.ps1` — dan de alta la tarea.
+  Para cambiar horarios se toca la línea `$horarios = 11, 13, 15, 17` del `.ps1` y se vuelve a correr.
 - `4-PROBAR-MERVAL-Y-REM.bat` y `5-PROBAR-ICC-INDEC.bat` — prueban una fuente sola, sin publicar.
 
 **Motor**
 
-- Los once `update_*.py` de la tabla de arriba.
+- Los `update_*.py` de la tabla de arriba.
 - `build_publicar.py` — embebe los caches en el HTML y genera las salidas.
 - `verificar.py` — chequeo de frescura, integridad y estructura.
 - `xlsx_lite.py` — lector mínimo de `.xlsx` con la librería estándar, para que el REM funcione sin pandas.
 
 **Se regeneran solos, no editar**
 
-- Los once `*_cache.js`.
+- Los `*_cache.js`.
 - `docs/index.html` — lo que se publica.
 - `tablero_elyon_portable.html` — archivo suelto para mandar por mail. Anda sin internet, salvo dólar y riesgo país que son en vivo.
 
