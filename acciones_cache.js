@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------
    acciones_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-08-13T14:00:06
+   Generado: 2026-08-13T14:02:42
    Las 3 mayores subas y las 3 mayores bajas del PANEL LIDER del
    Merval en la rueda. Fuente: data912 (panel de BYMA).
    pct = variacion % contra el cierre anterior
@@ -13,11 +13,11 @@ window.ACCIONES_CACHE = {
     { symbol: "VALO", nombre: "Grupo Financiero Valores", precio: 584.5, pct: 0.42 }
   ],
   peores: [
-    { symbol: "LOMA", nombre: "Loma Negra", precio: 2982.5, pct: -2.61 },
-    { symbol: "TXAR", nombre: "Ternium Argentina", precio: 731.0, pct: -2.53 },
-    { symbol: "SUPV", nombre: "Grupo Supervielle", precio: 2580.0, pct: -1.99 }
+    { symbol: "TXAR", nombre: "Ternium Argentina", precio: 730.0, pct: -2.66 },
+    { symbol: "LOMA", nombre: "Loma Negra", precio: 2987.5, pct: -2.44 },
+    { symbol: "BYMA", nombre: "BYMA", precio: 271.0, pct: -1.9 }
   ],
   panel: 23,
   fuente: "Panel líder · BYMA vía data912",
-  updated: "2026-08-13T14:00:06"
+  updated: "2026-08-13T14:02:42"
 };
