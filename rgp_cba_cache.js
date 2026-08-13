@@ -6,7 +6,7 @@
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.RGP_CBA_CACHE = {
-  updated: "2026-08-13T11:00:19",
+  updated: "2026-08-13T11:00:40",
   source: "Registro General de la Provincia de Cordoba",
   hasta: "2026-06",
   transferencias: [
