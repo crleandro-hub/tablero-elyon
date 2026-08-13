@@ -730,6 +730,85 @@ body {
       </div>
     </div>
 
+    <!-- ── COSTO DEL M² · APYMECO ──────────────── -->
+    <div class="sec-title" id="apymeco-titulo">Costo del m² · APYMECO</div>
+    <div id="apymeco-section">
+      <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
+        Precio de obra por metro cuadrado que releva <strong style="color:#bbb;">APYMECO</strong>,
+        la asociación de pymes de la construcción del Gran La Plata. Es el único dato del tablero
+        con un <strong style="color:#bbb;">valor absoluto de mercado</strong>: el CAC y los dos ICC son
+        índices base 100, y el m² que publica Córdoba corresponde a una vivienda social de 50,25 m².
+        <strong style="color:#bbb;">Excluye IVA, terreno, honorarios, gastos legales y utilidad
+        del desarrollador</strong>: es costo directo de obra. Al ser bonaerense se lee como contraste
+        con el ICC Córdoba, nunca como reemplazo.
+        <span id="apymeco-datasource" style="display:block;margin-top:5px;font-size:10px;"></span>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="card">
+          <div class="kpi-label">Costo del m²</div>
+          <div class="kpi-value" id="kpi-apy-m2">—</div>
+          <div class="kpi-sub" id="kpi-apy-fecha">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Var. mensual</div>
+          <div class="kpi-value" id="kpi-apy-m">—</div>
+          <div class="kpi-sub">vs. mes anterior</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Var. interanual</div>
+          <div class="kpi-value" id="kpi-apy-ia">—</div>
+          <div class="kpi-sub">vs. mismo mes año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Acum. en el año</div>
+          <div class="kpi-value" id="kpi-apy-ytd">—</div>
+          <div class="kpi-sub" id="kpi-apy-ytd-sub">vs. dic. año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Costo en dólares</div>
+          <div class="kpi-value" id="kpi-apy-usd">—</div>
+          <div class="kpi-sub" id="kpi-apy-usd-sub">US$/m² · MEP promedio del mes</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:22px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">El costo de construir, medido en dólares</div>
+        <select class="period-select" id="apy-usd-range" onchange="renderCostoUsdChart()">
+          <option value="24">Últimos 2 años</option>
+          <option value="60" selected>Últimos 5 años</option>
+          <option value="120">Últimos 10 años</option>
+          <option value="0">Histórico completo</option>
+        </select>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-costo-usd" role="img"
+                aria-label="Costo de construcción por metro cuadrado expresado en dólares"></canvas>
+      </div>
+      <div style="font-size:10px;color:var(--gris-txt);margin-top:8px;line-height:1.6;" id="apy-usd-nota"></div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:26px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Los cuatro índices de costo, uno al lado del otro</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select class="period-select" id="comp-costos-modo" onchange="renderCompCostos()">
+            <option value="mensual" selected>Variación mensual</option>
+            <option value="ia">Variación interanual</option>
+            <option value="base">Índice base 100</option>
+          </select>
+          <select class="period-select" id="comp-costos-range" onchange="renderCompCostos()">
+            <option value="12">Último año</option>
+            <option value="24" selected>Últimos 2 años</option>
+            <option value="36">Últimos 3 años</option>
+          </select>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-comp-costos" role="img"
+                aria-label="Comparación de CAC, ICC Córdoba, ICC INDEC y APYMECO"></canvas>
+      </div>
+      <div style="font-size:10px;color:var(--gris-txt);margin-top:8px;line-height:1.6;" id="comp-costos-nota"></div>
+    </div>
+
     <!-- ── ÍNDICE UVA ──────────────────── -->
     <div class="sec-title">Índice UVA</div>
 
@@ -1447,6 +1526,7 @@ body {
 <script src="rgp_cba_cache.js"></script>  <!-- generado por update_rgp_cba_cache.py -->
 <script src="icc_indec_cache.js"></script>  <!-- generado por update_icc_indec_cache.py -->
 <script src="ceduc_cache.js"></script>  <!-- generado por update_ceduc_cache.py -->
+<script src="apymeco_cache.js"></script>  <!-- generado por update_apymeco_cache.py -->
 <script src="salarios_cache.js"></script>  <!-- escalas UOCRA / UECARA, se edita a mano -->
 <!-- ══════════════════════════════════════
      JAVASCRIPT
@@ -1485,6 +1565,8 @@ function showScreen(id) {
     initRgp();        // Registro General de Córdoba (dato local)
     initCeduc();      // ventas de desarrollistas · CEDUC (dato local)
     loadConstruya();  // Índice Construya (dato local, no tiene API)
+    initApymeco();    // costo del m² · APYMECO (dato local; el gráfico en
+                      // dólares se completa después, en loadApymecoUsd)
     renderResumenConstruccion();   // CAC / ICC Cba / ICC INDEC ya están; la UVA entra después
     revisarFuentes();  // avisa si algún cache quedó viejo
     initSalarios();   // escalas de convenio (dato local, pinta al toque)
@@ -3318,6 +3400,8 @@ const SNAP_IDS = [
   'kpi-icc-idx','kpi-icc-fecha','kpi-icc-m','kpi-icc-ia','kpi-icc-ytd',
   'kpi-icc-ytd-sub','kpi-icc-m2','kpi-icc-m2-sub',
   'kpi-iccn-idx','kpi-iccn-fecha','kpi-iccn-m','kpi-iccn-ia','kpi-iccn-ytd','kpi-iccn-ytd-sub',
+  'kpi-apy-m2','kpi-apy-fecha','kpi-apy-m','kpi-apy-ia','kpi-apy-ytd','kpi-apy-ytd-sub',
+  'kpi-apy-usd','kpi-apy-usd-sub',
   'kpi-transf','kpi-transf-fecha','kpi-transf-ia','kpi-transf-acum','kpi-transf-acum-sub',
   'kpi-hipo','kpi-hipo-fecha','kpi-hipo-ia','kpi-hipo-acum','kpi-hipo-acum-sub',
   'kpi-cred-stock','kpi-cred-fecha','kpi-cred-ia','kpi-cred-real',
@@ -3438,6 +3522,7 @@ const COMP_SERIES = {
   iccIndec:  { label: 'ICC INDEC (GBA)',    color: '#f472b6', get: () => compIccIndec(1) },
   iccIndecMat: { label: 'ICC INDEC materiales', color: '#fbcfe8', get: () => compIccIndec(2) },
   iccIndecMo:  { label: 'ICC INDEC mano obra',  color: '#d946ef', get: () => compIccIndec(3) },
+  apymeco:   { label: 'APYMECO (pymes)',    color: '#22d3ee', get: () => compApymeco() },
   uocra:     { label: 'Jornal UOCRA',       color: '#a3e635', get: () => salSerieUocra('oficial') },
   uva:       { label: 'UVA',                color: '#c084fc', get: () => compUva() },
   oficial:   { label: 'Dólar oficial',      color: '#60a5fa', get: () => compUsd('oficial') },
@@ -3744,6 +3829,9 @@ async function reloadAll() {
     loadBlue(),
     loadIsac(),
     loadCreditoHipotecario(),
+    /* Necesita las series diarias de dólar de ArgentinaDatos para pasar el
+       costo del m² a dólares; por eso no puede resolverse con el dato local. */
+    loadApymecoUsd(),
   ]);
 
   // Se repinta con la UVA ya cargada, que es la única del resumen que viene de la red
@@ -4655,6 +4743,356 @@ function renderIccCbaChart() {
 }
 
 /* ══════════════════════════════════════════
+   COSTO DEL M² — APYMECO
+
+   Sale de apymeco_cache.js, que arma update_apymeco_cache.py parseando la
+   tabla de apymeco.com.ar. Es la unica fuente del tablero que da un PRECIO
+   ABSOLUTO por m2 de una vivienda de estandar de mercado: el CAC y los dos
+   ICC son indices base 100, y el m2 que publica Cordoba es el de una vivienda
+   social de 50,25 m2, que sirve de piso pero no de presupuesto.
+
+   Ojo con dos cosas al leerlo:
+     · Es del Gran La Plata, no de Cordoba. Se compara, no se sustituye.
+     · Excluye IVA, terreno, honorarios, gastos legales y utilidad. Es costo
+       directo de obra, igual que el CAC.
+
+   Columnas de la serie: [fecha, precio del m2, indice, var. mensual publicada]
+
+   Esta seccion arma ademas dos graficos que no dependen solo de APYMECO:
+   el costo en dolares (APYMECO e ICC Cordoba divididos por el MEP) y el
+   comparador de los cuatro indices de costo.
+══════════════════════════════════════════ */
+let apymecoSerie   = [];     // [[fecha, precioM2, indice, varMensualPub], ...]
+let costoUsdChart  = null;
+let compCostosChart = null;
+let usdMensual     = null;   // Map 'aaaa-mm' -> { valor, casa }
+
+function compApymeco() {
+  if (!apymecoSerie.length) return null;
+  const m = new Map();
+  apymecoSerie.forEach(r => {
+    if (r[2] != null) m.set(String(r[0]).slice(0, 7), Number(r[2]));
+  });
+  return m.size ? m : null;
+}
+
+function initApymeco() {
+  const c   = window.APYMECO_CACHE;
+  const sec = document.getElementById('apymeco-section');
+
+  if (!c || !Array.isArray(c.serie) || !c.serie.length) {
+    /* Mismo criterio que el ICC INDEC: no se oculta la seccion, porque
+       desaparecer sin decir nada parece un tablero roto. */
+    if (sec) {
+      sec.innerHTML =
+        '<div style="background:var(--gris-med);border:1px dashed var(--gris-brd);' +
+        'border-radius:10px;padding:18px 20px;color:var(--gris-txt);font-size:12px;line-height:1.6;">' +
+        '<strong style="color:#ddd;">Falta generar los datos.</strong><br>' +
+        'Corré <code style="color:#ddd;">python update_apymeco_cache.py</code> para bajar la ' +
+        'serie de apymeco.com.ar y crear <code style="color:#ddd;">apymeco_cache.js</code>. ' +
+        'Después regenerá el tablero y la sección aparece sola.' +
+        '</div>';
+    }
+    return;
+  }
+
+  apymecoSerie = c.serie.slice()
+    .sort((a, b) => String(a[0]).localeCompare(String(b[0])));
+
+  const g = varsColumna(apymecoSerie, 1);   // columna 1 = precio del m2
+  if (!g) return;
+
+  document.getElementById('kpi-apy-m2').textContent = fmtARS(g.valor);
+  const idx = varsColumna(apymecoSerie, 2);
+  document.getElementById('kpi-apy-fecha').textContent =
+    isacMesLargo(g.mes) + (idx ? ' · índice ' + fmtN(idx.valor, 2) : '');
+
+  /* Mismo criterio de color que el CAC y los ICC: un costo que sube es
+     mala noticia, asi que va en rojo. */
+  iccCbaPintarPct('kpi-apy-m',   g.mensual);
+  iccCbaPintarPct('kpi-apy-ia',  g.ia);
+  iccCbaPintarPct('kpi-apy-ytd', g.ytd);
+
+  const subYtd = document.getElementById('kpi-apy-ytd-sub');
+  if (subYtd) subYtd.textContent = 'vs. dic-' + (+g.mes.slice(0, 4) - 1);
+
+  const src = document.getElementById('apymeco-datasource');
+  if (src) {
+    src.textContent = '📊 ' + (c.source || 'APYMECO') +
+      ' · serie desde ' + String(apymecoSerie[0][0]).slice(0, 7) +
+      ' · dato hasta ' + (c.hasta || String(g.mes)) +
+      (c.updated ? ' · cache del ' +
+        new Date(c.updated).toLocaleDateString('es-AR') : '');
+  }
+
+  renderCompCostos();
+}
+
+/* ── El dólar mes a mes ────────────────────────────────────────────────
+   Para pasar un costo mensual a dólares no sirve el valor de un día suelto:
+   la obra del mes se paga a lo largo del mes. Se usa el PROMEDIO de los
+   cierres diarios.
+
+   La referencia es el MEP, que es el tipo de cambio al que un desarrollo
+   convierte pesos de verdad. ArgentinaDatos no lo publica antes de 2018: en
+   esos meses se usa el blue, pero EMPALMADO, no pegado crudo.
+
+   Por que empalmado: si se mezclan las dos cotizaciones tal cual, el mes en
+   que arranca el MEP el grafico pega un escalon que no es un movimiento del
+   costo sino un cambio de fuente. El empalme toma la relacion MEP/blue en los
+   primeros meses en que conviven y corrige el tramo viejo por ese factor, que
+   es como se encadena cualquier serie estadistica cuando cambia la base. El
+   nivel absoluto de los años viejos queda aproximado; la pendiente, que es lo
+   que se mira, queda limpia. La nota del grafico lo aclara. */
+async function _usdMensualProm() {
+  if (usdMensual) return usdMensual;
+  const [mep, blue] = await Promise.all([
+    loadUsdSerie('bolsa'), loadUsdSerie('blue'),
+  ]);
+  const acum = new Map();   // 'aaaa-mm' -> { mep:[suma,n], blue:[suma,n] }
+  const sumar = (serie, clave) => (serie || []).forEach(r => {
+    if (r.venta == null || isNaN(r.venta)) return;
+    const ym = String(r.fecha).slice(0, 7);
+    let e = acum.get(ym);
+    if (!e) { e = { mep: [0, 0], blue: [0, 0] }; acum.set(ym, e); }
+    e[clave][0] += Number(r.venta);
+    e[clave][1] += 1;
+  });
+  sumar(mep, 'mep');
+  sumar(blue, 'blue');
+
+  // Menos de 5 ruedas en el mes es un mes incompleto: no promedia bien.
+  const prom = (e, k) => e[k][1] >= 5 ? e[k][0] / e[k][1] : null;
+  const meses = [...acum.keys()].sort();
+
+  /* Factor de empalme: mediana de MEP/blue en los primeros 12 meses en que
+     las dos cotizan. Mediana y no promedio para que un mes de brecha rara
+     no arrastre todo el tramo viejo. */
+  const razones = [];
+  for (const ym of meses) {
+    const e = acum.get(ym), m = prom(e, 'mep'), b = prom(e, 'blue');
+    if (m && b) razones.push(m / b);
+    if (razones.length >= 12) break;
+  }
+  razones.sort((a, b) => a - b);
+  const factor = razones.length ? razones[Math.floor(razones.length / 2)] : 1;
+
+  const out = new Map();
+  meses.forEach(ym => {
+    const e = acum.get(ym), m = prom(e, 'mep'), b = prom(e, 'blue');
+    if (m)      out.set(ym, { valor: m, casa: 'MEP' });
+    else if (b) out.set(ym, { valor: b * factor, casa: 'blue empalmado' });
+  });
+  usdMensual = out;
+  usdMensual.factorEmpalme = factor;
+  return usdMensual;
+}
+
+async function loadApymecoUsd() {
+  if (!apymecoSerie.length && !iccCbaSerie.length) return;
+  await _usdMensualProm();
+
+  const g = varsColumna(apymecoSerie, 1);
+  const el = document.getElementById('kpi-apy-usd');
+  if (g && el) {
+    const u = usdMensual.get(g.mes);
+    if (u) {
+      const hoy  = g.valor / u.valor;
+      const sub  = document.getElementById('kpi-apy-usd-sub');
+      // Interanual en dolares: el mismo mes del año anterior, a su propio TC
+      const ymPrev = (+g.mes.slice(0, 4) - 1) + '-' + g.mes.slice(5, 7);
+      const prevM2 = apymecoSerie.find(r => String(r[0]).slice(0, 7) === ymPrev);
+      const prevU  = usdMensual.get(ymPrev);
+      let iaTxt = '';
+      if (prevM2 && prevM2[1] && prevU) {
+        const ia = ((g.valor / u.valor) / (prevM2[1] / prevU.valor) - 1) * 100;
+        iaTxt = ' · ' + (ia >= 0 ? '+' : '') + fmtN(ia, 1) + '% i.a. en US$';
+      }
+      el.textContent = 'US$ ' + fmtN(hoy, 0);
+      if (sub) sub.textContent = 'US$/m² · ' + u.casa + ' promedio del mes' + iaTxt;
+    } else {
+      el.textContent = 'N/D';
+    }
+  }
+
+  renderCostoUsdChart();
+}
+
+function renderCostoUsdChart() {
+  const ctx = document.getElementById('chart-costo-usd');
+  if (!ctx || !usdMensual || !usdMensual.size) return;
+
+  const rangeEl = document.getElementById('apy-usd-range');
+  const meses   = rangeEl ? parseInt(rangeEl.value) : 60;
+
+  /* Dos series de costo por m2 en pesos: APYMECO (col 1) e ICC Cordoba
+     (col 5, valor del m2 de la vivienda social). Se dividen por el dolar
+     del mes. Los niveles son distintos a proposito: son dos tipologias
+     distintas, y el interes esta en como se mueven. */
+  const enUsd = (serie, col) => {
+    const m = new Map();
+    (serie || []).forEach(r => {
+      const ym = String(r[0]).slice(0, 7);
+      const u  = usdMensual.get(ym);
+      if (r[col] != null && u) m.set(ym, Number(r[col]) / u.valor);
+    });
+    return m;
+  };
+  const apy = enUsd(apymecoSerie, 1);
+  const icc = enUsd(iccCbaSerie, 5);
+  if (!apy.size && !icc.size) return;
+
+  let labels = [...new Set([...apy.keys(), ...icc.keys()])].sort();
+  if (meses > 0) labels = labels.slice(-meses);
+
+  if (costoUsdChart) costoUsdChart.destroy();
+  costoUsdChart = new Chart(ctx.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: labels.map(ym => ISAC_MESES[+ym.slice(5, 7) - 1].slice(0, 3) + '-' + ym.slice(2, 4)),
+      datasets: [
+        {
+          label: 'APYMECO · vivienda pymes (La Plata)',
+          data: labels.map(ym => apy.has(ym) ? apy.get(ym) : null),
+          borderColor: '#22d3ee', backgroundColor: 'rgba(34,211,238,0.10)',
+          borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true, spanGaps: true,
+        },
+        {
+          label: 'ICC Córdoba · vivienda social 50,25 m²',
+          data: labels.map(ym => icc.has(ym) ? icc.get(ym) : null),
+          borderColor: '#fb7185', backgroundColor: 'transparent',
+          borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false, spanGaps: true,
+        },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#aaa', font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: '#1C1C1C', borderColor: '#383838', borderWidth: 1,
+          titleColor: '#fff', bodyColor: '#aaa',
+          callbacks: { label: c => ` ${c.dataset.label}: US$ ${fmtN(c.parsed.y, 0)}/m²` },
+        },
+      },
+      scales: {
+        x: { ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 12 }, grid: { color: '#222' } },
+        y: { ticks: { color: '#555', font: { size: 9 }, callback: v => 'US$ ' + fmtN(v, 0) },
+             grid: { color: '#222' } },
+      },
+    },
+  });
+
+  const nota = document.getElementById('apy-usd-nota');
+  if (nota) {
+    const usadas = labels.map(ym => usdMensual.get(ym)).filter(Boolean);
+    const conBlue = usadas.filter(u => u.casa !== 'MEP').length;
+    nota.textContent =
+      'Promedio mensual del dólar MEP sobre los cierres diarios de ArgentinaDatos' +
+      (conBlue
+        ? '; en los ' + conBlue + ' mes(es) más viejos del tramo todavía no hay MEP y se usa el blue ' +
+          'empalmado por la relación MEP/blue de los meses en que conviven (×' +
+          fmtN(usdMensual.factorEmpalme || 1, 3) + '), para que el cambio de fuente no se lea como un salto de costo'
+        : '') +
+      '. Las dos líneas no son comparables en nivel —son tipologías distintas—: lo que se mira es la pendiente.';
+  }
+}
+
+/* ── Los cuatro índices de costo juntos ──────────────────────────────── */
+const COMP_COSTOS = [
+  ['CAC general (nacional)',        '#ef4444', () => compCac('cacGen')],
+  ['ICC Córdoba',                   '#fb7185', () => compIccCba(1)],
+  ['ICC INDEC (GBA)',               '#f472b6', () => compIccIndec(1)],
+  ['APYMECO (pymes · La Plata)',    '#22d3ee', () => compApymeco()],
+];
+
+function renderCompCostos() {
+  const ctx = document.getElementById('chart-comp-costos');
+  if (!ctx) return;
+  const modo  = (document.getElementById('comp-costos-modo')  || {}).value || 'mensual';
+  const meses = parseInt((document.getElementById('comp-costos-range') || {}).value || 24);
+
+  const crudas = COMP_COSTOS
+    .map(([label, color, get]) => [label, color, get()])
+    .filter(s => s[2] && s[2].size);
+  if (!crudas.length) return;
+
+  /* El eje de meses lo manda la union de todas las series, no una en
+     particular: APYMECO arranca mucho despues que el CAC. */
+  let labels = [...new Set(crudas.flatMap(s => [...s[2].keys()]))].sort();
+  labels = labels.slice(-meses);
+
+  const transformar = niveles => {
+    if (modo === 'ia') {
+      const ia = compVarIA(niveles);
+      return labels.map(ym => ia.has(ym) ? ia.get(ym) : null);
+    }
+    if (modo === 'base') {
+      /* Base 100 en el primer mes del tramo en el que la serie tiene dato,
+         para que una serie corta como APYMECO no arrastre el grafico. */
+      const base = labels.map(ym => niveles.get(ym)).find(v => v != null);
+      if (!base) return labels.map(() => null);
+      return labels.map(ym => niveles.has(ym) ? (niveles.get(ym) / base) * 100 : null);
+    }
+    // mensual
+    const ordenados = [...niveles.keys()].sort();
+    const pos = new Map(ordenados.map((ym, i) => [ym, i]));
+    return labels.map(ym => {
+      const i = pos.get(ym);
+      if (i == null || i === 0) return null;
+      const prev = niveles.get(ordenados[i - 1]);
+      const v = niveles.get(ym);
+      return (prev && v != null) ? (v / prev - 1) * 100 : null;
+    });
+  };
+
+  if (compCostosChart) compCostosChart.destroy();
+  compCostosChart = new Chart(ctx.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: labels.map(ym => ISAC_MESES[+ym.slice(5, 7) - 1].slice(0, 3) + '-' + ym.slice(2, 4)),
+      datasets: crudas.map(([label, color, niveles]) => ({
+        label, data: transformar(niveles),
+        borderColor: color, backgroundColor: 'transparent',
+        borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false, spanGaps: true,
+      })),
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#aaa', font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: '#1C1C1C', borderColor: '#383838', borderWidth: 1,
+          titleColor: '#fff', bodyColor: '#aaa',
+          callbacks: {
+            label: c => ` ${c.dataset.label}: ` + fmtN(c.parsed.y, modo === 'base' ? 1 : 2) +
+                        (modo === 'base' ? '' : '%'),
+          },
+        },
+      },
+      scales: {
+        x: { ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 12 }, grid: { color: '#222' } },
+        y: { ticks: { color: '#555', font: { size: 9 },
+                      callback: v => fmtN(v, modo === 'base' ? 0 : 1) + (modo === 'base' ? '' : '%') },
+             grid: { color: '#222' } },
+      },
+    },
+  });
+
+  const nota = document.getElementById('comp-costos-nota');
+  if (nota) {
+    nota.textContent = modo === 'base'
+      ? 'Cada serie arranca en 100 el primer mes del tramo elegido en el que tiene dato. ' +
+        'APYMECO es la serie más corta: la página publica solo 13 meses y el histórico se acumula corrida a corrida.'
+      : 'Los cuatro miden costo de construcción, pero no la misma obra: CAC e ICC INDEC son nacional y ' +
+        'Gran Buenos Aires sobre edificio tipo, ICC Córdoba es vivienda social provincial y APYMECO es ' +
+        'obra de pymes bonaerenses. Que se separen no es un error: es la señal.';
+  }
+}
+
+/* ══════════════════════════════════════════
    ESTADO DE LAS FUENTES
 
    El ciclo de actualizacion toca doce fuentes distintas. Cuando una falla, el
@@ -4680,6 +5118,7 @@ const FUENTES = [
   ['CAC_CACHE',       'Índice CAC',                        85,   6],
   ['ICC_CBA_CACHE',   'ICC Córdoba',                       85,   6],
   ['ICC_INDEC_CACHE', 'ICC INDEC',                         85,   6],
+  ['APYMECO_CACHE',   'APYMECO · costo del m²',            85,   6],
   ['ISAC_CACHE',      'ISAC (actividad)',                  80,   6],
   ['CONSTRUYA_CACHE', 'Índice Construya',                  60,   6],
   ['RGP_CBA_CACHE',   'Registro General de Córdoba',       80,   6],

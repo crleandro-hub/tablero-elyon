@@ -66,6 +66,11 @@ FRESCURA = {
     # rapido que cualquier fuente oficial. Si el ultimo dato pasa los 55 dias
     # es que la camara cambio la pagina y el parseo dejo de encontrar la tabla.
     "construya_cache.js": ("mensual", 55,  6),
+    # APYMECO publica con un rezago parecido al del CAC. Es la unica fuente
+    # que ACUMULA historico (la pagina solo muestra 13 meses), asi que un
+    # cache viejo no es solo un dato desactualizado: son meses que se pierden
+    # para siempre si el script queda roto mucho tiempo.
+    "apymeco_cache.js":   ("mensual", 85,  6),
     # CEDUC se carga desde un .txt que se arma a mano con el PDF del informe,
     # y la camara publica de forma irregular. Por eso no se controla cuando
     # corrio el script y el limite del dato es holgado: 150 dias.

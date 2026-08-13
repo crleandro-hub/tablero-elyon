@@ -12,9 +12,9 @@ Documento único: qué mide cada indicador, de dónde sale, cómo se publica y q
 
 Una tarea del Programador de tareas de Windows llamada **"Tablero Elyon - Actualizar y publicar"** corre de lunes a viernes a las 11, 13, 15 y 17 y ejecuta `actualizar_auto.bat`. Si la PC estaba apagada, la tarea corre apenas la prendas. El link público se refresca uno o dos minutos después del push.
 
-El ciclo tiene 18 pasos: quince fuentes de datos, el armado del HTML, la verificación y la publicación.
+El ciclo tiene 19 pasos: dieciséis fuentes de datos, el armado del HTML, la verificación y la publicación.
 
-Las fuentes **mensuales** (CAC, REM, ISAC, los dos ICC, el Registro General y el Índice Construya) corren solo en la primera vuelta del día: pedirles el dato cada dos horas es tiempo perdido. La marca es el archivo `.ultima_corrida_mensual`.
+Las fuentes **mensuales** (CAC, REM, ISAC, los dos ICC, el Registro General, el Índice Construya y APYMECO) corren solo en la primera vuelta del día: pedirles el dato cada dos horas es tiempo perdido. La marca es el archivo `.ultima_corrida_mensual`.
 
 Si una fuente falla, **no frena el ciclo**: conserva el cache anterior y sigue. Mejor un dato viejo que el tablero roto. La verificación del paso 17 avisa después si algo quedó atrasado, y si encuentra problemas reales en los datos **frena la publicación**.
 
@@ -37,6 +37,7 @@ Cada corrida deja constancia en `log_actualizacion.txt` (automática) o `log_act
 | ICC INDEC (GBA) | INDEC | `update_icc_indec_cache.py` | `icc_indec_cache.js` | Mensual, ~día 17 | Excel de nombre fijo |
 | ISAC + insumos | INDEC vía SSPM | `update_isac_cache.py` | `isac_cache.js` | Mensual, ~5 semanas de rezago | API de series |
 | Índice Construya | Grupo Construya | `update_construya_cache.py` | `construya_cache.js` | Mensual, ~día 10 | **Scraping de tabla HTML** |
+| Costo del m² APYMECO | APYMECO (pymes, La Plata) | `update_apymeco_cache.py` | `apymeco_cache.js` | Mensual | **Scraping de tabla HTML** |
 | ISAC: empleo y permisos | INDEC (cuadros 3 y 4) | — | `isac_manual.json` | Mensual | **Carga manual** |
 | Registro General de Córdoba | Registro General de la Provincia | `update_rgp_cba_cache.py` | `rgp_cba_cache.js` | Mensual, ~día 23 | CSV vía CKAN |
 | MERVAL | Yahoo → Rava → Stooq | `update_merval_cache.py` | `merval_cache.js` | Diario hábil | Scraping, 3 respaldos |
@@ -56,6 +57,8 @@ Son las que van a romperse primero.
 
 **El Índice Construya** no tiene API ni archivo descargable: sale de parsear la tabla HTML de `grupoconstruya.com.ar`. El parser se guía por los **encabezados** de la tabla, no por el orden de las columnas, y antes de escribir controla que la variación interanual publicada coincida con la que sale de dividir los índices. Si no cierra, aborta y deja el cache anterior intacto.
 
+**APYMECO** también sale de parsear una tabla HTML, y además **la página solo publica los últimos 13 meses**. Por eso su script es el único que no pisa la serie: la mezcla con la que ya está en el cache y va acumulando historial corrida tras corrida. La consecuencia práctica es que si el parseo se rompe y nadie lo mira durante meses, esos meses no se recuperan: hay que pedírselos a APYMECO o reconstruirlos a mano. El control de integridad se apoya en que el precio del m² y el índice son la misma serie a distinta escala, así que el cociente entre los dos tiene que dar constante (hoy 151,374). Si deja de darlo, el parseo se corrió de columna y el script aborta.
+
 **El Excel del ICC INDEC** viene transpuesto: capítulos en filas y meses en columnas. El parser busca la fila de años y la de meses en vez de asumir posiciones, y valida contra junio 2026 antes de escribir. Si el INDEC cambia el formato, aborta y vuelca la estructura.
 
 ---
@@ -74,6 +77,10 @@ Remove-Item .git\*.lock, .git\objects\maintenance.lock -Force -ErrorAction Silen
 **`[EXCEL DESACTUALIZADO]` en el log** — salió un mes nuevo del CAC. Bajá la serie histórica de camarco.org.ar/indicadores y pisá el `.xls` de la carpeta. El resto se actualiza solo.
 
 **El push pide usuario y contraseña** — se perdieron las credenciales del Credential Manager. Corré `git push` a mano una vez desde PowerShell: se abre el navegador, autorizás, y queda guardado.
+
+**APYMECO aborta con "el cociente precio/índice no es constante"** — cambió el orden de las columnas de la tabla o la asociación rebasó el índice. Corré `python update_apymeco_cache.py --diagnostico`: muestra lo que parseó sin escribir nada. Si el orden cambió, se ajusta la lista `COLUMNAS` del script.
+
+**El costo en dólares de la sección APYMECO no aparece** — sale de las series diarias de ArgentinaDatos, que se piden en vivo. Sin internet, las tarjetas de pesos siguen andando y el gráfico en dólares queda vacío. Es esperado en la versión portable.
 
 **El link muestra datos viejos** — fijate en el log si la publicación dijo `[OK]`. También puede ser caché del navegador: Ctrl+F5.
 
@@ -106,6 +113,8 @@ Remove-Item .git\*.lock, .git\objects\maintenance.lock -Force -ErrorAction Silen
 
 - `actualizar_auto.bat` — lo que corre la tarea programada.
 - `2-ACTUALIZAR-TABLERO.bat` — lo mismo, a mano y con pantalla.
+- `actualizar_auto.bat` trae el paso `[16/19]` de APYMECO, dentro del bloque de fuentes mensuales.
+  `2-ACTUALIZAR-TABLERO.bat` corre lo mismo a mano: si le agregás fuentes, van en los dos.
 - `3-PROGRAMAR-TAREA-CADA-2-HORAS.bat` + `_programar_tarea.ps1` — dan de alta la tarea.
   Para cambiar horarios se toca la línea `$horarios = 11, 13, 15, 17` del `.ps1` y se vuelve a correr.
 - `4-PROBAR-MERVAL-Y-REM.bat` y `5-PROBAR-ICC-INDEC.bat` — prueban una fuente sola, sin publicar.
@@ -119,7 +128,8 @@ Remove-Item .git\*.lock, .git\objects\maintenance.lock -Force -ErrorAction Silen
 
 **Se regeneran solos, no editar**
 
-- Los `*_cache.js`.
+- Los `*_cache.js`. Con una salvedad: `apymeco_cache.js` se regenera, pero **acumula**.
+  Si se borra, se pierde todo el historial anterior a los 13 meses que muestra la página.
 - `docs/index.html` — lo que se publica.
 - `tablero_elyon_portable.html` — archivo suelto para mandar por mail. Anda sin internet, salvo dólar y riesgo país que son en vivo.
 

@@ -73,13 +73,14 @@ call :paso 12 "ICC de Cordoba"                       update_icc_cba_cache.py
 call :paso 13 "Registro General de Cordoba"          update_rgp_cba_cache.py
 call :paso 14 "ICC del INDEC (Gran Buenos Aires)"    update_icc_indec_cache.py
 call :paso 15 "Indice Construya"                     update_construya_cache.py
+call :paso 16 "Costo del m2 (APYMECO)"                update_apymeco_cache.py
 
 rem =====================================================
 rem  ARMADO
 rem =====================================================
-echo [16/18] Generando docs\index.html y version portable...
+echo [17/19] Generando docs\index.html y version portable...
 echo. >> "%LOG%"
-echo --- [16/18] BUILD_PUBLICAR --- >> "%LOG%"
+echo --- [17/19] BUILD_PUBLICAR --- >> "%LOG%"
 %PY% build_publicar.py >> "%LOG%" 2>&1
 set "RC=%errorlevel%"
 if not "%RC%"=="0" (
@@ -93,9 +94,9 @@ rem  VERIFICACION
 rem  0 = todo bien   1 = datos con problemas, no publicar
 rem  2 = se cayo el verificador, es un bug suyo: se publica igual
 rem =====================================================
-echo [17/18] Verificando frescura e integridad de los datos...
+echo [18/19] Verificando frescura e integridad de los datos...
 echo. >> "%LOG%"
-echo --- [17/18] VERIFICAR --- >> "%LOG%"
+echo --- [18/19] VERIFICAR --- >> "%LOG%"
 %PY% verificar.py >> "%LOG%" 2>&1
 set "RC=%errorlevel%"
 if "%RC%"=="1" (
@@ -111,9 +112,9 @@ if "%RC%"=="2" (
 rem =====================================================
 rem  PUBLICACION
 rem =====================================================
-echo [18/18] Publicando en GitHub Pages...
+echo [19/19] Publicando en GitHub Pages...
 echo. >> "%LOG%"
-echo --- [18/18] GIT --- >> "%LOG%"
+echo --- [19/19] GIT --- >> "%LOG%"
 git add -A >> "%LOG%" 2>&1
 git commit -m "Actualizacion de indicadores %date%" >> "%LOG%" 2>&1
 set "RC=%errorlevel%"
@@ -146,9 +147,9 @@ exit /b 0
 
 rem --- Corre un update y avisa, sin frenar el ciclo ---
 :paso
-echo [%~1/18] Actualizando %~2...
+echo [%~1/19] Actualizando %~2...
 echo. >> "%LOG%"
-echo --- [%~1/18] %~2 --- >> "%LOG%"
+echo --- [%~1/19] %~2 --- >> "%LOG%"
 %PY% %~3 >> "%LOG%" 2>&1
 if errorlevel 1 (
   echo    [AVISO] Fallo - se conservan los datos previos.
