@@ -1,4 +1,4 @@
-<!-- Version autocontenida generada por build_publicar.py el 13/08/2026 11:03 - datos embebidos, no depende de archivos externos -->
+<!-- Version autocontenida generada por build_publicar.py el 13/08/2026 12:00 - datos embebidos, no depende de archivos externos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -660,7 +660,9 @@ body {
         <div class="sub-title">Apertura por rubro</div>
       </div>
       <div class="kpi-grid" id="icc-cba-rubros"
-           style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));"></div>
+           style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr));"></div>
+      <div style="font-size:10px;color:var(--gris-txt);margin-top:8px;line-height:1.6;"
+           id="icc-cba-rubros-nota"></div>
 
       <div style="display:flex;align-items:center;justify-content:space-between;margin:22px 0 8px;flex-wrap:wrap;gap:8px;">
         <div class="sub-title">Evolución del ICC Córdoba</div>
@@ -715,7 +717,9 @@ body {
         <div class="sub-title">Apertura por capítulo</div>
       </div>
       <div class="kpi-grid" id="icc-indec-rubros"
-           style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));"></div>
+           style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr));"></div>
+      <div style="font-size:10px;color:var(--gris-txt);margin-top:8px;line-height:1.6;"
+           id="icc-indec-rubros-nota"></div>
 
       <div style="display:flex;align-items:center;justify-content:space-between;margin:22px 0 8px;flex-wrap:wrap;gap:8px;">
         <div class="sub-title">Evolución del ICC INDEC</div>
@@ -824,21 +828,6 @@ body {
           <div class="kpi-sub" id="kpi-apy-usd-sub">US$/m² · MEP promedio del mes</div>
         </div>
       </div>
-
-      <div style="display:flex;align-items:center;justify-content:space-between;margin:22px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div class="sub-title">El costo de construir, medido en dólares</div>
-        <select class="period-select" id="apy-usd-range" onchange="renderCostoUsdChart()">
-          <option value="24">Últimos 2 años</option>
-          <option value="60" selected>Últimos 5 años</option>
-          <option value="120">Últimos 10 años</option>
-          <option value="0">Histórico completo</option>
-        </select>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="chart-costo-usd" role="img"
-                aria-label="Costo de construcción por metro cuadrado expresado en dólares"></canvas>
-      </div>
-      <div style="font-size:10px;color:var(--gris-txt);margin-top:8px;line-height:1.6;" id="apy-usd-nota"></div>
 
       <div style="display:flex;align-items:center;justify-content:space-between;margin:26px 0 8px;flex-wrap:wrap;gap:8px;">
         <div class="sub-title">Los cuatro índices de costo, uno al lado del otro</div>
@@ -3149,7 +3138,7 @@ window.CAUCION_CACHE = {
 /* === ROFEX_CACHE embebido desde rofex_cache.js (build_publicar.py) === */
 /* -----------------------------------------------------------------
    rofex_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-08-13T11:03:10
+   Generado: 2026-08-13T12:00:03
    Curva de dolar futuro (contratos DLR) de Matba Rofex.
    precio = precio de ajuste (settlement) de la rueda
    varPct = variacion % contra el ajuste anterior
@@ -3170,14 +3159,14 @@ window.ROFEX_CACHE = {
     { periodo: "2027-05", etiqueta: "may-27", precio: 1778.5, varPct: 0.4, tna: 23.95 }
   ],
   fuente: "Dólar futuro · Matba Rofex",
-  updated: "2026-08-13T11:03:10"
+  updated: "2026-08-13T12:00:03"
 };
 </script>
 <script>
 /* === ACCIONES_CACHE embebido desde acciones_cache.js (build_publicar.py) === */
 /* -----------------------------------------------------------------
    acciones_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-08-13T11:03:11
+   Generado: 2026-08-13T12:00:06
    Las 3 mayores subas y las 3 mayores bajas del PANEL LIDER del
    Merval en la rueda. Fuente: data912 (panel de BYMA).
    pct = variacion % contra el cierre anterior
@@ -3185,25 +3174,25 @@ window.ROFEX_CACHE = {
 ----------------------------------------------------------------- */
 window.ACCIONES_CACHE = {
   mejores: [
-    { symbol: "METR", nombre: "Metrogas", precio: 2380.0, pct: 4.89 },
-    { symbol: "EDN", nombre: "Edenor", precio: 1830.0, pct: 1.32 },
-    { symbol: "SUPV", nombre: "Grupo Supervielle", precio: 2660.0, pct: 1.04 }
+    { symbol: "METR", nombre: "Metrogas", precio: 2379.0, pct: 4.84 },
+    { symbol: "EDN", nombre: "Edenor", precio: 1878.0, pct: 3.98 },
+    { symbol: "GGAL", nombre: "Grupo Galicia", precio: 7065.0, pct: 0.64 }
   ],
   peores: [
+    { symbol: "BYMA", nombre: "BYMA", precio: 273.5, pct: -0.99 },
     { symbol: "YPFD", nombre: "YPF", precio: 7700.0, pct: -0.9 },
-    { symbol: "TRAN", nombre: "Transener", precio: 3487.5, pct: -0.49 },
-    { symbol: "BYMA", nombre: "BYMA", precio: 275.0, pct: -0.45 }
+    { symbol: "TGSU2", nombre: "Transportadora Gas del Sur", precio: 8875.0, pct: -0.5 }
   ],
   panel: 23,
   fuente: "Panel líder · BYMA vía data912",
-  updated: "2026-08-13T11:03:11"
+  updated: "2026-08-13T12:00:06"
 };
 </script>
 <script>
 /* === DOLAR_CACHE embebido desde dolar_cache.js (build_publicar.py) === */
 /* -----------------------------------------------------------------
    dolar_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-08-13T11:03:11
+   Generado: 2026-08-13T12:00:06
    Respaldo del tipo de cambio. El tablero pide los valores EN VIVO a
    dolarapi.com en cada carga; esto se usa solo si esa consulta falla,
    para no dejar las tarjetas en N/D.
@@ -3211,15 +3200,15 @@ window.ACCIONES_CACHE = {
 ----------------------------------------------------------------- */
 window.DOLAR_CACHE = {
   blue: { compra: 1520.0, venta: 1540.0, fecha: "2026-08-13" },
-  ccl: { compra: 1585.6, venta: 1587.1, fecha: "2026-08-13" },
-  cripto: { compra: 1579.97, venta: 1583.96, fecha: "2026-08-13" },
+  ccl: { compra: 1584.5, venta: 1584.5, fecha: "2026-08-13" },
+  cripto: { compra: 1581.51, venta: 1585.02, fecha: "2026-08-13" },
   euroBlue: { compra: 1635.0, venta: 1671.0, fecha: "2026-08-13" },
   euroOficial: { compra: 1592.0, venta: 1647.0, fecha: "2026-08-13" },
-  mayorista: { compra: 1482.5, venta: 1491.5, fecha: "2026-08-12" },
-  mep: { compra: 1521.7, venta: 1529.2, fecha: "2026-08-13" },
+  mayorista: { compra: 1482.0, venta: 1491.0, fecha: "2026-08-13" },
+  mep: { compra: 1525.9, venta: 1525.9, fecha: "2026-08-13" },
   oficial: { compra: 1465.0, venta: 1515.0, fecha: "2026-08-13" },
   fuente: "dolarapi.com · bluelytics",
-  updated: "2026-08-13T11:03:11"
+  updated: "2026-08-13T12:00:06"
 };
 </script>
 <script>
@@ -5025,7 +5014,7 @@ function setVarBadge(id, pct, label) {
     return;
   }
   const sign  = pct >= 0 ? '+' : '';
-  const fmted = sign + pct.toFixed(1).replace('.', ',') + '%';
+  const fmted = sign + pct.toFixed(2).replace('.', ',') + '%';
   el.textContent = (label ? label + ' ' : '') + fmted;
   el.className   = 'var-badge ' + (pct >= 0 ? 'up' : 'dn');
 }
@@ -5107,14 +5096,14 @@ async function loadInflacion() {
     if (data.length >= 2) {
       const pctM = (data[0][1] / data[1][1] - 1) * 100;
       setMacro('val-inf-m', 'src-inf-m',
-        fmtN(pctM, 1) + '%',
+        fmtN(pctM, 2) + '%',
         fmtMes(data[0][0]) + ' · INDEC',
         'var(--rojo-txt)');
     }
     if (data.length >= 13) {
       const pctIA = (data[0][1] / data[12][1] - 1) * 100;
       setMacro('val-inf-ia', 'src-inf-ia',
-        fmtN(pctIA, 1) + '%',
+        fmtN(pctIA, 2) + '%',
         'Interanual a ' + fmtMes(data[0][0]) + ' · INDEC',
         'var(--rojo-txt)');
     }
@@ -5128,7 +5117,7 @@ async function loadInflacion() {
       const pctAcum = (data[0][1] / baseDic[1] - 1) * 100;
       const meses   = +String(data[0][0]).slice(5, 7);
       setMacro('val-inf-acum', 'src-inf-acum',
-        fmtN(pctAcum, 1) + '%',
+        fmtN(pctAcum, 2) + '%',
         `${meses} ${meses === 1 ? 'mes' : 'meses'} a ${fmtMes(data[0][0])} · INDEC`,
         'var(--rojo-txt)');
     } else {
@@ -5190,12 +5179,12 @@ function _pintarREM(res) {
 
   const yy = String(anio).slice(2);
   const partes = [usaM12 ? 'próx. 12 meses' : `dic-${yy} i.a.`];
-  if (usaM12 && res.anual != null) partes.push(`dic-${yy}: ` + fmtN(res.anual, 1) + '%');
+  if (usaM12 && res.anual != null) partes.push(`dic-${yy}: ` + fmtN(res.anual, 2) + '%');
   // Mes del relevamiento en formato corto (07/26) para no romper la tarjeta
   partes.push(res.relev ? 'REM ' + res.relev.slice(5, 7) + '/' + res.relev.slice(2, 4)
                         : 'BCRA');
 
-  setMacro('val-rem', 'src-rem', fmtN(valor, 1) + '%', partes.join(' · '), '#f59e0b');
+  setMacro('val-rem', 'src-rem', fmtN(valor, 2) + '%', partes.join(' · '), '#f59e0b');
 }
 
 async function loadREM() {
@@ -5267,7 +5256,7 @@ async function loadRiesgo() {
   }
 
   const varTxt = mejor.varDia != null
-    ? ' · ' + (mejor.varDia >= 0 ? '+' : '') + fmtN(mejor.varDia, 1) + '%'
+    ? ' · ' + (mejor.varDia >= 0 ? '+' : '') + fmtN(mejor.varDia, 2) + '%'
     : '';
   setMacro('val-riesgo', 'src-riesgo',
     fmtN(mejor.valor, 0) + ' pb',
@@ -5432,7 +5421,7 @@ function loadRofex() {
     const col = v.varPct == null ? '#fff'
               : v.varPct > 0 ? 'var(--rojo-txt)'
               : v.varPct < 0 ? 'var(--verde)' : '#fff';
-    const tna = v.tna == null ? '' : fmtN(v.tna, 1) + '%';
+    const tna = v.tna == null ? '' : fmtN(v.tna, 2) + '%';
     return '<div class="cauc-col">'
          + '<div class="cauc-plazo">' + v.etiqueta + '</div>'
          + '<div class="cauc-val" style="color:' + col + '">' + fmtN(v.precio, 0) + '</div>'
@@ -5446,7 +5435,7 @@ function loadRofex() {
   const pri = curva[0];
   const impl = (pri.precio && ult.precio && ult !== pri)
     ? ' · ' + (ult.precio / pri.precio - 1 >= 0 ? '+' : '')
-      + fmtN((ult.precio / pri.precio - 1) * 100, 1) + '% a ' + ult.etiqueta
+      + fmtN((ult.precio / pri.precio - 1) * 100, 2) + '% a ' + ult.etiqueta
     : '';
   sEl.textContent = fmtFecha(c.rueda) + ' · ajuste y TNA implícita · Matba Rofex' + impl;
 }
@@ -5477,7 +5466,7 @@ function loadReservas() {
   let pie = fmtFecha(ref.fecha) + ' · brutas · BCRA';
   let color = '';
   if (ref.var30 != null) {
-    pie = (ref.var30 >= 0 ? '▲ +' : '▼ ') + fmtN(ref.var30, 1) + '% en el mes · ' + pie;
+    pie = (ref.var30 >= 0 ? '▲ +' : '▼ ') + fmtN(ref.var30, 2) + '% en el mes · ' + pie;
     color = ref.var30 >= 0 ? 'var(--verde)' : 'var(--rojo-txt)';
   }
   setMacro('val-reservas', 'src-reservas', texto, pie, color);
@@ -5518,7 +5507,7 @@ function loadDevaluacion() {
   const tcn = 'US$ = $' + fmtN(c.tcnDic, 0) + ' a dic-' + String(anio).slice(2);
 
   if (c.tcnIa != null) {
-    vEl.textContent = (c.tcnIa >= 0 ? '+' : '') + fmtN(c.tcnIa, 1) + '%';
+    vEl.textContent = (c.tcnIa >= 0 ? '+' : '') + fmtN(c.tcnIa, 2) + '%';
     vEl.style.color = c.tcnIa >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
     sEl.textContent = tcn + ' · i.a. vs dic-' + String(anio - 1).slice(2)
                       + (relev ? ' · REM ' + relev : '');
@@ -5529,7 +5518,7 @@ function loadDevaluacion() {
   const may = dolarVivo.mayorista && dolarVivo.mayorista.venta;
   if (may) {
     const pct = (c.tcnDic / may - 1) * 100;
-    vEl.textContent = (pct >= 0 ? '+' : '') + fmtN(pct, 1) + '%';
+    vEl.textContent = (pct >= 0 ? '+' : '') + fmtN(pct, 2) + '%';
     vEl.style.color = pct >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
     sEl.textContent = tcn + ' · desde el mayorista de hoy'
                       + (relev ? ' · REM ' + relev : '');
@@ -5578,7 +5567,7 @@ function loadCaucion() {
     if (!el) return;
     const d = c[k];
     if (!d || d.valor == null) { el.textContent = 'N/D'; return; }
-    el.textContent = fmtN(d.valor, 1) + '%';
+    el.textContent = fmtN(d.valor, 2) + '%';
     /* Se colorea contra la rueda anterior: la tasa que sube encarece tomar
        y mejora colocar, asi que va en verde igual que el resto del tablero. */
     el.style.color = d.varPp == null ? '#fff'
@@ -5868,7 +5857,7 @@ function _calcUvaVariaciones(data) {
     const el = document.getElementById(id);
     if (!el || !ref || !v0) return;
     const pct = (v0 / ref - 1) * 100;
-    el.textContent = (pct >= 0 ? '+' : '') + fmtN(pct, 1) + '%';
+    el.textContent = (pct >= 0 ? '+' : '') + fmtN(pct, 2) + '%';
     el.style.color = pct >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
   };
 
@@ -6062,7 +6051,7 @@ function renderUvaConsulta() {
     const signo = pct >= 0 ? '+' : '';
     return `<div style="flex:1 1 150px;background:var(--gris-osc);border:1px solid var(--gris-brd);border-radius:8px;padding:12px 14px;">
       <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:6px;">${titulo}</div>
-      <div style="font-size:22px;font-weight:700;color:${color};line-height:1;">${signo}${fmtN(pct, 1)}%</div>
+      <div style="font-size:22px;font-weight:700;color:${color};line-height:1;">${signo}${fmtN(pct, 2)}%</div>
       <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">${etiqueta}: $ ${fmtN(ref.valor, 2)}</div>
     </div>`;
   };
@@ -6210,7 +6199,7 @@ async function loadBlue() {
     if (!el) return;
     if (!ref || !ref.venta) { el.textContent = '—'; return; }
     const pct = (hoy.venta / ref.venta - 1) * 100;
-    el.textContent  = (pct >= 0 ? '+' : '') + fmtN(pct, 1) + '%';
+    el.textContent  = (pct >= 0 ? '+' : '') + fmtN(pct, 2) + '%';
     el.style.color  = pct >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
   };
   pintarVar('val-blue-m',  buscarUsd('blue', uvaDesplazar(hoy.fecha, { meses: 1 })));
@@ -6239,7 +6228,7 @@ async function loadBlue() {
   if (elB) {
     if (of && of.venta) {
       const br = (hoy.venta / of.venta - 1) * 100;
-      elB.textContent = (br >= 0 ? '+' : '') + fmtN(br, 1) + '%';
+      elB.textContent = (br >= 0 ? '+' : '') + fmtN(br, 2) + '%';
       elB.style.color = br >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
     } else {
       elB.textContent = '—';
@@ -6491,7 +6480,7 @@ function renderUsdConsulta() {
       brechaHtml = `
         <div style="flex:1 1 150px;background:var(--gris-osc);border:1px solid var(--gris-brd);border-radius:8px;padding:12px 14px;">
           <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:6px;">BRECHA VS. OFICIAL</div>
-          <div style="font-size:22px;font-weight:700;color:${color};line-height:1;">${br >= 0 ? '+' : ''}${fmtN(br, 1)}%</div>
+          <div style="font-size:22px;font-weight:700;color:${color};line-height:1;">${br >= 0 ? '+' : ''}${fmtN(br, 2)}%</div>
           <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">oficial: ${fmtARS2(of.venta)}</div>
         </div>`;
     }
@@ -6952,7 +6941,7 @@ function renderCompChart() {
         tooltip: {
           callbacks: {
             label: c => c.parsed.y == null ? null
-              : ` ${c.dataset.label}: ${fmtN(c.parsed.y, 1)}%`,
+              : ` ${c.dataset.label}: ${fmtN(c.parsed.y, 2)}%`,
           },
         },
       },
@@ -6993,7 +6982,7 @@ function renderCompResumen(series) {
           <div style="font-size:9.5px;color:var(--gris-txt);">${f.ym.slice(5)}/${f.ym.slice(0, 4)}</div>
         </div>
         <div style="font-size:14px;font-weight:700;color:${f.color};white-space:nowrap;">
-          ${fmtN(f.valor, 1)}%
+          ${fmtN(f.valor, 2)}%
         </div>
       </div>`).join('')
     + '</div>';
@@ -7047,7 +7036,7 @@ let salChart = null;
 /* +12,3% / -4,1% para las variaciones */
 function _signoPct(pct) {
   if (pct == null || isNaN(pct)) return '—';
-  return (pct >= 0 ? '+' : '') + fmtN(pct, 1) + '%';
+  return (pct >= 0 ? '+' : '') + fmtN(pct, 2) + '%';
 }
 
 /* Serie de UOCRA como Map 'aaaa-mm' -> $/hora de una categoria */
@@ -7402,7 +7391,7 @@ async function renderAjuste() {
   if (sumaEl) {
     const ok = Math.abs(suma - 100) < 0.01;
     sumaEl.innerHTML = '<span style="color:' + (ok ? '#22c55e' : '#f59e0b') + ';">'
-      + (ok ? '✓ ' : '⚠ ') + 'Suma: ' + fmtN(suma, 1) + '%'
+      + (ok ? '✓ ' : '⚠ ') + 'Suma: ' + fmtN(suma, 2) + '%'
       + (ok ? '' : ' — tiene que dar 100% para que el ajuste tenga sentido') + '</span>';
   }
 
@@ -7460,7 +7449,7 @@ async function renderAjuste() {
       + filas.map(f =>
           '<tr>'
         + '<td style="padding:6px 10px;border-bottom:1px solid var(--gris-brd);">' + f.label + '</td>'
-        + '<td style="padding:6px 10px;border-bottom:1px solid var(--gris-brd);text-align:right;">' + fmtN(f.w, 0) + '%</td>'
+        + '<td style="padding:6px 10px;border-bottom:1px solid var(--gris-brd);text-align:right;">' + fmtN(f.w, 2) + '%</td>'
         + '<td style="padding:6px 10px;border-bottom:1px solid var(--gris-brd);text-align:right;">' + _signoPct(f.varPct) + '</td>'
         + '<td style="padding:6px 10px;border-bottom:1px solid var(--gris-brd);text-align:right;font-variant-numeric:tabular-nums;">$ ' + fmtN(f.montoParte, 0) + '</td>'
         + '</tr>').join('')
@@ -7534,7 +7523,7 @@ function renderCacKpis(data, sourceLabel) {
   if (prevYear && last.cacGen != null && prevYear.cacGen != null) {
     const ia = (last.cacGen / prevYear.cacGen - 1) * 100;
     const el = document.getElementById('kpi-cac-ia');
-    el.textContent = (ia >= 0 ? '+' : '') + fmtN(ia, 1) + '%';
+    el.textContent = (ia >= 0 ? '+' : '') + fmtN(ia, 2) + '%';
     el.style.color = ia >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
   } else if (last.cacGen == null) {
     // General de abr-2026 aún no publicado por INDEC
@@ -7553,7 +7542,7 @@ function renderCacKpis(data, sourceLabel) {
     if (subYtd) subYtd.textContent = 'vs. dic-' + anioBase;
     if (dicAnt && last.cacGen != null && dicAnt.cacGen != null) {
       const ytd = (last.cacGen / dicAnt.cacGen - 1) * 100;
-      elYtd.textContent = (ytd >= 0 ? '+' : '') + fmtN(ytd, 1) + '%';
+      elYtd.textContent = (ytd >= 0 ? '+' : '') + fmtN(ytd, 2) + '%';
       elYtd.style.color = ytd >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
     } else if (last.cacGen == null) {
       elYtd.textContent = 'Pend.'; elYtd.style.color = 'var(--gris-txt)';
@@ -7632,7 +7621,7 @@ function cacVarHtml(actual, previo, etiqueta) {
   const color = pct >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
   const signo = pct >= 0 ? '+' : '';
   return `<div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">
-            <span style="color:${color};font-weight:700;">${signo}${fmtN(pct, 1)}%</span> ${etiqueta}
+            <span style="color:${color};font-weight:700;">${signo}${fmtN(pct, 2)}%</span> ${etiqueta}
           </div>`;
 }
 
@@ -7815,13 +7804,197 @@ function varsColumna(serie, col) {
 
 const iccCbaVars = col => varsColumna(iccCbaSerie, col);
 
+/* ══════════════════════════════════════════
+   DESCOMPOSICIÓN POR RUBRO — pesos, incidencia y aporte
+
+   Los dos ICC son indices de Laspeyres de base fija: el nivel general es un
+   promedio ponderado de los rubros, con ponderaciones que no cambian mes a
+   mes. Formalmente
+
+       General(t) = Σ w_i · Rubro_i(t)          con Σ w_i = 1
+
+   Ninguna de las dos fuentes publica los w_i en el dato que baja el tablero
+   (el INDEC los menciona en su metodologia, Cordoba no). Pero como la
+   identidad vale para TODOS los meses de la serie, los w_i se pueden despejar:
+   son la solucion de minimos cuadrados de ese sistema sobreterminado, con la
+   restriccion de que sumen 1.
+
+   Que esto no es una estimacion floja lo dice el error de ajuste, que se
+   calcula y se muestra en pantalla: da 0,004% en Cordoba y 0,057% en el INDEC
+   sobre mas de diez años de datos. Ademas el peso de materiales del INDEC cae
+   en 46,00%, que es exactamente el que publica el organismo. Si alguna vez el
+   error se dispara, es que la fuente rebaso el indice o cambio la canasta, y
+   el cartel de la pantalla lo va a mostrar.
+
+   Con los pesos salen las dos cosas que interesan en obra:
+
+     · INCIDENCIA — cuanto del costo de hoy es cada rubro:
+           w_i · Rubro_i(t) / General(t)
+       Sobre el ICC de Cordoba, que publica el valor del m2, se puede llevar
+       directo a pesos por metro.
+
+     · APORTE — cuantos puntos porcentuales de la variacion del mes puso cada
+       rubro:
+           w_i · [Rubro_i(t) − Rubro_i(t−1)] / General(t−1)
+       La suma de los aportes da, por construccion, la variacion del nivel
+       general. Es lo que separa "los materiales subieron poco" de "los
+       materiales no movieron la aguja": un rubro puede saltar 8% y aportar
+       nada si pesa 3%.
+
+   El CAC queda afuera a proposito: su serie solo trae materiales y mano de
+   obra, sin gastos generales, y el ajuste da 3% de error. Con ese margen la
+   apertura engañaria mas de lo que explica.
+══════════════════════════════════════════ */
+
+/* Resuelve A·x = b por eliminacion gaussiana con pivoteo parcial.
+   A viene como array de filas; devuelve x, o null si el sistema es singular. */
+function _resolverSistema(A, b) {
+  const n = b.length;
+  const M = A.map((fila, i) => fila.concat([b[i]]));
+  for (let c = 0; c < n; c++) {
+    let piv = c;
+    for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[piv][c])) piv = r;
+    if (Math.abs(M[piv][c]) < 1e-12) return null;
+    [M[c], M[piv]] = [M[piv], M[c]];
+    for (let r = 0; r < n; r++) {
+      if (r === c) continue;
+      const f = M[r][c] / M[c][c];
+      for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k];
+    }
+  }
+  return M.map((fila, i) => fila[n] / M[i][i]);
+}
+
+/* Pesos de los rubros por minimos cuadrados con la restriccion Σw = 1,
+   resuelta con un multiplicador de Lagrange. Devuelve { pesos, error } donde
+   error es el desvio maximo, en %, entre el nivel general reconstruido y el
+   publicado. */
+function pesosRubros(serie, colsRubros) {
+  const n = colsRubros.length;
+  const filas = (serie || []).filter(r =>
+    r[1] != null && colsRubros.every(c => r[c] != null && Number(r[c]) > 0));
+  if (filas.length < n + 3) return null;
+
+  const X = filas.map(r => colsRubros.map(c => Number(r[c])));
+  const y = filas.map(r => Number(r[1]));
+
+  // Sistema aumentado: [X'X  1; 1'  0] · [w; λ] = [X'y; 1]
+  const M = [], b = [];
+  for (let i = 0; i < n; i++) {
+    const fila = [];
+    for (let j = 0; j < n; j++) {
+      fila.push(X.reduce((s, xr) => s + xr[i] * xr[j], 0));
+    }
+    fila.push(1);
+    M.push(fila);
+    b.push(X.reduce((s, xr, k) => s + xr[i] * y[k], 0));
+  }
+  M.push(colsRubros.map(() => 1).concat([0]));
+  b.push(1);
+
+  const sol = _resolverSistema(M, b);
+  if (!sol) return null;
+  const pesos = sol.slice(0, n);
+  if (pesos.some(w => !isFinite(w))) return null;
+
+  let error = 0;
+  X.forEach((xr, k) => {
+    const rec = xr.reduce((s, v, i) => s + v * pesos[i], 0);
+    error = Math.max(error, Math.abs(rec / y[k] - 1) * 100);
+  });
+  return { pesos, error };
+}
+
+/* Arma la descomposicion del ultimo mes disponible.
+   rubros: [[columna, nombre, color], ...]   colM2: columna del valor del m2,
+   o null si la fuente no lo publica. */
+function descomponerRubros(serie, rubros, colM2) {
+  if (!serie || serie.length < 2) return null;
+  const cols = rubros.map(r => r[0]);
+  const aj = pesosRubros(serie, cols);
+  if (!aj) return null;
+
+  const ult = serie[serie.length - 1], ant = serie[serie.length - 2];
+  if (ult[1] == null || ant[1] == null || !Number(ant[1])) return null;
+
+  const m2 = colM2 != null && ult[colM2] != null ? Number(ult[colM2]) : null;
+
+  const detalle = rubros.map(([col, nombre, color], i) => {
+    const w = aj.pesos[i];
+    const nivel = ult[col] != null ? Number(ult[col]) : null;
+    const previo = ant[col] != null ? Number(ant[col]) : null;
+    const v = varsColumna(serie, col) || {};
+    const incidencia = nivel != null ? (w * nivel / Number(ult[1])) * 100 : null;
+    return {
+      col, nombre, color, peso: w * 100, nivel, incidencia,
+      pesosM2: (m2 != null && incidencia != null) ? m2 * incidencia / 100 : null,
+      aporte: (nivel != null && previo != null)
+        ? (w * (nivel - previo) / Number(ant[1])) * 100 : null,
+      mensual: v.mensual, ia: v.ia, ytd: v.ytd,
+    };
+  });
+
+  return {
+    mes: String(ult[0]).slice(0, 7),
+    varGeneral: (Number(ult[1]) / Number(ant[1]) - 1) * 100,
+    m2, error: aj.error, detalle,
+  };
+}
+
+/* Tarjetas de apertura por rubro. Mismo formato para los dos ICC. */
+function pintarRubros(contId, notaId, desc, etiquetaM2) {
+  const cont = document.getElementById(contId);
+  if (!cont) return;
+  if (!desc) { cont.innerHTML = ''; return; }
+
+  const sig = (v, d) => v == null || isNaN(v)
+    ? '—' : (v >= 0 ? '+' : '') + fmtN(v, d == null ? 2 : d) + '%';
+  const pp = v => v == null || isNaN(v)
+    ? '—' : (v >= 0 ? '+' : '') + fmtN(v, 2) + ' p.p.';
+
+  cont.innerHTML = desc.detalle.map(r => {
+    /* El titular de la tarjeta pasa a ser la variacion MENSUAL: es el numero
+       con el que se discute un certificado o una redeterminacion. La
+       interanual sigue abajo. */
+    const color = r.mensual == null ? '' : (r.mensual >= 0 ? 'var(--rojo-txt)' : 'var(--verde)');
+    return '<div class="card">'
+      + '<div class="kpi-label">' + r.nombre + '</div>'
+      + '<div class="kpi-value" style="color:' + color + ';">' + sig(r.mensual)
+      +   ' <span style="font-size:11px;font-weight:600;color:#8f8f8f;">mensual</span></div>'
+      + '<div class="kpi-sub" style="color:#bbb;">incidencia ' + fmtN(r.incidencia, 2) + '% del costo'
+      +   (r.pesosM2 != null ? ' · ' + fmtARS(r.pesosM2) + '/m²' : '') + '</div>'
+      + '<div class="kpi-sub">aporta ' + pp(r.aporte) + ' de ' + sig(desc.varGeneral)
+      +   ' del mes</div>'
+      + '<div class="kpi-sub">' + sig(r.ia) + ' i.a. · ' + sig(r.ytd) + ' acum. año</div>'
+      + '<div class="kpi-sub" style="opacity:.75;">índice ' + fmtN(r.nivel, 2)
+      +   ' · ponderación ' + fmtN(r.peso, 2) + '%</div>'
+      + '</div>';
+  }).join('');
+
+  const nota = document.getElementById(notaId);
+  if (!nota) return;
+  const dudoso = desc.error > 0.5;
+  nota.innerHTML =
+    '<strong style="color:#bbb;">Incidencia</strong> = cuánto del costo de hoy explica cada rubro'
+    + (etiquetaM2 ? ', llevado a pesos sobre ' + etiquetaM2 : '')
+    + '. <strong style="color:#bbb;">Aporte</strong> = cuántos puntos de la suba del mes puso cada uno; '
+    + 'la suma de los aportes da la variación del nivel general. Un rubro puede saltar mucho y mover poco '
+    + 'si pesa poco.<br>Las ponderaciones no vienen en el dato publicado: se despejan del propio índice '
+    + 'por mínimos cuadrados. El desvío entre el nivel general reconstruido y el publicado es de '
+    + fmtN(desc.error, 4) + '%'
+    + (dudoso
+        ? ' — <span style="color:var(--rojo-txt);">alto: la fuente pudo haber rebasado el índice o cambiado la canasta, '
+          + 'tomá la apertura con pinzas.</span>'
+        : ', así que la apertura es exacta a los fines prácticos.');
+}
+
 /* Los indices de costo se pintan al reves que la actividad: que suba el costo
    es mala noticia, asi que va en rojo (mismo criterio que el CAC y el IPC). */
 function iccCbaPintarPct(id, pct) {
   const el = document.getElementById(id);
   if (!el) return;
   if (pct == null || isNaN(pct)) { el.textContent = '—'; el.style.color = ''; return; }
-  el.textContent = (pct >= 0 ? '+' : '') + fmtN(pct, 1) + '%';
+  el.textContent = (pct >= 0 ? '+' : '') + fmtN(pct, 2) + '%';
   el.style.color = pct >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
 }
 
@@ -7856,27 +8029,13 @@ function initIccCba() {
     document.getElementById('kpi-icc-m2').textContent = fmtARS(m2.valor);
     document.getElementById('kpi-icc-m2-sub').textContent =
       'vivienda tipo 50,25 m² · ' +
-      (m2.ia != null ? (m2.ia >= 0 ? '+' : '') + fmtN(m2.ia, 1) + '% i.a.' : '');
+      (m2.ia != null ? (m2.ia >= 0 ? '+' : '') + fmtN(m2.ia, 2) + '% i.a.' : '');
   }
 
-  // Tarjetas de rubros
-  const cont = document.getElementById('icc-cba-rubros');
-  if (cont) {
-    cont.innerHTML = ICC_CBA_RUBROS.map(([col, nombre]) => {
-      const r = iccCbaVars(col);
-      if (!r) return '';
-      const sig = v => v == null || isNaN(v)
-        ? '—' : (v >= 0 ? '+' : '') + fmtN(v, 1) + '%';
-      const color = r.ia == null ? '' : (r.ia >= 0 ? 'var(--rojo-txt)' : 'var(--verde)');
-      return '<div class="card">'
-           +   '<div class="kpi-label">' + nombre + '</div>'
-           +   '<div class="kpi-value" style="color:' + color + ';">' + sig(r.ia) + ' <span style="font-size:11px;font-weight:600;color:#8f8f8f;">i.a.</span></div>'
-           +   '<div class="kpi-sub">' + sig(r.mensual) + ' mensual · '
-           +   sig(r.ytd) + ' acum. año</div>'
-           +   '<div class="kpi-sub" style="opacity:.75;">índice ' + fmtN(r.valor, 1) + '</div>'
-           + '</div>';
-    }).join('');
-  }
+  // Tarjetas de rubros, con incidencia y aporte a la variacion del mes
+  pintarRubros('icc-cba-rubros', 'icc-cba-rubros-nota',
+               descomponerRubros(iccCbaSerie, ICC_CBA_RUBROS, 5),
+               'el valor del m² de la vivienda tipo');
 
   const src = document.getElementById('icc-cba-datasource');
   if (src) {
@@ -7952,12 +8111,10 @@ function renderIccCbaChart() {
 
    Columnas de la serie: [fecha, precio del m2, indice, var. mensual publicada]
 
-   Esta seccion arma ademas dos graficos que no dependen solo de APYMECO:
-   el costo en dolares (APYMECO e ICC Cordoba divididos por el MEP) y el
-   comparador de los cuatro indices de costo.
+   La tarjeta de dolares divide el m2 por el promedio mensual del MEP, y el
+   grafico del final compara los cuatro indices de costo del tablero.
 ══════════════════════════════════════════ */
 let apymecoSerie   = [];     // [[fecha, precioM2, indice, varMensualPub], ...]
-let costoUsdChart  = null;
 let compCostosChart = null;
 let usdMensual     = null;   // Map 'aaaa-mm' -> { valor, casa }
 
@@ -8024,66 +8181,33 @@ function initApymeco() {
 
 /* ── El dólar mes a mes ────────────────────────────────────────────────
    Para pasar un costo mensual a dólares no sirve el valor de un día suelto:
-   la obra del mes se paga a lo largo del mes. Se usa el PROMEDIO de los
-   cierres diarios.
-
-   La referencia es el MEP, que es el tipo de cambio al que un desarrollo
-   convierte pesos de verdad. ArgentinaDatos no lo publica antes de 2018: en
-   esos meses se usa el blue, pero EMPALMADO, no pegado crudo.
-
-   Por que empalmado: si se mezclan las dos cotizaciones tal cual, el mes en
-   que arranca el MEP el grafico pega un escalon que no es un movimiento del
-   costo sino un cambio de fuente. El empalme toma la relacion MEP/blue en los
-   primeros meses en que conviven y corrige el tramo viejo por ese factor, que
-   es como se encadena cualquier serie estadistica cuando cambia la base. El
-   nivel absoluto de los años viejos queda aproximado; la pendiente, que es lo
-   que se mira, queda limpia. La nota del grafico lo aclara. */
+   la obra del mes se paga a lo largo del mes. Se toma el PROMEDIO de los
+   cierres diarios del MEP, que es el tipo de cambio al que un desarrollo
+   convierte pesos de verdad. Si un mes no llega a cinco ruedas —el mes en
+   curso, sobre todo— se descarta: promediar tres días no es promediar. */
 async function _usdMensualProm() {
   if (usdMensual) return usdMensual;
-  const [mep, blue] = await Promise.all([
-    loadUsdSerie('bolsa'), loadUsdSerie('blue'),
-  ]);
-  const acum = new Map();   // 'aaaa-mm' -> { mep:[suma,n], blue:[suma,n] }
-  const sumar = (serie, clave) => (serie || []).forEach(r => {
+  const serie = await loadUsdSerie('bolsa');
+
+  const acum = new Map();   // 'aaaa-mm' -> [suma, ruedas]
+  (serie || []).forEach(r => {
     if (r.venta == null || isNaN(r.venta)) return;
     const ym = String(r.fecha).slice(0, 7);
-    let e = acum.get(ym);
-    if (!e) { e = { mep: [0, 0], blue: [0, 0] }; acum.set(ym, e); }
-    e[clave][0] += Number(r.venta);
-    e[clave][1] += 1;
+    const e = acum.get(ym) || [0, 0];
+    e[0] += Number(r.venta);
+    e[1] += 1;
+    acum.set(ym, e);
   });
-  sumar(mep, 'mep');
-  sumar(blue, 'blue');
 
-  // Menos de 5 ruedas en el mes es un mes incompleto: no promedia bien.
-  const prom = (e, k) => e[k][1] >= 5 ? e[k][0] / e[k][1] : null;
-  const meses = [...acum.keys()].sort();
-
-  /* Factor de empalme: mediana de MEP/blue en los primeros 12 meses en que
-     las dos cotizan. Mediana y no promedio para que un mes de brecha rara
-     no arrastre todo el tramo viejo. */
-  const razones = [];
-  for (const ym of meses) {
-    const e = acum.get(ym), m = prom(e, 'mep'), b = prom(e, 'blue');
-    if (m && b) razones.push(m / b);
-    if (razones.length >= 12) break;
-  }
-  razones.sort((a, b) => a - b);
-  const factor = razones.length ? razones[Math.floor(razones.length / 2)] : 1;
-
-  const out = new Map();
-  meses.forEach(ym => {
-    const e = acum.get(ym), m = prom(e, 'mep'), b = prom(e, 'blue');
-    if (m)      out.set(ym, { valor: m, casa: 'MEP' });
-    else if (b) out.set(ym, { valor: b * factor, casa: 'blue empalmado' });
+  usdMensual = new Map();
+  acum.forEach(([suma, n], ym) => {
+    if (n >= 5) usdMensual.set(ym, { valor: suma / n, casa: 'MEP' });
   });
-  usdMensual = out;
-  usdMensual.factorEmpalme = factor;
   return usdMensual;
 }
 
 async function loadApymecoUsd() {
-  if (!apymecoSerie.length && !iccCbaSerie.length) return;
+  if (!apymecoSerie.length) return;
   await _usdMensualProm();
 
   const g = varsColumna(apymecoSerie, 1);
@@ -8100,96 +8224,13 @@ async function loadApymecoUsd() {
       let iaTxt = '';
       if (prevM2 && prevM2[1] && prevU) {
         const ia = ((g.valor / u.valor) / (prevM2[1] / prevU.valor) - 1) * 100;
-        iaTxt = ' · ' + (ia >= 0 ? '+' : '') + fmtN(ia, 1) + '% i.a. en US$';
+        iaTxt = ' · ' + (ia >= 0 ? '+' : '') + fmtN(ia, 2) + '% i.a. en US$';
       }
       el.textContent = 'US$ ' + fmtN(hoy, 0);
       if (sub) sub.textContent = 'US$/m² · ' + u.casa + ' promedio del mes' + iaTxt;
     } else {
       el.textContent = 'N/D';
     }
-  }
-
-  renderCostoUsdChart();
-}
-
-function renderCostoUsdChart() {
-  const ctx = document.getElementById('chart-costo-usd');
-  if (!ctx || !usdMensual || !usdMensual.size) return;
-
-  const rangeEl = document.getElementById('apy-usd-range');
-  const meses   = rangeEl ? parseInt(rangeEl.value) : 60;
-
-  /* Dos series de costo por m2 en pesos: APYMECO (col 1) e ICC Cordoba
-     (col 5, valor del m2 de la vivienda social). Se dividen por el dolar
-     del mes. Los niveles son distintos a proposito: son dos tipologias
-     distintas, y el interes esta en como se mueven. */
-  const enUsd = (serie, col) => {
-    const m = new Map();
-    (serie || []).forEach(r => {
-      const ym = String(r[0]).slice(0, 7);
-      const u  = usdMensual.get(ym);
-      if (r[col] != null && u) m.set(ym, Number(r[col]) / u.valor);
-    });
-    return m;
-  };
-  const apy = enUsd(apymecoSerie, 1);
-  const icc = enUsd(iccCbaSerie, 5);
-  if (!apy.size && !icc.size) return;
-
-  let labels = [...new Set([...apy.keys(), ...icc.keys()])].sort();
-  if (meses > 0) labels = labels.slice(-meses);
-
-  if (costoUsdChart) costoUsdChart.destroy();
-  costoUsdChart = new Chart(ctx.getContext('2d'), {
-    type: 'line',
-    data: {
-      labels: labels.map(ym => ISAC_MESES[+ym.slice(5, 7) - 1].slice(0, 3) + '-' + ym.slice(2, 4)),
-      datasets: [
-        {
-          label: 'APYMECO · vivienda pymes (La Plata)',
-          data: labels.map(ym => apy.has(ym) ? apy.get(ym) : null),
-          borderColor: '#22d3ee', backgroundColor: 'rgba(34,211,238,0.10)',
-          borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true, spanGaps: true,
-        },
-        {
-          label: 'ICC Córdoba · vivienda social 50,25 m²',
-          data: labels.map(ym => icc.has(ym) ? icc.get(ym) : null),
-          borderColor: '#fb7185', backgroundColor: 'transparent',
-          borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false, spanGaps: true,
-        },
-      ],
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { labels: { color: '#aaa', font: { size: 11 } } },
-        tooltip: {
-          backgroundColor: '#1C1C1C', borderColor: '#383838', borderWidth: 1,
-          titleColor: '#fff', bodyColor: '#aaa',
-          callbacks: { label: c => ` ${c.dataset.label}: US$ ${fmtN(c.parsed.y, 0)}/m²` },
-        },
-      },
-      scales: {
-        x: { ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 12 }, grid: { color: '#222' } },
-        y: { ticks: { color: '#555', font: { size: 9 }, callback: v => 'US$ ' + fmtN(v, 0) },
-             grid: { color: '#222' } },
-      },
-    },
-  });
-
-  const nota = document.getElementById('apy-usd-nota');
-  if (nota) {
-    const usadas = labels.map(ym => usdMensual.get(ym)).filter(Boolean);
-    const conBlue = usadas.filter(u => u.casa !== 'MEP').length;
-    nota.textContent =
-      'Promedio mensual del dólar MEP sobre los cierres diarios de ArgentinaDatos' +
-      (conBlue
-        ? '; en los ' + conBlue + ' mes(es) más viejos del tramo todavía no hay MEP y se usa el blue ' +
-          'empalmado por la relación MEP/blue de los meses en que conviven (×' +
-          fmtN(usdMensual.factorEmpalme || 1, 3) + '), para que el cambio de fuente no se lea como un salto de costo'
-        : '') +
-      '. Las dos líneas no son comparables en nivel —son tipologías distintas—: lo que se mira es la pendiente.';
   }
 }
 
@@ -8419,7 +8460,7 @@ function renderResumenConstruccion() {
   if (!cont) return;
 
   const pct = v => v == null || isNaN(v)
-    ? '—' : (v >= 0 ? '+' : '') + fmtN(v, 1) + '%';
+    ? '—' : (v >= 0 ? '+' : '') + fmtN(v, 2) + '%';
   // Son indices de costo: que suban es mala noticia, van en rojo
   const color = v => v == null || isNaN(v) ? '#888'
     : (v >= 0 ? 'var(--rojo-txt)' : 'var(--verde)');
@@ -8531,21 +8572,9 @@ function initIccIndec() {
   const subYtd = document.getElementById('kpi-iccn-ytd-sub');
   if (subYtd) subYtd.textContent = 'vs. dic-' + (+g.mes.slice(0, 4) - 1);
 
-  const cont = document.getElementById('icc-indec-rubros');
-  if (cont) {
-    cont.innerHTML = ICC_INDEC_CAPS.map(([col, nombre]) => {
-      const r = varsColumna(iccIndecSerie, col);
-      if (!r) return '';
-      const sig = v => v == null || isNaN(v) ? '—' : (v >= 0 ? '+' : '') + fmtN(v, 1) + '%';
-      const color = r.ia == null ? '' : (r.ia >= 0 ? 'var(--rojo-txt)' : 'var(--verde)');
-      return '<div class="card">'
-           +   '<div class="kpi-label">' + nombre + '</div>'
-           +   '<div class="kpi-value" style="color:' + color + ';">' + sig(r.ia)
-           +   ' <span style="font-size:11px;font-weight:600;color:#8f8f8f;">i.a.</span></div>'
-           +   '<div class="kpi-sub">' + sig(r.mensual) + ' mensual · ' + sig(r.ytd) + ' acum. año</div>'
-           + '</div>';
-    }).join('');
-  }
+  // El ICC del INDEC no publica valor del m2: la incidencia va solo en %
+  pintarRubros('icc-indec-rubros', 'icc-indec-rubros-nota',
+               descomponerRubros(iccIndecSerie, ICC_INDEC_CAPS, null), null);
 
   const src = document.getElementById('icc-indec-datasource');
   if (src) {
@@ -8636,7 +8665,7 @@ function rgpPintarPct(id, pct) {
   const el = document.getElementById(id);
   if (!el) return;
   if (pct == null || isNaN(pct)) { el.textContent = '—'; el.style.color = ''; return; }
-  el.textContent = (pct >= 0 ? '+' : '') + fmtN(pct, 1) + '%';
+  el.textContent = (pct >= 0 ? '+' : '') + fmtN(pct, 2) + '%';
   el.style.color = pct >= 0 ? 'var(--verde)' : 'var(--rojo-txt)';
 }
 
@@ -8800,7 +8829,7 @@ function initCeduc() {
   }
 
   const pct = v => v == null || isNaN(v)
-    ? '—' : (v >= 0 ? '+' : '') + fmtN(v, 1) + '%';
+    ? '—' : (v >= 0 ? '+' : '') + fmtN(v, 2) + '%';
   // Son ventas: que suban es buena noticia
   const color = v => v == null || isNaN(v) ? '#888'
     : (v >= 0 ? 'var(--verde)' : 'var(--rojo-txt)');
@@ -8928,7 +8957,7 @@ async function loadCreditoHipotecario() {
 
   const ultT = serieUltimoMes(tasa);
   if (ultT) {
-    document.getElementById('kpi-cred-tasa').textContent = fmtN(tasa.get(ultT), 1) + '%';
+    document.getElementById('kpi-cred-tasa').textContent = fmtN(tasa.get(ultT), 2) + '%';
     const sub = document.getElementById('kpi-cred-tasa-sub');
     if (sub) sub.textContent = 'nominal anual · ' + isacMesLargo(ultT);
   }
