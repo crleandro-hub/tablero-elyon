@@ -282,6 +282,20 @@ body {
 .var-badge.na  { color:var(--gris-txt); font-weight:400; }
 .var-sep     { color:var(--gris-brd); font-size:9px; }
 
+/* FUENTE AL PIE DE CADA BLOQUE
+   Requisito del tablero: ningun indicador se muestra sin decir de donde sale.
+   Va debajo del bloque, separada por una linea fina para que se lea como
+   ficha tecnica y no compita con el dato. */
+.fuente-bloque {
+  font-size: 10px;
+  color: var(--gris-txt);
+  line-height: 1.55;
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1px solid var(--gris-brd);
+}
+.fuente-bloque strong { color: #999; font-weight: 600; }
+
 </style>
 </head>
 <body>
@@ -934,14 +948,20 @@ body {
       <button class="btn btn-rojo" onclick="abrirHerramienta('dolar')">ABRIR &rsaquo;</button>
     </div>
 
-    <!-- ── SALARIOS DE LA CONSTRUCCIÓN ─────────────────── -->
+    <!-- ── SALARIOS Y EMPLEO DE LA CONSTRUCCIÓN ─────────── -->
     <div id="sal-section">
-      <div class="sec-title">Salarios de la construcción</div>
+      <div class="sec-title">Salarios y empleo de la construcción</div>
       <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
-        Básicos de convenio homologados. UOCRA es el jornal por hora de Zona A, que es la que
-        aplica en Córdoba. Los saltos grandes en meses de acuerdos chicos no son errores: son
-        sumas no remunerativas que se incorporan al básico, así que la variación del básico no
-        equivale al aumento real de bolsillo.
+        Primero lo que dice el convenio, después lo que se paga y cuánta gente hay trabajando.
+        UOCRA y UECARA son <strong style="color:#bbb;">básicos homologados</strong>; el salario
+        promedio del IERIC es el <strong style="color:#bbb;">efectivamente liquidado</strong>,
+        que incluye antigüedad, horas extras y adicionales. La brecha entre los dos es el dato.
+        <span style="display:block;margin-top:5px;font-size:10px;">
+          Los saltos grandes del básico en meses de acuerdos chicos no son errores: son sumas
+          no remunerativas que se incorporan, así que la variación del básico no equivale al
+          aumento real de bolsillo. Y ojo con el empleo: el del IERIC y el del INDEC miden
+          universos distintos y no se pueden encadenar. Cada uno va con su fuente.
+        </span>
       </div>
 
       <div class="sub-title" style="margin-bottom:8px;">
@@ -979,6 +999,112 @@ body {
         <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="sal-uecara-fecha"></span>
       </div>
       <div id="sal-uecara-tabla"></div>
+      <div class="fuente-bloque">
+        Fuente: escalas homologadas UOCRA (CCT 76/75 y 577/10) y UECARA (CCT 660/13) ·
+        carga manual desde el acuerdo publicado
+      </div>
+
+      <!-- ─── EMPLEO REGISTRADO · CÓRDOBA · IERIC ─── -->
+      <div style="margin:26px 0 8px;">
+        <div class="sub-title">
+          Empleo registrado en la construcción · Córdoba
+          <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="ier-pue-fecha"></span>
+        </div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;">
+          Puestos de trabajo registrados en la provincia, del padrón de la propia industria.
+          No es una encuesta ni una estimación: es un conteo.
+        </div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));"
+           id="ier-pue-kpis"></div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución del empleo</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select class="period-select" id="ier-pue-modo" onchange="renderIericChart('puestos')">
+            <option value="nivel">Puestos · Córdoba</option>
+            <option value="ia">Var. interanual · Córdoba y país</option>
+          </select>
+          <select class="period-select" id="ier-pue-range" onchange="renderIericChart('puestos')">
+            <option value="24">Últimos 2 años</option>
+            <option value="60" selected>Últimos 5 años</option>
+            <option value="120">Últimos 10 años</option>
+            <option value="0">Histórico completo</option>
+          </select>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-ier-pue" role="img"
+                aria-label="Puestos de trabajo registrados en la construcción, provincia de Córdoba"></canvas>
+      </div>
+      <div class="fuente-bloque" id="ier-pue-fuente"></div>
+
+      <!-- ─── SALARIO PROMEDIO PAGADO · CÓRDOBA · IERIC ─── -->
+      <div style="margin:26px 0 8px;">
+        <div class="sub-title">
+          Salario promedio pagado · Córdoba
+          <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="ier-sal-fecha"></span>
+        </div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;">
+          Salario mensual promedio de los trabajadores registrados, en pesos corrientes.
+          Es lo que efectivamente se liquida, contra el básico de convenio de más arriba.
+        </div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));"
+           id="ier-sal-kpis"></div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución del salario pagado</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select class="period-select" id="ier-sal-modo" onchange="renderIericChart('salario')">
+            <option value="ia" selected>Var. interanual · Córdoba y país</option>
+            <option value="nivel">Pesos corrientes · Córdoba</option>
+          </select>
+          <select class="period-select" id="ier-sal-range" onchange="renderIericChart('salario')">
+            <option value="24">Últimos 2 años</option>
+            <option value="60" selected>Últimos 5 años</option>
+            <option value="120">Últimos 10 años</option>
+            <option value="0">Histórico completo</option>
+          </select>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-ier-sal" role="img"
+                aria-label="Salario promedio de la construcción, provincia de Córdoba"></canvas>
+      </div>
+      <div class="fuente-bloque" id="ier-sal-fuente"></div>
+
+      <!-- ─── EMPLEO REGISTRADO PRIVADO · TOTAL PAÍS · INDEC ───
+           Estaba dentro de "Actividad de la construcción", junto a los permisos
+           de edificacion. Se movio aca para que el empleo quede todo junto. Los
+           permisos siguen alla, que es donde corresponden. -->
+      <div style="margin:26px 0 8px;">
+        <div class="sub-title">Empleo registrado privado · total país</div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;" id="isac-ep-sub">
+          Del informe mensual del INDEC · un mes más de rezago que el ISAC
+        </div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
+        <div class="card">
+          <div class="kpi-label">Puestos registrados</div>
+          <div class="kpi-value" id="kpi-emp-val">—</div>
+          <div class="kpi-sub" id="kpi-emp-fecha">sector privado</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Empleo · interanual</div>
+          <div class="kpi-value" id="kpi-emp-ia">—</div>
+          <div class="kpi-sub">vs. mismo mes año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Empleo · acum. año</div>
+          <div class="kpi-value" id="kpi-emp-acum">—</div>
+          <div class="kpi-sub">vs. igual período año ant.</div>
+        </div>
+      </div>
+      <div class="fuente-bloque">
+        Fuente: INDEC · Indicadores de coyuntura de la actividad de la construcción, cuadro 3
+        (puestos de asalariados registrados del sector privado, base SIPA).
+        <strong style="color:#999;">No es comparable en niveles con la serie del IERIC</strong>:
+        son universos distintos.
+      </div>
     </div>
 
     <!-- ── COMPARADOR DE ÍNDICES ──────────── -->
@@ -1101,30 +1227,56 @@ body {
         <canvas id="chart-isac-ins" role="img" aria-label="Variación interanual por insumo de la construcción"></canvas>
       </div>
 
-      <!-- ─── EMPLEO Y PERMISOS ─── -->
-      <div style="margin:24px 0 10px;">
-        <div class="sub-title">Empleo registrado y permisos de edificación</div>
-        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;" id="isac-ep-sub">
-          Complementos del informe mensual del INDEC · un mes más de rezago que el ISAC
+      <div class="fuente-bloque">
+        Fuente: INDEC · Indicadores de coyuntura de la actividad de la construcción (ISAC),
+        base 2004=100 · serie de nivel general, desestacionalizada y consumo aparente de insumos
+      </div>
+
+      <!-- ─── EMPRESAS CONSTRUCTORAS EN ACTIVIDAD · CÓRDOBA · IERIC ─── -->
+      <div style="margin:26px 0 8px;">
+        <div class="sub-title">
+          Empresas constructoras en actividad · Córdoba
+          <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="ier-emp-fecha"></span>
+        </div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;">
+          Constructoras con inscripción al día en el registro de la industria, en la provincia.
+          Mide cuántas empresas están operando, no cuánto construyen.
+        </div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));"
+           id="ier-emp-kpis"></div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución de las empresas en actividad</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select class="period-select" id="ier-emp-modo" onchange="renderIericChart('empresas')">
+            <option value="nivel">Empresas · Córdoba</option>
+            <option value="ia">Var. interanual · Córdoba y país</option>
+          </select>
+          <select class="period-select" id="ier-emp-range" onchange="renderIericChart('empresas')">
+            <option value="24">Últimos 2 años</option>
+            <option value="60" selected>Últimos 5 años</option>
+            <option value="120">Últimos 10 años</option>
+            <option value="0">Histórico completo</option>
+          </select>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-ier-emp" role="img"
+                aria-label="Empresas constructoras en actividad, provincia de Córdoba"></canvas>
+      </div>
+      <div class="fuente-bloque" id="ier-emp-fuente"></div>
+
+      <!-- ─── PERMISOS DE EDIFICACIÓN · TOTAL PAÍS ───
+           El bloque de empleo que estaba aca se movio a "Salarios y empleo de
+           la construccion". Los permisos se quedan, que es donde corresponden. -->
+      <div style="margin:26px 0 10px;">
+        <div class="sub-title">Permisos de edificación · total país</div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;">
+          Superficie autorizada para construir · un mes más de rezago que el ISAC
         </div>
       </div>
 
       <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
-        <div class="card">
-          <div class="kpi-label">Puestos registrados</div>
-          <div class="kpi-value" id="kpi-emp-val">—</div>
-          <div class="kpi-sub" id="kpi-emp-fecha">sector privado</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Empleo · interanual</div>
-          <div class="kpi-value" id="kpi-emp-ia">—</div>
-          <div class="kpi-sub">vs. mismo mes año ant.</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Empleo · acum. año</div>
-          <div class="kpi-value" id="kpi-emp-acum">—</div>
-          <div class="kpi-sub">vs. igual período año ant.</div>
-        </div>
         <div class="card">
           <div class="kpi-label">Superficie autorizada</div>
           <div class="kpi-value" id="kpi-per-val">—</div>
@@ -1140,6 +1292,12 @@ body {
           <div class="kpi-value" id="kpi-per-acum">—</div>
           <div class="kpi-sub">m² vs. igual período año ant.</div>
         </div>
+      </div>
+      <div class="fuente-bloque">
+        Fuente: INDEC · Indicadores de coyuntura de la actividad de la construcción, cuadro 4.
+        El relevamiento cubre 246 municipios (de Córdoba entran Córdoba, Alta Gracia, Cosquín y
+        Unquillo) pero <strong>el INDEC publica solo el agregado nacional</strong>: no hay
+        apertura provincial, y no se estima acá.
       </div>
     </div>
 
@@ -1517,6 +1675,7 @@ body {
 <script src="ceduc_cache.js"></script>  <!-- generado por update_ceduc_cache.py -->
 <script src="apymeco_cache.js"></script>  <!-- generado por update_apymeco_cache.py -->
 <script src="salarios_cache.js"></script>  <!-- escalas UOCRA / UECARA, se edita a mano -->
+<script src="ieric_cba_cache.js"></script>  <!-- generado por update_ieric_cba_cache.py -->
 <!-- ══════════════════════════════════════
      JAVASCRIPT
 ══════════════════════════════════════ -->
@@ -1559,6 +1718,7 @@ function showScreen(id) {
     renderResumenConstruccion();   // CAC / ICC Cba / ICC INDEC ya están; la UVA entra después
     revisarFuentes();  // avisa si algún cache quedó viejo
     initSalarios();   // escalas de convenio (dato local, pinta al toque)
+    initIericCba();   // empleo, salario pagado y empresas de Córdoba · IERIC (dato local)
     initAjuste();     // calculadora de redeterminacion
     loadSnapshot();   // datos guardados inmediatamente
     reloadAll();      // refrescar APIs en paralelo
@@ -4089,6 +4249,167 @@ async function renderSalChart() {
    propia variacion entre las dos fechas. Es lo que se firma como
    formula de redeterminacion en obra privada y publica.
 ══════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   IERIC · SERIES DE LA PROVINCIA DE CÓRDOBA
+   ══════════════════════════════════════════
+   Tres series con exactamente la misma forma, asi que las pinta un solo
+   renderizador parametrizado en vez de tres copiados.
+
+   puestos   [fecha, Cba, pais, CbaMens, CbaIa, CbaAcum, paisMens, paisIa, paisAcum]
+   salario   idem, en pesos por mes
+   empresas  [fecha, Cba, pais, CbaIa, paisIa]
+
+   Las variaciones son las que PUBLICA el IERIC. Aca no se recalcula nada:
+   el script de actualizacion ya controla que cierren contra los niveles.
+   ══════════════════════════════════════════ */
+
+const IERIC_BLOQUES = {
+  puestos: {
+    pref: 'ier-pue', etiqueta: 'Puestos registrados', ejeNivel: 'Puestos · Córdoba',
+    col: { mens: 3, ia: 4, acum: 5, paisIa: 7 },
+    fmt: v => fmtN(v, 0),
+  },
+  salario: {
+    pref: 'ier-sal', etiqueta: 'Salario promedio', ejeNivel: 'Pesos corrientes · Córdoba',
+    col: { mens: 3, ia: 4, acum: 5, paisIa: 7 },
+    fmt: v => fmtARS(v),
+  },
+  empresas: {
+    pref: 'ier-emp', etiqueta: 'Empresas en actividad', ejeNivel: 'Empresas · Córdoba',
+    col: { ia: 3, paisIa: 4 },
+    fmt: v => fmtN(v, 0),
+  },
+};
+
+const iericCharts = {};
+
+const _iericColor = pct =>
+  (pct == null || isNaN(pct)) ? '' : (pct >= 0 ? '#22C55E' : 'var(--rojo-txt)');
+
+function iericBloque(clave) {
+  const c = window.IERIC_CBA_CACHE;
+  return (c && c[clave] && c[clave].serie && c[clave].serie.length) ? c[clave] : null;
+}
+
+/* Tarjetas + fecha del encabezado + pie con la fuente y las notas de la
+   planilla. Las notas se muestran tal cual las escribe el IERIC: la de
+   empresas explica por que cae la serie todos los meses de mayo, y sin eso
+   el grafico se lee mal. */
+function _pintarIericKpis(clave) {
+  const spec = IERIC_BLOQUES[clave];
+  const d    = iericBloque(clave);
+  const cont = document.getElementById(spec.pref + '-kpis');
+  if (!cont || !d) return false;
+
+  const u = d.serie[d.serie.length - 1];
+  const c = spec.col;
+  const cards = [];
+
+  cards.push(_salCard(spec.etiqueta, spec.fmt(u[1]),
+    'Córdoba · ' + fmtMes(u[0]) + (d.provisorio ? ' · provisorio' : ''), ''));
+
+  if (c.mens != null) {
+    cards.push(_salCard('Var. mensual', _signoPct(u[c.mens]),
+      'vs. mes anterior', _iericColor(u[c.mens])));
+  }
+
+  cards.push(_salCard('Var. interanual', _signoPct(u[c.ia]),
+    'vs. mismo mes año ant.', _iericColor(u[c.ia])));
+
+  if (c.acum != null) {
+    cards.push(_salCard('Acum. en el año', _signoPct(u[c.acum]),
+      'vs. igual período año ant.', _iericColor(u[c.acum])));
+  } else {
+    cards.push(_salCard('Total país', fmtN(u[2], 0),
+      'i.a. ' + _signoPct(u[c.paisIa]), ''));
+  }
+
+  cont.innerHTML = cards.join('');
+
+  const fe = document.getElementById(spec.pref + '-fecha');
+  if (fe) fe.textContent = '· ' + fmtMes(u[0]) + (d.provisorio ? ' · dato provisorio' : '');
+
+  const fu = document.getElementById(spec.pref + '-fuente');
+  if (fu) {
+    let txt = 'Fuente: ' + d.fuente + ' · serie de la provincia de Córdoba desde '
+            + fmtMes(d.serie[0][0]) + '.';
+    (d.notas || []).forEach(n => { txt += ' <strong>Nota:</strong> ' + n; });
+    fu.innerHTML = txt;
+  }
+  return true;
+}
+
+function renderIericChart(clave) {
+  const spec = IERIC_BLOQUES[clave];
+  const d    = iericBloque(clave);
+  const cv   = document.getElementById('chart-' + spec.pref);
+  if (!d || !cv) return;
+
+  const modo   = (document.getElementById(spec.pref + '-modo')  || {}).value || 'nivel';
+  const meses  = parseInt((document.getElementById(spec.pref + '-range') || {}).value || '0');
+  const slice  = meses > 0 ? d.serie.slice(-meses) : d.serie;
+  const labels = slice.map(r =>
+    fechaLocal(r[0]).toLocaleDateString('es-AR', { month: 'short', year: '2-digit' }));
+
+  const datasets = (modo === 'ia')
+    ? [
+        { label: 'Córdoba', data: slice.map(r => r[spec.col.ia]),
+          borderColor: '#FF5F5F', backgroundColor: 'transparent',
+          borderWidth: 2, pointRadius: 0, tension: 0.3, fill: false },
+        { label: 'Total país', data: slice.map(r => r[spec.col.paisIa]),
+          borderColor: '#60a5fa', backgroundColor: 'transparent',
+          borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: false, borderDash: [4, 3] },
+      ]
+    : [
+        { label: spec.ejeNivel, data: slice.map(r => r[1]),
+          borderColor: '#FF5F5F', backgroundColor: 'rgba(255,95,95,0.12)',
+          borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true },
+      ];
+
+  if (iericCharts[clave]) iericCharts[clave].destroy();
+  iericCharts[clave] = new Chart(cv.getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#aaa', font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: '#1C1C1C', borderColor: '#383838', borderWidth: 1,
+          titleColor: '#fff', bodyColor: '#aaa',
+          callbacks: {
+            label: ctx => {
+              if (ctx.parsed.y == null) return ` ${ctx.dataset.label}: N/D`;
+              const v = modo === 'ia' ? _signoPct(ctx.parsed.y) : spec.fmt(ctx.parsed.y);
+              return ` ${ctx.dataset.label}: ${v}`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: { ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 10 }, grid: { color: '#222' } },
+        y: {
+          ticks: {
+            color: '#555', font: { size: 9 },
+            callback: v => modo === 'ia'
+              ? fmtN(v, 0) + '%'
+              : Number(v).toLocaleString('es-AR', { maximumFractionDigits: 0 }),
+          },
+          grid: { color: '#222' },
+        },
+      },
+    },
+  });
+}
+
+function initIericCba() {
+  if (!window.IERIC_CBA_CACHE) return;
+  Object.keys(IERIC_BLOQUES).forEach(clave => {
+    if (_pintarIericKpis(clave)) renderIericChart(clave);
+  });
+}
+
 const AJ_COMPONENTES = [
   { id: 'cacMat', label: 'CAC · Materiales',   get: () => _serieCac('mat') },
   { id: 'cacMo',  label: 'CAC · Mano de obra', get: () => _serieCac('mo')  },
@@ -5175,6 +5496,8 @@ const FUENTES = [
   ['ISAC_CACHE',      'ISAC (actividad)',                  80,   6],
   ['CONSTRUYA_CACHE', 'Índice Construya',                  60,   6],
   ['RGP_CBA_CACHE',   'Registro General de Córdoba',       80,   6],
+  // El IERIC publica con ~2 meses de rezago y el ultimo mes es provisorio.
+  ['IERIC_CBA_CACHE', 'IERIC · empleo y empresas de Córdoba', 80, 6],
   ['SALARIOS_CACHE',  'Escalas UOCRA / UECARA',           240, null],  // carga manual
 ];
 

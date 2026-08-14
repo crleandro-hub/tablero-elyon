@@ -7,6 +7,12 @@ log_actualizacion.txt
 log_actualizacion.txt.old
 log_actualizar.txt
 log_icc_indec.txt
+log_ieric_cordoba.txt
+
+# Planillas que baja probar_ieric_cordoba.py para inspeccionarlas. Son de
+# consulta, no fuente: el repo es publico y todo lo que queda suelto en la
+# carpeta se publica solo en la corrida siguiente.
+_diagnostico_ieric/
 
 # Archivo obsoleto: quedo de cuando el ICC INDEC se cargaba a mano, antes de
 # encontrar el Excel del INDEC. Se puede borrar de la carpeta.

@@ -12,9 +12,9 @@ Documento único: qué mide cada indicador, de dónde sale, cómo se publica y q
 
 Una tarea del Programador de tareas de Windows llamada **"Tablero Elyon - Actualizar y publicar"** corre de lunes a viernes a las 11, 13, 15 y 17 y ejecuta `actualizar_auto.bat`. Si la PC estaba apagada, la tarea corre apenas la prendas. El link público se refresca uno o dos minutos después del push.
 
-El ciclo tiene 19 pasos: dieciséis fuentes de datos, el armado del HTML, la verificación y la publicación.
+El ciclo tiene 20 pasos: diecisiete fuentes de datos, el armado del HTML, la verificación y la publicación.
 
-Las fuentes **mensuales** (CAC, REM, ISAC, los dos ICC, el Registro General, el Índice Construya y APYMECO) corren solo en la primera vuelta del día: pedirles el dato cada dos horas es tiempo perdido. La marca es el archivo `.ultima_corrida_mensual`.
+Las fuentes **mensuales** (CAC, REM, ISAC, los dos ICC, el Registro General, el Índice Construya, APYMECO y las series de Córdoba del IERIC) corren solo en la primera vuelta del día: pedirles el dato cada dos horas es tiempo perdido. La marca es el archivo `.ultima_corrida_mensual`.
 
 Si una fuente falla, **no frena el ciclo**: conserva el cache anterior y sigue. Mejor un dato viejo que el tablero roto. La verificación del paso 17 avisa después si algo quedó atrasado, y si encuentra problemas reales en los datos **frena la publicación**.
 
@@ -40,6 +40,7 @@ Cada corrida deja constancia en `log_actualizacion.txt` (automática) o `log_act
 | Costo del m² APYMECO | APYMECO (pymes, La Plata) | `update_apymeco_cache.py` | `apymeco_cache.js` | Mensual | **Scraping de tabla HTML** |
 | ISAC: empleo y permisos | INDEC (cuadros 3 y 4) | — | `isac_manual.json` | Mensual | **Carga manual** |
 | Registro General de Córdoba | Registro General de la Provincia | `update_rgp_cba_cache.py` | `rgp_cba_cache.js` | Mensual, ~día 23 | CSV vía CKAN |
+| Empleo, salario y empresas de Córdoba | IERIC | `update_ieric_cba_cache.py` | `ieric_cba_cache.js` | Mensual, ~2 meses de rezago | **Scraping de links + .xls** |
 | MERVAL | Yahoo → Rava → Stooq | `update_merval_cache.py` | `merval_cache.js` | Diario hábil | Scraping, 3 respaldos |
 | Riesgo país | Rava, con argentinadatos de respaldo | `update_riesgo_cache.py` | `riesgo_cache.js` | Diario hábil | Scraping HTML |
 | REM (inflación esperada) | BCRA | `update_rem_cache.py` | `rem_cache.js` | Mensual | Planilla xlsx |
@@ -56,6 +57,8 @@ Son las que van a romperse primero.
 **Los CSV de Córdoba** se bajan de un link que redirige a un S3 firmado que vence en una hora. Los scripts resuelven el link por la API de CKAN antes de usar el directo, porque el nombre del archivo del Registro General lleva el mes adentro.
 
 **El Índice Construya** no tiene API ni archivo descargable: sale de parsear la tabla HTML de `grupoconstruya.com.ar`. El parser se guía por los **encabezados** de la tabla, no por el orden de las columnas, y antes de escribir controla que la variación interanual publicada coincida con la que sale de dividir los índices. Si no cierra, aborta y deja el cache anterior intacto.
+
+**El IERIC** sirve los `.xls` desde `/wp-content/uploads/AAAA/MM/`, donde ese tramo es la fecha en que subieron el archivo y **cambia cuando lo refrescan**. Hardcodear la URL es la peor trampa de todas: el día que actualicen, el script sigue bajando la versión vieja **sin dar error**. Por eso los links se resuelven leyendo `series_estadisticas/cordoba/` en cada corrida. Además son BIFF viejo (OLE2), así que necesitan `xlrd`: `xlsx_lite.py` no los lee.
 
 **APYMECO** también sale de parsear una tabla HTML, y además **la página solo publica los últimos 13 meses**. Por eso su script es el único que no pisa la serie: la mezcla con la que ya está en el cache y va acumulando historial corrida tras corrida. La consecuencia práctica es que si el parseo se rompe y nadie lo mira durante meses, esos meses no se recuperan: hay que pedírselos a APYMECO o reconstruirlos a mano. El control de integridad se apoya en que el precio del m² y el índice son la misma serie a distinta escala, así que el cociente entre los dos tiene que dar constante (hoy 151,374). Si deja de darlo, el parseo se corrió de columna y el script aborta.
 
@@ -117,7 +120,9 @@ Remove-Item .git\*.lock, .git\objects\maintenance.lock -Force -ErrorAction Silen
   `2-ACTUALIZAR-TABLERO.bat` corre lo mismo a mano: si le agregás fuentes, van en los dos.
 - `3-PROGRAMAR-TAREA-CADA-2-HORAS.bat` + `_programar_tarea.ps1` — dan de alta la tarea.
   Para cambiar horarios se toca la línea `$horarios = 11, 13, 15, 17` del `.ps1` y se vuelve a correr.
-- `4-PROBAR-MERVAL-Y-REM.bat` y `5-PROBAR-ICC-INDEC.bat` — prueban una fuente sola, sin publicar.
+- `4-PROBAR-MERVAL-Y-REM.bat`, `5-PROBAR-ICC-INDEC.bat` y `7-PROBAR-IERIC-CORDOBA.bat` — prueban una
+  fuente sola, sin publicar. El de IERIC lista todas las planillas de la página de Córdoba y vuelca
+  su estructura; sirve para ver qué hay publicado hoy cuando algo deja de parsearse.
 
 **Motor**
 
@@ -132,6 +137,44 @@ Remove-Item .git\*.lock, .git\objects\maintenance.lock -Force -ErrorAction Silen
   Si se borra, se pierde todo el historial anterior a los 13 meses que muestra la página.
 - `docs/index.html` — lo que se publica.
 - `tablero_elyon_portable.html` — archivo suelto para mandar por mail. Anda sin internet, salvo dólar y riesgo país que son en vivo.
+
+---
+
+## Lo que se evaluó y quedó afuera
+
+Anotado para no repetir la investigación. Agosto de 2026.
+
+**Precio de venta de departamentos en Córdoba Capital.** No hay fuente pública, gratuita y
+metodológicamente limpia. Se revisaron tres:
+
+- *Zonaprop Index Córdoba* publica USD/m² de departamentos de Córdoba Capital (USD 1.474 en
+  marzo de 2026), pero es precio de **oferta publicada**, no de operación cerrada, la metodología
+  es propietaria, sale trimestral y arrastraba 4,5 meses de atraso mientras la edición de CABA
+  salía mensual y al día.
+- *UdeSA / Mercado Libre* publica variaciones, no un nivel en USD/m². Es un índice, no un precio.
+- *IERIC "Precio del M2 Ciudad de Córdoba"* parece la solución y no lo es: sale del Suplemento
+  Arquitectura de Clarín, es un rango mínimo/máximo de zona céntrica, la serie mensual termina en
+  abril de 2025 y **está clavada en 1.900 / 2.200 desde 2021**. Es un dato muerto.
+
+Conclusión: el tablero no muestra precio de venta. Es un hueco real del mercado, no una falla.
+
+**Despachos de cemento por provincia (AFCP).** El dato existe y es excelente —desde enero de 2004,
+mensual, con bolsa y granel por separado, en el `.xls` de la página de Córdoba del IERIC— pero
+por disposición de la **Comisión Nacional de Defensa de la Competencia** del 27/04/2022 la AFCP
+no puede publicar apertura provincial con menos de doce meses de antigüedad. El rezago es
+regulatorio y permanente: nunca va a haber cemento provincial fresco. Se decidió dejarlo afuera
+por eso. Si alguna vez se agrega, va como indicador estructural y con el motivo del rezago escrito
+en el bloque.
+
+**Permisos de edificación de Córdoba.** El INDEC releva 246 municipios (de Córdoba entran Córdoba,
+Alta Gracia, Cosquín y Unquillo) pero **publica solo el agregado nacional**. La DGEyC tiene
+recursos de permisos en `datosestadistica.cba.gov.ar`, pero congelados desde 2021. La
+Municipalidad de Córdoba no publica permisos en datos abiertos. Quedó pendiente confirmar si el
+recurso vivo "Sector Construcción - Coyuntura" los trae adentro.
+
+Ojo con el portal: **`datosabiertos.cba.gov.ar` no existe** (no resuelve DNS). Los reales son
+`datosestadistica.cba.gov.ar` (DGEyC, el que ya usan el ICC y el Registro General) y
+`datosgestionabierta.cba.gov.ar`.
 
 ---
 

@@ -62,6 +62,11 @@ FRESCURA = {
     "icc_indec_cache.js": ("mensual", 85,  6),
     "isac_cache.js":      ("mensual", 80,  6),
     "rgp_cba_cache.js":   ("mensual", 80,  6),
+    # El IERIC publica con ~2 meses de rezago y marca el ultimo mes como
+    # provisorio. Empresas en actividad va un mes mas adelantada que puestos
+    # y salario, y el control mira la fecha mas nueva del cache, asi que 80
+    # dias alcanza para las tres sin dar falsos avisos.
+    "ieric_cba_cache.js": ("mensual", 80,  6),
     # El Indice Construya sale alrededor del dia 10 del mes siguiente, mas
     # rapido que cualquier fuente oficial. Si el ultimo dato pasa los 55 dias
     # es que la camara cambio la pagina y el parseo dejo de encontrar la tabla.

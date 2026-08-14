@@ -64,112 +64,120 @@ if "%MENSUALES%"=="1" (
   call :log "Las fuentes mensuales ya se actualizaron hoy: se omiten."
 )
 
-call :log "[1/19] BCRA - valores del dia (TAMAR / BADLAR / UVA)..."
+call :log "[1/20] BCRA - valores del dia (TAMAR / BADLAR / UVA)..."
 %PY% update_bcra_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_bcra_cache.py - se conservan los datos previos."
 
-call :log "[2/19] BCRA - serie historica UVA..."
+call :log "[2/20] BCRA - serie historica UVA..."
 %PY% update_uva_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_uva_cache.py - se conserva la serie previa."
 
 if "%MENSUALES%"=="1" (
-  call :log "[3/19] Indice CAC..."
+  call :log "[3/20] Indice CAC..."
   %PY% update_cac_cache.py >> "%LOG%" 2>&1
   if errorlevel 1 call :log "[AVISO] Fallo update_cac_cache.py - se conservan los datos previos."
 ) else (
-  call :log "[3/19] Indice CAC... omitido (mensual, ya corrio hoy)"
+  call :log "[3/20] Indice CAC... omitido (mensual, ya corrio hoy)"
 )
 
-call :log "[4/19] Indice MERVAL (pesos y dolares)..."
+call :log "[4/20] Indice MERVAL (pesos y dolares)..."
 %PY% update_merval_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_merval_cache.py - se conservan los datos previos."
 
 if "%MENSUALES%"=="1" (
-  call :log "[5/19] REM del BCRA (inflacion esperada)..."
+  call :log "[5/20] REM del BCRA (inflacion esperada)..."
   %PY% update_rem_cache.py >> "%LOG%" 2>&1
   if errorlevel 1 call :log "[AVISO] Fallo update_rem_cache.py - se conservan los datos previos."
 ) else (
-  call :log "[5/19] REM del BCRA (inflacion esperada)... omitido (mensual, ya corrio hoy)"
+  call :log "[5/20] REM del BCRA (inflacion esperada)... omitido (mensual, ya corrio hoy)"
 )
 
-call :log "[6/19] Riesgo pais (Rava Bursatil)..."
+call :log "[6/20] Riesgo pais (Rava Bursatil)..."
 %PY% update_riesgo_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_riesgo_cache.py - se conservan los datos previos."
 
-call :log "[7/19] Caucion a 1, 7 y 14 dias (Rava Bursatil)..."
+call :log "[7/20] Caucion a 1, 7 y 14 dias (Rava Bursatil)..."
 %PY% update_caucion_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_caucion_cache.py - se conservan los datos previos."
 
-call :log "[8/19] Dolar futuro ROFEX (Matba Rofex)..."
+call :log "[8/20] Dolar futuro ROFEX (Matba Rofex)..."
 %PY% update_rofex_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_rofex_cache.py - se conservan los datos previos."
 
-call :log "[9/19] Acciones del panel lider (BYMA)..."
+call :log "[9/20] Acciones del panel lider (BYMA)..."
 %PY% update_acciones_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_acciones_cache.py - se conservan los datos previos."
 
-call :log "[10/19] Tipo de cambio - respaldo (dolarapi / bluelytics)..."
+call :log "[10/20] Tipo de cambio - respaldo (dolarapi / bluelytics)..."
 %PY% update_dolar_cache.py >> "%LOG%" 2>&1
 if errorlevel 1 call :log "[AVISO] Fallo update_dolar_cache.py - se conserva el respaldo previo."
 
 if "%MENSUALES%"=="1" (
-  call :log "[11/19] ISAC e insumos de la construccion (INDEC)..."
+  call :log "[11/20] ISAC e insumos de la construccion (INDEC)..."
   %PY% update_isac_cache.py >> "%LOG%" 2>&1
   if errorlevel 1 call :log "[AVISO] Fallo update_isac_cache.py - se conservan los datos previos."
 ) else (
-  call :log "[11/19] ISAC e insumos de la construccion (INDEC)... omitido (mensual, ya corrio hoy)"
+  call :log "[11/20] ISAC e insumos de la construccion (INDEC)... omitido (mensual, ya corrio hoy)"
 )
 
 if "%MENSUALES%"=="1" (
-  call :log "[12/19] ICC de Cordoba (Estadistica y Censos Cba)..."
+  call :log "[12/20] ICC de Cordoba (Estadistica y Censos Cba)..."
   %PY% update_icc_cba_cache.py >> "%LOG%" 2>&1
   if errorlevel 1 call :log "[AVISO] Fallo update_icc_cba_cache.py - se conservan los datos previos."
 ) else (
-  call :log "[12/19] ICC de Cordoba (Estadistica y Censos Cba)... omitido (mensual, ya corrio hoy)"
+  call :log "[12/20] ICC de Cordoba (Estadistica y Censos Cba)... omitido (mensual, ya corrio hoy)"
 )
 
 if "%MENSUALES%"=="1" (
-  call :log "[13/19] Registro General de la Propiedad de Cordoba..."
+  call :log "[13/20] Registro General de la Propiedad de Cordoba..."
   %PY% update_rgp_cba_cache.py >> "%LOG%" 2>&1
   if errorlevel 1 call :log "[AVISO] Fallo update_rgp_cba_cache.py - se conservan los datos previos."
 ) else (
-  call :log "[13/19] Registro General de la Propiedad de Cordoba... omitido (mensual, ya corrio hoy)"
+  call :log "[13/20] Registro General de la Propiedad de Cordoba... omitido (mensual, ya corrio hoy)"
 )
 
 if "%MENSUALES%"=="1" (
-  call :log "[14/19] ICC del INDEC (Gran Buenos Aires)..."
+  call :log "[14/20] ICC del INDEC (Gran Buenos Aires)..."
   %PY% update_icc_indec_cache.py >> "%LOG%" 2>&1
   if errorlevel 1 call :log "[AVISO] Fallo update_icc_indec_cache.py - se conservan los datos previos."
 ) else (
-  call :log "[14/19] ICC del INDEC (Gran Buenos Aires)... omitido (mensual, ya corrio hoy)"
+  call :log "[14/20] ICC del INDEC (Gran Buenos Aires)... omitido (mensual, ya corrio hoy)"
 )
 
 if "%MENSUALES%"=="1" (
-  call :log "[15/19] Indice Construya (Grupo Construya)..."
+  call :log "[15/20] Indice Construya (Grupo Construya)..."
   %PY% update_construya_cache.py >> "%LOG%" 2>&1
   if errorlevel 1 call :log "[AVISO] Fallo update_construya_cache.py - se conservan los datos previos."
 ) else (
-  call :log "[15/19] Indice Construya (Grupo Construya)... omitido (mensual, ya corrio hoy)"
+  call :log "[15/20] Indice Construya (Grupo Construya)... omitido (mensual, ya corrio hoy)"
 )
 
 if "%MENSUALES%"=="1" (
-  call :log "[16/19] Costo del m2 - APYMECO (pymes de la construccion)..."
+  call :log "[16/20] Costo del m2 - APYMECO (pymes de la construccion)..."
   %PY% update_apymeco_cache.py >> "%LOG%" 2>&1
   if errorlevel 1 call :log "[AVISO] Fallo update_apymeco_cache.py - se conservan los datos previos."
 ) else (
-  call :log "[16/19] Costo del m2 - APYMECO (pymes de la construccion)... omitido (mensual, ya corrio hoy)"
+  call :log "[16/20] Costo del m2 - APYMECO (pymes de la construccion)... omitido (mensual, ya corrio hoy)"
+)
+
+if "%MENSUALES%"=="1" (
+  call :log "[17/20] Series de Cordoba del IERIC (empleo, salario, empresas)..."
+  %PY% update_ieric_cba_cache.py >> "%LOG%" 2>&1
+  if errorlevel 1 call :log "[AVISO] Fallo update_ieric_cba_cache.py - se conservan los datos previos."
+) else (
+  call :log "[17/20] Series de Cordoba del IERIC (empleo, salario, empresas)... omitido (mensual, ya corrio hoy)"
 )
 
 if "%MENSUALES%"=="1" (echo %HOY%)>"%MARCA%"
 
-call :log "[17/19] Generando docs\index.html y version portable..."
+call :log "[18/20] Generando docs\index.html y version portable..."
 %PY% build_publicar.py >> "%LOG%" 2>&1
 if errorlevel 1 (
   call :log "[ERROR] Fallo build_publicar.py. No se publica."
   goto :fin
 )
 
-call :log "[18/19] Verificando frescura e integridad de los datos..."
+call :log "[19/20] Verificando frescura e integridad de los datos..."
 %PY% verificar.py >> "%LOG%" 2>&1
 rem  0 = todo bien   1 = datos con problemas, no publicar
 rem  2 = se cayo el verificador, es un bug suyo: se publica igual
@@ -182,7 +190,7 @@ if "%RC%"=="1" (
   goto :fin
 )
 
-call :log "[19/19] Publicando en GitHub Pages..."
+call :log "[20/20] Publicando en GitHub Pages..."
 git add -A >> "%LOG%" 2>&1
 git commit -m "Actualizacion automatica de indicadores %date%" >> "%LOG%" 2>&1
 if errorlevel 1 (
