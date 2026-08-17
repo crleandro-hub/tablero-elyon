@@ -21,6 +21,8 @@
    pactado (ej. ago-2026 +9,1 con un acuerdo de +1,9). No es un error:
    son las SUMAS NO REMUNERATIVAS que se incorporan al basico. Por eso
    la variacion del basico NO equivale al aumento real de bolsillo.
+   Los porcentajes de acuerdo se cargan en uocra.pactado (mas abajo) y el
+   tablero los usa para mostrar el aumento real al lado del nominal.
 ═══════════════════════════════════════════════════════════════════ */
 
 window.SALARIOS_CACHE = {
@@ -41,6 +43,30 @@ window.SALARIOS_CACHE = {
       ["medioOficial", "Medio oficial"],
       ["ayudante",     "Ayudante"]
     ],
+    /* PORCENTAJES REALMENTE PACTADOS EN LA PARITARIA
+       -----------------------------------------------
+       El basico salta muy por encima del acuerdo en los meses en que se
+       INCORPORA al basico una suma no remunerativa que el trabajador ya venia
+       cobrando aparte. Ese salto no es aumento de bolsillo: solo cambia de
+       donde sale la plata. Ejemplo: ago-2026 muestra +9,1% de basico con un
+       acuerdo de +1,9%.
+
+       Aca va, mes por mes, el porcentaje que fija el acuerdo homologado. El
+       tablero arma con esto una serie homogenea y lee el poder de compra sin
+       el ruido de las incorporaciones. Los meses que no esten listados usan la
+       variacion del basico tal cual.
+
+       AL CARGAR UN ACUERDO NUEVO, agregar aca sus porcentajes.
+
+       Fuente: acuerdos homologados CCT 76/75 (UOCRA - CAMARCO/FAEC)
+         mar-2026  2,0 %                          jun-2026  2,1 %  (absorbe la SNR de mayo)
+         abr-2026  1,9 %  (absorbe parte de SNR)  jul-2026  2,0 %
+         may-2026  1,8 %                          ago-2026  1,9 %  (absorbe la SNR de julio) */
+    pactado: {
+      "2026-03": 2.0, "2026-04": 1.9, "2026-05": 1.8,
+      "2026-06": 2.1, "2026-07": 2.0, "2026-08": 1.9
+    },
+
     /* ["aaaa-mm", oficialEsp, oficial, medioOficial, ayudante]  -  $/hora */
     serie: [
       ["2022-05", 463, 394, 364, 334],

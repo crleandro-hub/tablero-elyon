@@ -1,4 +1,4 @@
-<!-- Version autocontenida generada por build_publicar.py el 14/08/2026 18:02 - datos embebidos, no depende de archivos externos -->
+<!-- Version autocontenida generada por build_publicar.py el 17/08/2026 01:45 - datos embebidos, no depende de archivos externos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -113,6 +113,44 @@ body {
                   font-size: 11px; padding: 2px 0; }
 .res-vars .rot { color: var(--gris-txt); letter-spacing: .3px; }
 .res-vars .val { font-size: 14px; font-weight: 700; }
+
+/* ─── NAVEGACIÓN A LAS PANTALLAS DE DETALLE ─────────────────
+   El tablero quedo largo: cada seccion pesada muestra el resumen y manda el
+   detalle (aperturas, graficos, buscador historico, lectura del dato) a su
+   propia pantalla. Este es el bloque con el que se entra. */
+.nav-mas { background: var(--gris-med); border: 1px solid var(--gris-brd); border-radius: 10px;
+           padding: 16px 18px; margin-top: 14px; display: flex; align-items: center;
+           justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.res-btn { width: 100%; margin-top: 12px; padding: 7px 10px; font-size: 10px; letter-spacing: .9px; }
+.q-box   { background: var(--gris-med); border: 1px solid var(--gris-brd); border-radius: 10px;
+           padding: 16px 18px; margin-top: 24px; }
+.det-panel > .sec-title:first-of-type { margin-top: 8px; }
+
+/* Lectura automatica del ultimo dato. Se recalcula sola en cada apertura:
+   no hay texto escrito a mano que pueda quedar viejo. */
+.det-analisis { background: linear-gradient(180deg, #241315 0%, var(--gris-osc) 65%);
+                border: 1px solid var(--gris-brd); border-left: 4px solid var(--rojo);
+                border-radius: 10px; padding: 15px 18px; margin: 6px 0 4px; }
+.an-tit   { font-size: 11px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase;
+            color: var(--rojo-txt); margin-bottom: 11px; }
+.an-lista { list-style: none; }
+.an-lista li { font-size: 12.5px; line-height: 1.7; color: #d8d8d8; padding-left: 17px;
+               position: relative; margin-bottom: 8px; }
+.an-lista li::before { content: '▸'; position: absolute; left: 0; top: 0; color: var(--rojo-txt); font-size: 11px; }
+.an-lista li:last-child { margin-bottom: 0; }
+.an-lista strong { color: #fff; }
+.an-nota  { font-size: 10.5px; color: var(--gris-txt); line-height: 1.6; margin-top: 12px;
+            border-top: 1px solid var(--gris-brd); padding-top: 10px; }
+.an-mal   { color: var(--rojo-txt); font-weight: 700; }
+.an-bien  { color: var(--verde);    font-weight: 700; }
+
+/* Tabla mensual de los detalles */
+.tab-mens { width: 100%; border-collapse: collapse; font-size: 12px; }
+.tab-mens th, .tab-mens td { padding: 7px 10px; border-bottom: 1px solid var(--gris-brd); text-align: right; }
+.tab-mens th { color: var(--gris-txt); font-size: 9.5px; letter-spacing: .7px;
+               text-transform: uppercase; font-weight: 700; }
+.tab-mens td:first-child, .tab-mens th:first-child { text-align: left; color: #ccc; }
+.tab-mens tbody tr:hover { background: #202020; }
 
 /* GRILLA DE INDICADORES MACRO
    Son 9 tarjetas y algunas traen numeros largos (el Merval pasa el millon de
@@ -455,6 +493,53 @@ body {
     </div>
     <div class="ts-line" id="dolar-ts">Cargando...</div>
 
+    <div class="nav-mas">
+      <div>
+        <div class="sub-title" style="margin-bottom:4px;">Dólar · análisis y detalle</div>
+        <div style="font-size:11px;color:var(--gris-txt);">Blue, brecha contra el oficial, variaciones y buscador de cotizaciones por fecha.</div>
+      </div>
+      <button class="btn btn-rojo" onclick="abrirDetalle('dolar')">VER ANÁLISIS &rsaquo;</button>
+    </div>
+
+    <!-- Gráfico de cotizaciones del dólar -->
+    <div id="blue-chart-section" style="margin-top:4px;">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div class="sub-title">Comparación entre Tipos de Dolares</div>
+          <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">Punta vendedora · serie diaria de cierre · ArgentinaDatos · un día de rezago frente al valor en vivo de arriba</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+
+          <!-- Desplegable multi-selección de cotizaciones -->
+          <div class="multi-dd" id="usd-dd">
+            <button type="button" class="period-select multi-dd-btn" id="usd-dd-btn" onclick="toggleUsdDD(event)">
+              <span id="usd-dd-label">Todos</span><span style="opacity:.55;font-size:9px;">▼</span>
+            </button>
+            <div class="multi-dd-panel" id="usd-dd-panel">
+              <label><input type="checkbox" value="oficial" checked onchange="onUsdChartSel()"><span class="dd-dot" style="background:#60a5fa"></span>Oficial</label>
+              <label><input type="checkbox" value="blue" checked onchange="onUsdChartSel()"><span class="dd-dot" style="background:#CC0000"></span>Blue / Informal</label>
+              <label><input type="checkbox" value="bolsa" checked onchange="onUsdChartSel()"><span class="dd-dot" style="background:#34d399"></span>MEP (Bolsa)</label>
+              <label><input type="checkbox" value="contadoconliqui" checked onchange="onUsdChartSel()"><span class="dd-dot" style="background:#f59e0b"></span>CCL (Cable)</label>
+              <div class="multi-dd-actions">
+                <button type="button" onclick="usdDDAll(true)">Todos</button>
+                <button type="button" onclick="usdDDAll(false)">Ninguno</button>
+              </div>
+            </div>
+          </div>
+
+          <select class="period-select" id="blue-range" onchange="renderBlueChart()">
+            <option value="365">Último año</option>
+            <option value="1095">Últimos 3 años</option>
+            <option value="1825">Últimos 5 años</option>
+            <option value="0">Histórico completo</option>
+          </select>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-blue" role="img" aria-label="Evolución de las cotizaciones del dólar"></canvas>
+      </div>
+    </div>
+
     <!-- MACRO -->
     <div class="sec-title">Indicadores Macroeconómicos</div>
     <div class="kpi-macro">
@@ -566,547 +651,10 @@ body {
     <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
       Los cuatro índices con los que se ajustan obras y contratos, uno al lado del otro.
       Cada uno mide algo distinto y no son intercambiables: mirá siempre cuál nombra el contrato.
-      Más abajo está el detalle de cada uno.
+      Tocá <strong style="color:#bbb;">VER DETALLE</strong> en cada tarjeta para abrir su página:
+      apertura por rubro, gráficos, buscador histórico y lectura automática del último dato.
     </div>
     <div class="res-grid" id="resumen-construccion"></div>
-
-    <!-- ── ÍNDICE CAC ──────────────────── -->
-    <div class="sec-title">Índice CAC</div>
-
-    <!-- KPIs CAC (siempre visibles con datos embebidos) -->
-    <div id="cac-section">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-        <span style="font-size:10px;color:var(--gris-txt);" id="cac-datasource">📊 Datos embebidos · Serie ene-2011/abr-2026 · Cámara Argentina de la Construcción</span>
-      </div>
-
-      <div class="kpi-grid">
-        <div class="card">
-          <div class="kpi-label">CAC General</div>
-          <div class="kpi-value" id="kpi-cac-gen">—</div>
-          <div class="kpi-sub" id="kpi-cac-fecha">—</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Materiales</div>
-          <div class="kpi-value" id="kpi-cac-mat">—</div>
-          <div class="kpi-sub" id="kpi-cac-mat-src">—</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Mano de Obra</div>
-          <div class="kpi-value" id="kpi-cac-mo">—</div>
-          <div class="kpi-sub" id="kpi-cac-mo-src">—</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Var. interanual CAC</div>
-          <div class="kpi-value" id="kpi-cac-ia">—</div>
-          <div class="kpi-sub">vs. mismo mes año ant.</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Acum. en el año</div>
-          <div class="kpi-value" id="kpi-cac-ytd">—</div>
-          <div class="kpi-sub" id="kpi-cac-ytd-sub">vs. dic. año ant.</div>
-        </div>
-      </div>
-
-      <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div class="sub-title">Evolución del índice CAC</div>
-        <select class="period-select" id="cac-range" onchange="renderCacChart()">
-          <option value="12">Último año</option>
-          <option value="36">Últimos 3 años</option>
-          <option value="60">Últimos 5 años</option>
-          <option value="0">Histórico completo</option>
-        </select>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="chart-cac" role="img" aria-label="Evolución del índice CAC General"></canvas>
-      </div>
-    </div>
-
-
-    <!-- ─── CONSULTA CAC POR PERÍODO · vive en la pantalla Herramientas ─── -->
-    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
-      <div>
-        <div class="sub-title" style="margin-bottom:4px;">Consulta CAC por período</div>
-        <div style="font-size:11px;color:var(--gris-txt);">Buscá el índice CAC de cualquier mes desde enero de 2011.</div>
-      </div>
-      <button class="btn btn-rojo" onclick="abrirHerramienta('cac')">ABRIR &rsaquo;</button>
-    </div>
-
-    <!-- ── ICC CÓRDOBA ──────────────────── -->
-    <div class="sec-title" id="icc-cba-titulo">Índice ICC Córdoba</div>
-    <div id="icc-cba-section">
-      <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
-        Índice del Costo de la Construcción de la provincia de Córdoba, base 2012=100.
-        Mide una <strong style="color:#bbb;">vivienda social tipo de 50,25 m²</strong>
-        (cocina-comedor, dos dormitorios y baño), metodología vigente desde oct-2013.
-        Es el par local del CAC, que es nacional y sobre un edificio tipo porteño.
-        <span id="icc-cba-datasource" style="display:block;margin-top:5px;font-size:10px;"></span>
-      </div>
-
-      <div class="kpi-grid">
-        <div class="card">
-          <div class="kpi-label">ICC Córdoba</div>
-          <div class="kpi-value" id="kpi-icc-idx">—</div>
-          <div class="kpi-sub" id="kpi-icc-fecha">—</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Var. mensual</div>
-          <div class="kpi-value" id="kpi-icc-m">—</div>
-          <div class="kpi-sub">vs. mes anterior</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Var. interanual</div>
-          <div class="kpi-value" id="kpi-icc-ia">—</div>
-          <div class="kpi-sub">vs. mismo mes año ant.</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Acum. en el año</div>
-          <div class="kpi-value" id="kpi-icc-ytd">—</div>
-          <div class="kpi-sub" id="kpi-icc-ytd-sub">vs. dic. año ant.</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Valor del m²</div>
-          <div class="kpi-value" id="kpi-icc-m2">—</div>
-          <div class="kpi-sub" id="kpi-icc-m2-sub">vivienda tipo 50,25 m²</div>
-        </div>
-      </div>
-
-      <div style="margin:20px 0 10px;">
-        <div class="sub-title">Apertura por rubro</div>
-      </div>
-      <div class="kpi-grid" id="icc-cba-rubros"
-           style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr));"></div>
-      <div style="font-size:10px;color:var(--gris-txt);margin-top:8px;line-height:1.6;"
-           id="icc-cba-rubros-nota"></div>
-
-      <div style="display:flex;align-items:center;justify-content:space-between;margin:22px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div class="sub-title">Evolución del ICC Córdoba</div>
-        <select class="period-select" id="icc-cba-range" onchange="renderIccCbaChart()">
-          <option value="12" selected>Último año</option>
-          <option value="36">Últimos 3 años</option>
-          <option value="60">Últimos 5 años</option>
-          <option value="0">Histórico completo</option>
-        </select>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="chart-icc-cba" role="img" aria-label="Evolución del ICC de Córdoba por rubro"></canvas>
-      </div>
-
-    </div>
-
-    <!-- ── ICC INDEC (GRAN BUENOS AIRES) ──────────────── -->
-    <div class="sec-title" id="icc-indec-titulo">Índice ICC INDEC</div>
-    <div id="icc-indec-section">
-      <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
-        Índice del costo de la construcción en el <strong style="color:#bbb;">Gran Buenos Aires</strong>,
-        del INDEC. Mide construcción privada de edificios para vivienda en CABA y los 24 partidos
-        del conurbano, con apertura en Materiales (46,0%), Mano de obra (45,6%) y Gastos generales (8,4%).
-        Es el índice al que remite el Decreto 1.295/02 para redeterminar obra pública.
-        <span id="icc-indec-datasource" style="display:block;margin-top:5px;font-size:10px;"></span>
-      </div>
-
-      <div class="kpi-grid">
-        <div class="card">
-          <div class="kpi-label">ICC INDEC</div>
-          <div class="kpi-value" id="kpi-iccn-idx">—</div>
-          <div class="kpi-sub" id="kpi-iccn-fecha">—</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Var. mensual</div>
-          <div class="kpi-value" id="kpi-iccn-m">—</div>
-          <div class="kpi-sub">vs. mes anterior</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Var. interanual</div>
-          <div class="kpi-value" id="kpi-iccn-ia">—</div>
-          <div class="kpi-sub">vs. mismo mes año ant.</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Acum. en el año</div>
-          <div class="kpi-value" id="kpi-iccn-ytd">—</div>
-          <div class="kpi-sub" id="kpi-iccn-ytd-sub">vs. dic. año ant.</div>
-        </div>
-      </div>
-
-      <div style="margin:20px 0 10px;">
-        <div class="sub-title">Apertura por capítulo</div>
-      </div>
-      <div class="kpi-grid" id="icc-indec-rubros"
-           style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr));"></div>
-      <div style="font-size:10px;color:var(--gris-txt);margin-top:8px;line-height:1.6;"
-           id="icc-indec-rubros-nota"></div>
-
-      <div style="display:flex;align-items:center;justify-content:space-between;margin:22px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div class="sub-title">Evolución del ICC INDEC</div>
-        <select class="period-select" id="icc-indec-range" onchange="renderIccIndecChart()">
-          <option value="12" selected>Último año</option>
-          <option value="36">Últimos 3 años</option>
-          <option value="60">Últimos 5 años</option>
-          <option value="0">Histórico completo</option>
-        </select>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="chart-icc-indec" role="img" aria-label="Evolución del ICC del INDEC por capítulo"></canvas>
-      </div>
-    </div>
-
-    <!-- ── ÍNDICE UVA ──────────────────── -->
-    <div class="sec-title">Índice UVA</div>
-
-    <!-- UVA en tiempo real (datos.gob.ar / BCRA) -->
-    <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(155px,1fr));margin-bottom:4px;">
-      <div class="card">
-        <div class="kpi-label">UVA (valor actual)</div>
-        <div class="kpi-value" id="val-uva">—</div>
-        <div class="kpi-sub" id="src-uva">BCRA · datos.gob.ar</div>
-      </div>
-      <div class="card">
-        <div class="kpi-label">Variación mensual</div>
-        <div class="kpi-value" id="val-uva-m">—</div>
-        <div class="kpi-sub">vs. 30 días atrás</div>
-      </div>
-      <div class="card">
-        <div class="kpi-label">Variación interanual</div>
-        <div class="kpi-value" id="val-uva-ia">—</div>
-        <div class="kpi-sub">vs. mismo día año ant.</div>
-      </div>
-      <div class="card">
-        <div class="kpi-label">Acum. en el año</div>
-        <div class="kpi-value" id="val-uva-ytd">—</div>
-        <div class="kpi-sub" id="val-uva-ytd-sub">vs. 31-dic año ant.</div>
-      </div>
-    </div>
-
-    <!-- Gráfico UVA desde API -->
-    <div id="uva-chart-section" style="margin-top:4px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div class="sub-title">Evolución del índice UVA</div>
-        <select class="period-select" id="uva-range" onchange="renderUvaChart()">
-          <option value="365">Último año</option>
-          <option value="1095">Últimos 3 años</option>
-          <option value="1825">Últimos 5 años</option>
-          <option value="0">Histórico completo</option>
-        </select>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="chart-uva" role="img" aria-label="Evolución del índice UVA"></canvas>
-      </div>
-    </div>
-
-    <!-- ─── CONSULTA UVA POR FECHA · vive en la pantalla Herramientas ─── -->
-    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
-      <div>
-        <div class="sub-title" style="margin-bottom:4px;">Consulta UVA por fecha</div>
-        <div style="font-size:11px;color:var(--gris-txt);">Valor de la UVA en cualquier día desde marzo de 2016.</div>
-      </div>
-      <button class="btn btn-rojo" onclick="abrirHerramienta('uva')">ABRIR &rsaquo;</button>
-    </div>
-
-    <!-- ── COSTO DEL M² · APYMECO ──────────────── -->
-    <div class="sec-title" id="apymeco-titulo">APYMECO - Costo del m²</div>
-    <div id="apymeco-section">
-      <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
-        Precio de obra por metro cuadrado que releva <strong style="color:#bbb;">APYMECO</strong>,
-        la asociación de pymes de la construcción del Gran La Plata. Es el único dato del tablero
-        con un <strong style="color:#bbb;">valor absoluto de mercado</strong>: el CAC y los dos ICC son
-        índices base 100, y el m² que publica Córdoba corresponde a una vivienda social de 50,25 m².
-        <strong style="color:#bbb;">Excluye IVA, terreno, honorarios, gastos legales y utilidad
-        del desarrollador</strong>: es costo directo de obra. Al ser bonaerense se lee como contraste
-        con el ICC Córdoba, nunca como reemplazo.
-        <span id="apymeco-datasource" style="display:block;margin-top:5px;font-size:10px;"></span>
-      </div>
-
-      <div class="kpi-grid">
-        <div class="card">
-          <div class="kpi-label">Costo del m²</div>
-          <div class="kpi-value" id="kpi-apy-m2">—</div>
-          <div class="kpi-sub" id="kpi-apy-fecha">—</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Var. mensual</div>
-          <div class="kpi-value" id="kpi-apy-m">—</div>
-          <div class="kpi-sub">vs. mes anterior</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Var. interanual</div>
-          <div class="kpi-value" id="kpi-apy-ia">—</div>
-          <div class="kpi-sub">vs. mismo mes año ant.</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Acum. en el año</div>
-          <div class="kpi-value" id="kpi-apy-ytd">—</div>
-          <div class="kpi-sub" id="kpi-apy-ytd-sub">vs. dic. año ant.</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Costo en dólares</div>
-          <div class="kpi-value" id="kpi-apy-usd">—</div>
-          <div class="kpi-sub" id="kpi-apy-usd-sub">US$/m² · MEP promedio del mes</div>
-        </div>
-      </div>
-
-      <div style="display:flex;align-items:center;justify-content:space-between;margin:26px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div class="sub-title">Los cuatro índices de costo, uno al lado del otro</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <select class="period-select" id="comp-costos-modo" onchange="renderCompCostos()">
-            <option value="mensual" selected>Variación mensual</option>
-            <option value="ia">Variación interanual</option>
-            <option value="base">Índice base 100</option>
-          </select>
-          <select class="period-select" id="comp-costos-range" onchange="renderCompCostos()">
-            <option value="12" selected>Último año</option>
-            <option value="24">Últimos 2 años</option>
-            <option value="36">Últimos 3 años</option>
-          </select>
-        </div>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="chart-comp-costos" role="img"
-                aria-label="Comparación de CAC, ICC Córdoba, ICC INDEC y APYMECO"></canvas>
-      </div>
-      <div style="font-size:10px;color:var(--gris-txt);margin-top:8px;line-height:1.6;" id="comp-costos-nota"></div>
-    </div>
-
-    <!-- ── DÓLAR BLUE ──────────────────── -->
-    <div class="sec-title">Dólar Blue</div>
-
-    <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(155px,1fr));margin-bottom:4px;">
-      <div class="card">
-        <div class="kpi-label">Compra</div>
-        <div class="kpi-value" id="val-blue-compra">—</div>
-        <div class="kpi-sub" id="src-blue">ArgentinaDatos</div>
-      </div>
-      <div class="card">
-        <div class="kpi-label">Venta</div>
-        <div class="kpi-value" id="val-blue-venta">—</div>
-        <div class="kpi-sub" id="src-blue-fecha">—</div>
-      </div>
-      <div class="card">
-        <div class="kpi-label">Variación mensual</div>
-        <div class="kpi-value" id="val-blue-m">—</div>
-        <div class="kpi-sub">venta vs. 30 días atrás</div>
-      </div>
-      <div class="card">
-        <div class="kpi-label">Variación interanual</div>
-        <div class="kpi-value" id="val-blue-ia">—</div>
-        <div class="kpi-sub">venta vs. año anterior</div>
-      </div>
-      <div class="card">
-        <div class="kpi-label">Acum. en el año</div>
-        <div class="kpi-value" id="val-blue-ytd">—</div>
-        <div class="kpi-sub" id="val-blue-ytd-sub">venta vs. 31-dic año ant.</div>
-      </div>
-      <div class="card">
-        <div class="kpi-label">Brecha vs. oficial</div>
-        <div class="kpi-value" id="val-blue-brecha">—</div>
-        <div class="kpi-sub">sobre venta</div>
-      </div>
-    </div>
-
-    <!-- Gráfico de cotizaciones del dólar -->
-    <div id="blue-chart-section" style="margin-top:4px;">
-      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div>
-          <div class="sub-title">Comparación entre Tipos de Dolares</div>
-          <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">Punta vendedora · serie diaria de cierre · ArgentinaDatos · un día de rezago frente al valor en vivo de arriba</div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-
-          <!-- Desplegable multi-selección de cotizaciones -->
-          <div class="multi-dd" id="usd-dd">
-            <button type="button" class="period-select multi-dd-btn" id="usd-dd-btn" onclick="toggleUsdDD(event)">
-              <span id="usd-dd-label">Todos</span><span style="opacity:.55;font-size:9px;">▼</span>
-            </button>
-            <div class="multi-dd-panel" id="usd-dd-panel">
-              <label><input type="checkbox" value="oficial" checked onchange="onUsdChartSel()"><span class="dd-dot" style="background:#60a5fa"></span>Oficial</label>
-              <label><input type="checkbox" value="blue" checked onchange="onUsdChartSel()"><span class="dd-dot" style="background:#CC0000"></span>Blue / Informal</label>
-              <label><input type="checkbox" value="bolsa" checked onchange="onUsdChartSel()"><span class="dd-dot" style="background:#34d399"></span>MEP (Bolsa)</label>
-              <label><input type="checkbox" value="contadoconliqui" checked onchange="onUsdChartSel()"><span class="dd-dot" style="background:#f59e0b"></span>CCL (Cable)</label>
-              <div class="multi-dd-actions">
-                <button type="button" onclick="usdDDAll(true)">Todos</button>
-                <button type="button" onclick="usdDDAll(false)">Ninguno</button>
-              </div>
-            </div>
-          </div>
-
-          <select class="period-select" id="blue-range" onchange="renderBlueChart()">
-            <option value="365">Último año</option>
-            <option value="1095">Últimos 3 años</option>
-            <option value="1825">Últimos 5 años</option>
-            <option value="0">Histórico completo</option>
-          </select>
-        </div>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="chart-blue" role="img" aria-label="Evolución de las cotizaciones del dólar"></canvas>
-      </div>
-    </div>
-
-    <!-- ─── CONSULTA DE TIPO DE CAMBIO · vive en la pantalla Herramientas ─── -->
-    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
-      <div>
-        <div class="sub-title" style="margin-bottom:4px;">Consulta de tipo de cambio</div>
-        <div style="font-size:11px;color:var(--gris-txt);">Cotización del dólar oficial, blue, MEP o CCL en cualquier fecha.</div>
-      </div>
-      <button class="btn btn-rojo" onclick="abrirHerramienta('dolar')">ABRIR &rsaquo;</button>
-    </div>
-
-    <!-- ── SALARIOS Y EMPLEO DE LA CONSTRUCCIÓN ─────────── -->
-    <div id="sal-section">
-      <div class="sec-title">Salarios y empleo de la construcción</div>
-      <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
-        Primero lo que dice el convenio, después lo que se paga y cuánta gente hay trabajando.
-        UOCRA y UECARA son <strong style="color:#bbb;">básicos homologados</strong>; el salario
-        promedio del IERIC es el <strong style="color:#bbb;">efectivamente liquidado</strong>,
-        que incluye antigüedad, horas extras y adicionales. La brecha entre los dos es el dato.
-        <span style="display:block;margin-top:5px;font-size:10px;">
-          Los saltos grandes del básico en meses de acuerdos chicos no son errores: son sumas
-          no remunerativas que se incorporan, así que la variación del básico no equivale al
-          aumento real de bolsillo. Y ojo con el empleo: el del IERIC y el del INDEC miden
-          universos distintos y no se pueden encadenar. Cada uno va con su fuente.
-        </span>
-      </div>
-
-      <div class="sub-title" style="margin-bottom:8px;">
-        UOCRA · jornal por hora
-        <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="sal-uocra-fecha"></span>
-      </div>
-      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:16px;"
-           id="sal-uocra-kpis"></div>
-
-      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:18px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div class="sub-title">Evolución del salario</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <select class="period-select" id="sal-cat" onchange="renderSalChart()"></select>
-          <select class="period-select" id="sal-unidad" onchange="renderSalChart()">
-            <option value="ars">Pesos corrientes</option>
-            <option value="real" selected>Pesos constantes (deflactado por IPC)</option>
-            <option value="usd">Dólares (blue)</option>
-            <option value="idx">Índice base 100</option>
-          </select>
-          <select class="period-select" id="sal-range" onchange="renderSalChart()">
-            <option value="12">Último año</option>
-            <option value="24">Últimos 2 años</option>
-            <option value="36" selected>Últimos 3 años</option>
-            <option value="0">Todo</option>
-          </select>
-        </div>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="chart-sal" role="img" aria-label="Evolución de los salarios de la construcción"></canvas>
-      </div>
-      <div id="sal-nota" style="font-size:10px;color:var(--gris-txt);margin-top:8px;line-height:1.5;"></div>
-
-      <div class="sub-title" style="margin:22px 0 8px;">
-        UECARA · sueldo básico mensual
-        <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="sal-uecara-fecha"></span>
-      </div>
-      <div id="sal-uecara-tabla"></div>
-      <div class="fuente-bloque">
-        Fuente: escalas homologadas UOCRA (CCT 76/75 y 577/10) y UECARA (CCT 660/13) ·
-        carga manual desde el acuerdo publicado
-      </div>
-
-      <!-- ─── EMPLEO REGISTRADO · CÓRDOBA · IERIC ─── -->
-      <div style="margin:26px 0 8px;">
-        <div class="sub-title">
-          Empleo registrado en la construcción · Córdoba
-          <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="ier-pue-fecha"></span>
-        </div>
-        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;">
-          Puestos de trabajo registrados en la provincia, del padrón de la propia industria.
-          No es una encuesta ni una estimación: es un conteo.
-        </div>
-      </div>
-      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));"
-           id="ier-pue-kpis"></div>
-      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div class="sub-title">Evolución del empleo</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <select class="period-select" id="ier-pue-modo" onchange="renderIericChart('puestos')">
-            <option value="nivel">Puestos · Córdoba</option>
-            <option value="ia">Var. interanual · Córdoba y país</option>
-          </select>
-          <select class="period-select" id="ier-pue-range" onchange="renderIericChart('puestos')">
-            <option value="24">Últimos 2 años</option>
-            <option value="60" selected>Últimos 5 años</option>
-            <option value="120">Últimos 10 años</option>
-            <option value="0">Histórico completo</option>
-          </select>
-        </div>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="chart-ier-pue" role="img"
-                aria-label="Puestos de trabajo registrados en la construcción, provincia de Córdoba"></canvas>
-      </div>
-      <div class="fuente-bloque" id="ier-pue-fuente"></div>
-
-      <!-- ─── SALARIO PROMEDIO PAGADO · CÓRDOBA · IERIC ─── -->
-      <div style="margin:26px 0 8px;">
-        <div class="sub-title">
-          Salario promedio pagado · Córdoba
-          <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="ier-sal-fecha"></span>
-        </div>
-        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;">
-          Salario mensual promedio de los trabajadores registrados, en pesos corrientes.
-          Es lo que efectivamente se liquida, contra el básico de convenio de más arriba.
-        </div>
-      </div>
-      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));"
-           id="ier-sal-kpis"></div>
-      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div class="sub-title">Evolución del salario pagado</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <select class="period-select" id="ier-sal-modo" onchange="renderIericChart('salario')">
-            <option value="ia" selected>Var. interanual · Córdoba y país</option>
-            <option value="nivel">Pesos corrientes · Córdoba</option>
-          </select>
-          <select class="period-select" id="ier-sal-range" onchange="renderIericChart('salario')">
-            <option value="24">Últimos 2 años</option>
-            <option value="60" selected>Últimos 5 años</option>
-            <option value="120">Últimos 10 años</option>
-            <option value="0">Histórico completo</option>
-          </select>
-        </div>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="chart-ier-sal" role="img"
-                aria-label="Salario promedio de la construcción, provincia de Córdoba"></canvas>
-      </div>
-      <div class="fuente-bloque" id="ier-sal-fuente"></div>
-
-      <!-- ─── EMPLEO REGISTRADO PRIVADO · TOTAL PAÍS · INDEC ───
-           Estaba dentro de "Actividad de la construcción", junto a los permisos
-           de edificacion. Se movio aca para que el empleo quede todo junto. Los
-           permisos siguen alla, que es donde corresponden. -->
-      <div style="margin:26px 0 8px;">
-        <div class="sub-title">Empleo registrado privado · total país</div>
-        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;" id="isac-ep-sub">
-          Del informe mensual del INDEC · un mes más de rezago que el ISAC
-        </div>
-      </div>
-      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
-        <div class="card">
-          <div class="kpi-label">Puestos registrados</div>
-          <div class="kpi-value" id="kpi-emp-val">—</div>
-          <div class="kpi-sub" id="kpi-emp-fecha">sector privado</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Empleo · interanual</div>
-          <div class="kpi-value" id="kpi-emp-ia">—</div>
-          <div class="kpi-sub">vs. mismo mes año ant.</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Empleo · acum. año</div>
-          <div class="kpi-value" id="kpi-emp-acum">—</div>
-          <div class="kpi-sub">vs. igual período año ant.</div>
-        </div>
-      </div>
-      <div class="fuente-bloque">
-        Fuente: INDEC · Indicadores de coyuntura de la actividad de la construcción, cuadro 3
-        (puestos de asalariados registrados del sector privado, base SIPA).
-        <strong style="color:#999;">No es comparable en niveles con la serie del IERIC</strong>:
-        son universos distintos.
-      </div>
-    </div>
 
     <!-- ── COMPARADOR DE ÍNDICES ──────────── -->
     <div class="sec-title">Comparador de índices</div>
@@ -1163,6 +711,126 @@ body {
       <button class="btn btn-rojo" onclick="abrirHerramienta('ajuste')">ABRIR &rsaquo;</button>
     </div>
 
+    <!-- ── COSTO DEL M² · APYMECO ──────────────── -->
+    <div class="sec-title" id="apymeco-titulo">APYMECO - Costo del m²</div>
+    <div id="apymeco-section">
+      <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
+        Precio de obra por metro cuadrado que releva <strong style="color:#bbb;">APYMECO</strong>,
+        la asociación de pymes de la construcción del Gran La Plata. Es el único dato del tablero
+        con un <strong style="color:#bbb;">valor absoluto de mercado</strong>: el CAC y los dos ICC son
+        índices base 100, y el m² que publica Córdoba corresponde a una vivienda social de 50,25 m².
+        <strong style="color:#bbb;">Excluye IVA, terreno, honorarios, gastos legales y utilidad
+        del desarrollador</strong>: es costo directo de obra. Al ser bonaerense se lee como contraste
+        con el ICC Córdoba, nunca como reemplazo.
+        <span id="apymeco-datasource" style="display:block;margin-top:5px;font-size:10px;"></span>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="card">
+          <div class="kpi-label">Costo del m²</div>
+          <div class="kpi-value" id="kpi-apy-m2">—</div>
+          <div class="kpi-sub" id="kpi-apy-fecha">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Var. mensual</div>
+          <div class="kpi-value" id="kpi-apy-m">—</div>
+          <div class="kpi-sub">vs. mes anterior</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Var. interanual</div>
+          <div class="kpi-value" id="kpi-apy-ia">—</div>
+          <div class="kpi-sub">vs. mismo mes año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Acum. en el año</div>
+          <div class="kpi-value" id="kpi-apy-ytd">—</div>
+          <div class="kpi-sub" id="kpi-apy-ytd-sub">vs. dic. año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Costo en dólares</div>
+          <div class="kpi-value" id="kpi-apy-usd">—</div>
+          <div class="kpi-sub" id="kpi-apy-usd-sub">US$/m² · MEP promedio del mes</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-mas">
+      <div>
+        <div class="sub-title" style="margin-bottom:4px;">APYMECO · comparación de costos</div>
+        <div style="font-size:11px;color:var(--gris-txt);">Los cuatro índices de costo en un mismo gráfico, costo en dólares y buscador histórico.</div>
+      </div>
+      <button class="btn btn-rojo" onclick="abrirDetalle('apymeco')">VER DETALLE &rsaquo;</button>
+    </div>
+
+    <!-- ── SALARIOS Y EMPLEO DE LA CONSTRUCCIÓN ─────────── -->
+    <div id="sal-section">
+      <div class="sec-title">Salarios y empleo de la construcción</div>
+      <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
+        Primero lo que dice el convenio, después lo que se paga y cuánta gente hay trabajando.
+        UOCRA y UECARA son <strong style="color:#bbb;">básicos homologados</strong>; el salario
+        promedio del IERIC es el <strong style="color:#bbb;">efectivamente liquidado</strong>,
+        que incluye antigüedad, horas extras y adicionales. La brecha entre los dos es el dato.
+        <span style="display:block;margin-top:5px;font-size:10px;">
+          Los saltos grandes del básico en meses de acuerdos chicos no son errores: son sumas
+          no remunerativas que se incorporan, así que la variación del básico no equivale al
+          aumento real de bolsillo. Y ojo con el empleo: el del IERIC y el del INDEC miden
+          universos distintos y no se pueden encadenar. Cada uno va con su fuente.
+        </span>
+      </div>
+
+      <div class="sub-title" style="margin-bottom:8px;">
+        UOCRA · jornal por hora
+        <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="sal-uocra-fecha"></span>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:16px;"
+           id="sal-uocra-kpis"></div>
+      <div id="sal-uocra-nota" style="display:none;font-size:10.5px;color:var(--gris-txt);line-height:1.65;
+           background:var(--gris-osc);border:1px solid var(--gris-brd);border-left:3px solid var(--rojo);
+           border-radius:8px;padding:11px 14px;margin:-6px 0 16px;"></div>
+
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:18px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución del salario</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select class="period-select" id="sal-cat" onchange="renderSalChart()"></select>
+          <select class="period-select" id="sal-unidad" onchange="renderSalChart()">
+            <option value="ars">Pesos corrientes · básico de escala</option>
+            <option value="real" selected>Pesos constantes · serie homogénea</option>
+            <option value="realNom">Pesos constantes · básico nominal (con saltos)</option>
+            <option value="usd">Dólares (blue)</option>
+            <option value="idx">Índice base 100</option>
+          </select>
+          <select class="period-select" id="sal-range" onchange="renderSalChart()">
+            <option value="12">Último año</option>
+            <option value="24">Últimos 2 años</option>
+            <option value="36" selected>Últimos 3 años</option>
+            <option value="0">Todo</option>
+          </select>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-sal" role="img" aria-label="Evolución de los salarios de la construcción"></canvas>
+      </div>
+      <div id="sal-nota" style="font-size:10px;color:var(--gris-txt);margin-top:8px;line-height:1.5;"></div>
+
+      <div class="sub-title" style="margin:22px 0 8px;">
+        UECARA · sueldo básico mensual
+        <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="sal-uecara-fecha"></span>
+      </div>
+      <div id="sal-uecara-tabla"></div>
+      <div class="fuente-bloque">
+        Fuente: escalas homologadas UOCRA (CCT 76/75 y 577/10) y UECARA (CCT 660/13) ·
+        carga manual desde el acuerdo publicado
+      </div>
+    </div>
+
+    <div class="nav-mas">
+      <div>
+        <div class="sub-title" style="margin-bottom:4px;">Salarios y empleo · detalle</div>
+        <div style="font-size:11px;color:var(--gris-txt);">Empleo registrado y salario efectivamente pagado en Córdoba (IERIC), y empleo privado del país.</div>
+      </div>
+      <button class="btn btn-rojo" onclick="abrirDetalle('salarios')">VER DETALLE &rsaquo;</button>
+    </div>
+
     <!-- ── ISAC · ACTIVIDAD DE LA CONSTRUCCIÓN ──────────── -->
     <div class="sec-title">Actividad de la construcción</div>
     <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
@@ -1208,98 +876,14 @@ body {
       <div class="chart-wrap">
         <canvas id="chart-isac" role="img" aria-label="Evolución del ISAC, serie original y desestacionalizada"></canvas>
       </div>
+    </div>
 
-      <!-- ─── INSUMOS ─── -->
-      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:24px 0 10px;flex-wrap:wrap;gap:8px;">
-        <div>
-          <div class="sub-title">Insumos para la construcción</div>
-          <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;" id="isac-ins-sub">
-            Consumo aparente por insumo · variación interanual y acumulada del año
-          </div>
-        </div>
+    <div class="nav-mas">
+      <div>
+        <div class="sub-title" style="margin-bottom:4px;">Insumos y actividad · detalle</div>
+        <div style="font-size:11px;color:var(--gris-txt);">Consumo aparente de los 13 insumos, interanual por insumo, empresas en actividad y permisos de edificación.</div>
       </div>
-
-      <div class="ins-grid" id="isac-insumos"></div>
-
-      <div style="margin:18px 0 8px;">
-        <div class="sub-title">Interanual por insumo</div>
-      </div>
-      <div class="chart-wrap" style="height:340px;">
-        <canvas id="chart-isac-ins" role="img" aria-label="Variación interanual por insumo de la construcción"></canvas>
-      </div>
-
-      <div class="fuente-bloque">
-        Fuente: INDEC · Indicadores de coyuntura de la actividad de la construcción (ISAC),
-        base 2004=100 · serie de nivel general, desestacionalizada y consumo aparente de insumos
-      </div>
-
-      <!-- ─── EMPRESAS CONSTRUCTORAS EN ACTIVIDAD · CÓRDOBA · IERIC ─── -->
-      <div style="margin:26px 0 8px;">
-        <div class="sub-title">
-          Empresas constructoras en actividad · Córdoba
-          <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="ier-emp-fecha"></span>
-        </div>
-        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;">
-          Constructoras con inscripción al día en el registro de la industria, en la provincia.
-          Mide cuántas empresas están operando, no cuánto construyen.
-        </div>
-      </div>
-      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));"
-           id="ier-emp-kpis"></div>
-      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div class="sub-title">Evolución de las empresas en actividad</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <select class="period-select" id="ier-emp-modo" onchange="renderIericChart('empresas')">
-            <option value="nivel">Empresas · Córdoba</option>
-            <option value="ia">Var. interanual · Córdoba y país</option>
-          </select>
-          <select class="period-select" id="ier-emp-range" onchange="renderIericChart('empresas')">
-            <option value="24">Últimos 2 años</option>
-            <option value="60" selected>Últimos 5 años</option>
-            <option value="120">Últimos 10 años</option>
-            <option value="0">Histórico completo</option>
-          </select>
-        </div>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="chart-ier-emp" role="img"
-                aria-label="Empresas constructoras en actividad, provincia de Córdoba"></canvas>
-      </div>
-      <div class="fuente-bloque" id="ier-emp-fuente"></div>
-
-      <!-- ─── PERMISOS DE EDIFICACIÓN · TOTAL PAÍS ───
-           El bloque de empleo que estaba aca se movio a "Salarios y empleo de
-           la construccion". Los permisos se quedan, que es donde corresponden. -->
-      <div style="margin:26px 0 10px;">
-        <div class="sub-title">Permisos de edificación · total país</div>
-        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;">
-          Superficie autorizada para construir · un mes más de rezago que el ISAC
-        </div>
-      </div>
-
-      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
-        <div class="card">
-          <div class="kpi-label">Superficie autorizada</div>
-          <div class="kpi-value" id="kpi-per-val">—</div>
-          <div class="kpi-sub" id="kpi-per-fecha">m² · 246 municipios</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Permisos · interanual</div>
-          <div class="kpi-value" id="kpi-per-ia">—</div>
-          <div class="kpi-sub" id="kpi-per-cant">—</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Permisos · acum. año</div>
-          <div class="kpi-value" id="kpi-per-acum">—</div>
-          <div class="kpi-sub">m² vs. igual período año ant.</div>
-        </div>
-      </div>
-      <div class="fuente-bloque">
-        Fuente: INDEC · Indicadores de coyuntura de la actividad de la construcción, cuadro 4.
-        El relevamiento cubre 246 municipios (de Córdoba entran Córdoba, Alta Gracia, Cosquín y
-        Unquillo) pero <strong>el INDEC publica solo el agregado nacional</strong>: no hay
-        apertura provincial, y no se estima acá.
-      </div>
+      <button class="btn btn-rojo" onclick="abrirDetalle('isac')">VER DETALLE &rsaquo;</button>
     </div>
 
     <!-- ── ÍNDICE CONSTRUYA · ADELANTO PRIVADO DEL ISAC ── -->
@@ -1351,6 +935,14 @@ body {
       </div>
 
       <div style="font-size:10px;color:var(--gris-txt);margin-top:10px;line-height:1.6;" id="construya-informe"></div>
+    </div>
+
+    <div class="nav-mas">
+      <div>
+        <div class="sub-title" style="margin-bottom:4px;">Construya · detalle</div>
+        <div style="font-size:11px;color:var(--gris-txt);">Construya contra el ISAC, tabla mensual de la serie e informe del Grupo Construya.</div>
+      </div>
+      <button class="btn btn-rojo" onclick="abrirDetalle('construya')">VER DETALLE &rsaquo;</button>
     </div>
 
     <!-- ── MERCADO INMOBILIARIO Y CRÉDITO ──────────────── -->
@@ -1484,6 +1076,8 @@ body {
           <canvas id="chart-ceduc" role="img" aria-label="Ventas de departamentos y casas en Córdoba, serie desestacionalizada"></canvas>
         </div>
       </div>
+
+      <div class="det-analisis" id="an-inmobiliario" style="margin-top:26px;"></div>
     </div>
 
   </div><!-- /content -->
@@ -1494,11 +1088,11 @@ body {
 
 <!-- ══════════════════════════════════════
      HERRAMIENTAS
-     Los buscadores y la calculadora vivian intercalados en el tablero y lo
-     alargaban sin necesidad: son cosas que se usan de a ratos, no se miran
-     de un vistazo. Ahora cada uno tiene su pantalla y en el tablero queda
-     solo el boton. Es la misma pagina (no un archivo aparte) para que la
-     version portable y la de GitHub Pages sigan siendo un unico .html.
+     Aca queda la calculadora de contratos, que no es de un indice en
+     particular sino de todos: se usa de a ratos y no se mira de un vistazo,
+     asi que vive en su propia pantalla y en el tablero queda solo el boton.
+     Los buscadores por fecha del CAC, la UVA y el dolar se mudaron a la
+     pantalla de detalle de cada indice, que es donde se los busca.
 ══════════════════════════════════════ -->
 <div id="screen-herramientas" class="screen">
   <div class="header">
@@ -1512,95 +1106,6 @@ body {
     </div>
   </div>
   <div class="content">
-    <div class="tool-panel" id="tool-cac" style="display:none;">
-      <div class="sub-title" style="margin-bottom:2px;">Consulta CAC por período</div>
-      <div style="font-size:11px;color:var(--gris-txt);margin-bottom:14px;">Índice CAC · Cámara Argentina de la Construcción</div>
-    <!-- ─── CONSULTA CAC POR PERÍODO ─── -->
-    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;">
-      <div class="sub-title" style="margin-bottom:12px;">Consulta por período</div>
-
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
-          <select id="cac-q-anio" class="cac-q-select" onchange="onCacQAnioChange()"></select>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
-          <select id="cac-q-mes" class="cac-q-select" onchange="renderCacConsulta()"></select>
-        </div>
-        <button type="button" class="cac-q-btn" onclick="cacQUltimo()">Último disponible</button>
-      </div>
-
-      <div id="cac-q-result">
-        <div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">Cargando...</div>
-      </div>
-    </div>
-    </div>
-    <div class="tool-panel" id="tool-uva" style="display:none;">
-      <div class="sub-title" style="margin-bottom:2px;">Consulta UVA por fecha</div>
-      <div style="font-size:11px;color:var(--gris-txt);margin-bottom:14px;">Unidad de Valor Adquisitivo · BCRA</div>
-    <!-- ─── CONSULTA UVA POR FECHA ─── -->
-    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;">
-      <div class="sub-title" style="margin-bottom:12px;">Consulta por fecha</div>
-
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
-          <select id="uva-q-anio" class="cac-q-select" onchange="onUvaQAnioChange()"></select>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
-          <select id="uva-q-mes" class="cac-q-select" onchange="onUvaQMesChange()"></select>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">DÍA</div>
-          <select id="uva-q-dia" class="cac-q-select" style="min-width:80px;" onchange="renderUvaConsulta()"></select>
-        </div>
-        <button type="button" class="cac-q-btn" onclick="uvaQHoy()">Hoy</button>
-      </div>
-
-      <div id="uva-q-result">
-        <div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">Cargando serie UVA...</div>
-      </div>
-    </div>
-    </div>
-    <div class="tool-panel" id="tool-dolar" style="display:none;">
-      <div class="sub-title" style="margin-bottom:2px;">Consulta de tipo de cambio</div>
-      <div style="font-size:11px;color:var(--gris-txt);margin-bottom:14px;">Oficial, blue, MEP y CCL · ArgentinaDatos</div>
-    <!-- ─── CONSULTA COTIZACIÓN POR FECHA ─── -->
-    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;">
-      <div class="sub-title" style="margin-bottom:12px;">Consulta por fecha</div>
-
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">COTIZACIÓN</div>
-          <select id="usd-q-casa" class="cac-q-select" onchange="onUsdQCasaChange()">
-            <option value="blue">Blue / Informal</option>
-            <option value="oficial">Oficial</option>
-            <option value="bolsa">MEP (Bolsa)</option>
-            <option value="contadoconliqui">CCL (Cable)</option>
-          </select>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
-          <select id="usd-q-anio" class="cac-q-select" onchange="onUsdQAnioChange()"></select>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
-          <select id="usd-q-mes" class="cac-q-select" onchange="onUsdQMesChange()"></select>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">DÍA</div>
-          <select id="usd-q-dia" class="cac-q-select" style="min-width:80px;" onchange="renderUsdConsulta()"></select>
-        </div>
-        <button type="button" class="cac-q-btn" onclick="usdQHoy()">Último disponible</button>
-      </div>
-
-      <div id="usd-q-result">
-        <div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">Cargando cotizaciones...</div>
-      </div>
-    </div>
-    </div>
     <div class="tool-panel" id="tool-ajuste" style="display:none;">
       <div class="sub-title" style="margin-bottom:2px;">Calculadora de contratos y presupuestos</div>
       <div style="font-size:11px;color:var(--gris-txt);margin-bottom:14px;">Polinomio multi-índice · redeterminación</div>
@@ -1656,6 +1161,714 @@ body {
     </div>
     </div>
   </div>
+</div>
+
+
+
+<!-- ══════════════════════════════════════
+     PANTALLAS DE DETALLE
+     Cada seccion pesada del tablero tiene aca su propia pantalla: graficos
+     largos, aperturas por rubro, buscadores historicos y la lectura
+     automatica del ultimo dato. En el tablero queda solo el resumen y el
+     boton. Es la misma pagina (no un archivo aparte) para que la version
+     portable y la de GitHub Pages sigan siendo un unico .html.
+══════════════════════════════════════ -->
+<div id="screen-detalle" class="screen">
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span class="logo" style="font-size:15px;">GRUPO <span class="r">ELYON</span>
+        <span class="header-sub" id="detalle-titulo">Detalle</span>
+      </span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button class="btn btn-ghost" onclick="volverAlTablero()">&lsaquo; VOLVER AL TABLERO</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="det-panel" id="det-cac" style="display:none;">
+      <div class="det-analisis" id="an-cac"></div>
+    <!-- ── ÍNDICE CAC ──────────────────── -->
+    <div class="sec-title">Índice CAC</div>
+
+    <!-- KPIs CAC (siempre visibles con datos embebidos) -->
+    <div id="cac-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <span style="font-size:10px;color:var(--gris-txt);" id="cac-datasource">📊 Datos embebidos · Serie ene-2011/jun-2026 · Cámara Argentina de la Construcción</span>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="card">
+          <div class="kpi-label">CAC General</div>
+          <div class="kpi-value" id="kpi-cac-gen">—</div>
+          <div class="kpi-sub" id="kpi-cac-fecha">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Materiales</div>
+          <div class="kpi-value" id="kpi-cac-mat">—</div>
+          <div class="kpi-sub" id="kpi-cac-mat-src">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Mano de Obra</div>
+          <div class="kpi-value" id="kpi-cac-mo">—</div>
+          <div class="kpi-sub" id="kpi-cac-mo-src">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Var. interanual CAC</div>
+          <div class="kpi-value" id="kpi-cac-ia">—</div>
+          <div class="kpi-sub">vs. mismo mes año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Acum. en el año</div>
+          <div class="kpi-value" id="kpi-cac-ytd">—</div>
+          <div class="kpi-sub" id="kpi-cac-ytd-sub">vs. dic. año ant.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución del índice CAC</div>
+        <select class="period-select" id="cac-range" onchange="renderCacChart()">
+          <option value="12">Último año</option>
+          <option value="36">Últimos 3 años</option>
+          <option value="60">Últimos 5 años</option>
+          <option value="0">Histórico completo</option>
+        </select>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-cac" role="img" aria-label="Evolución del índice CAC General"></canvas>
+      </div>
+    </div>
+
+
+    <!-- ─── CONSULTA CAC POR PERÍODO ─── -->
+    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;">
+      <div class="sub-title" style="margin-bottom:12px;">Consulta por período</div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
+          <select id="cac-q-anio" class="cac-q-select" onchange="onCacQAnioChange()"></select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
+          <select id="cac-q-mes" class="cac-q-select" onchange="renderCacConsulta()"></select>
+        </div>
+        <button type="button" class="cac-q-btn" onclick="cacQUltimo()">Último disponible</button>
+      </div>
+
+      <div id="cac-q-result">
+        <div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">Cargando...</div>
+      </div>
+    </div>
+    </div>
+
+    <div class="det-panel" id="det-icc-cba" style="display:none;">
+      <div class="det-analisis" id="an-icc-cba"></div>
+    <!-- ── ICC CÓRDOBA ──────────────────── -->
+    <div class="sec-title" id="icc-cba-titulo">Índice ICC Córdoba</div>
+    <div id="icc-cba-section">
+      <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
+        Índice del Costo de la Construcción de la provincia de Córdoba, base 2012=100.
+        Mide una <strong style="color:#bbb;">vivienda social tipo de 50,25 m²</strong>
+        (cocina-comedor, dos dormitorios y baño), metodología vigente desde oct-2013.
+        Es el par local del CAC, que es nacional y sobre un edificio tipo porteño.
+        <span id="icc-cba-datasource" style="display:block;margin-top:5px;font-size:10px;"></span>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="card">
+          <div class="kpi-label">ICC Córdoba</div>
+          <div class="kpi-value" id="kpi-icc-idx">—</div>
+          <div class="kpi-sub" id="kpi-icc-fecha">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Var. mensual</div>
+          <div class="kpi-value" id="kpi-icc-m">—</div>
+          <div class="kpi-sub">vs. mes anterior</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Var. interanual</div>
+          <div class="kpi-value" id="kpi-icc-ia">—</div>
+          <div class="kpi-sub">vs. mismo mes año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Acum. en el año</div>
+          <div class="kpi-value" id="kpi-icc-ytd">—</div>
+          <div class="kpi-sub" id="kpi-icc-ytd-sub">vs. dic. año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Valor del m²</div>
+          <div class="kpi-value" id="kpi-icc-m2">—</div>
+          <div class="kpi-sub" id="kpi-icc-m2-sub">vivienda tipo 50,25 m²</div>
+        </div>
+      </div>
+
+      <div style="margin:20px 0 10px;">
+        <div class="sub-title">Apertura por rubro</div>
+      </div>
+      <div class="kpi-grid" id="icc-cba-rubros"
+           style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr));"></div>
+      <div style="font-size:10px;color:var(--gris-txt);margin-top:8px;line-height:1.6;"
+           id="icc-cba-rubros-nota"></div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:22px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución del ICC Córdoba</div>
+        <select class="period-select" id="icc-cba-range" onchange="renderIccCbaChart()">
+          <option value="12" selected>Último año</option>
+          <option value="36">Últimos 3 años</option>
+          <option value="60">Últimos 5 años</option>
+          <option value="0">Histórico completo</option>
+        </select>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-icc-cba" role="img" aria-label="Evolución del ICC de Córdoba por rubro"></canvas>
+      </div>
+
+    </div>
+
+    <div class="q-box">
+      <div class="sub-title" style="margin-bottom:4px;">Consulta ICC Córdoba por período</div>
+      <div style="font-size:11px;color:var(--gris-txt);margin-bottom:14px;">Nivel general, materiales, mano de obra, varios y valor del m² de cualquier mes desde oct-2013.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
+          <select id="qs-icccba-anio" class="cac-q-select" onchange="qsAnioChange('icccba')"></select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
+          <select id="qs-icccba-mes" class="cac-q-select" onchange="qsRender('icccba')"></select>
+        </div>
+        <button type="button" class="cac-q-btn" onclick="qsUltimo('icccba')">Último disponible</button>
+      </div>
+      <div id="qs-icccba-result"></div>
+    </div>
+
+    </div>
+
+    <div class="det-panel" id="det-icc-indec" style="display:none;">
+      <div class="det-analisis" id="an-icc-indec"></div>
+    <!-- ── ICC INDEC (GRAN BUENOS AIRES) ──────────────── -->
+    <div class="sec-title" id="icc-indec-titulo">Índice ICC INDEC</div>
+    <div id="icc-indec-section">
+      <div style="font-size:11px;color:var(--gris-txt);margin:-6px 0 14px;line-height:1.5;">
+        Índice del costo de la construcción en el <strong style="color:#bbb;">Gran Buenos Aires</strong>,
+        del INDEC. Mide construcción privada de edificios para vivienda en CABA y los 24 partidos
+        del conurbano, con apertura en Materiales (46,0%), Mano de obra (45,6%) y Gastos generales (8,4%).
+        Es el índice al que remite el Decreto 1.295/02 para redeterminar obra pública.
+        <span id="icc-indec-datasource" style="display:block;margin-top:5px;font-size:10px;"></span>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="card">
+          <div class="kpi-label">ICC INDEC</div>
+          <div class="kpi-value" id="kpi-iccn-idx">—</div>
+          <div class="kpi-sub" id="kpi-iccn-fecha">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Var. mensual</div>
+          <div class="kpi-value" id="kpi-iccn-m">—</div>
+          <div class="kpi-sub">vs. mes anterior</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Var. interanual</div>
+          <div class="kpi-value" id="kpi-iccn-ia">—</div>
+          <div class="kpi-sub">vs. mismo mes año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Acum. en el año</div>
+          <div class="kpi-value" id="kpi-iccn-ytd">—</div>
+          <div class="kpi-sub" id="kpi-iccn-ytd-sub">vs. dic. año ant.</div>
+        </div>
+      </div>
+
+      <div style="margin:20px 0 10px;">
+        <div class="sub-title">Apertura por capítulo</div>
+      </div>
+      <div class="kpi-grid" id="icc-indec-rubros"
+           style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr));"></div>
+      <div style="font-size:10px;color:var(--gris-txt);margin-top:8px;line-height:1.6;"
+           id="icc-indec-rubros-nota"></div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:22px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución del ICC INDEC</div>
+        <select class="period-select" id="icc-indec-range" onchange="renderIccIndecChart()">
+          <option value="12" selected>Último año</option>
+          <option value="36">Últimos 3 años</option>
+          <option value="60">Últimos 5 años</option>
+          <option value="0">Histórico completo</option>
+        </select>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-icc-indec" role="img" aria-label="Evolución del ICC del INDEC por capítulo"></canvas>
+      </div>
+    </div>
+
+    <div class="q-box">
+      <div class="sub-title" style="margin-bottom:4px;">Consulta ICC INDEC por período</div>
+      <div style="font-size:11px;color:var(--gris-txt);margin-bottom:14px;">Nivel general, materiales, mano de obra y gastos generales de cualquier mes de la serie.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
+          <select id="qs-iccindec-anio" class="cac-q-select" onchange="qsAnioChange('iccindec')"></select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
+          <select id="qs-iccindec-mes" class="cac-q-select" onchange="qsRender('iccindec')"></select>
+        </div>
+        <button type="button" class="cac-q-btn" onclick="qsUltimo('iccindec')">Último disponible</button>
+      </div>
+      <div id="qs-iccindec-result"></div>
+    </div>
+
+    </div>
+
+    <div class="det-panel" id="det-uva" style="display:none;">
+      <div class="det-analisis" id="an-uva"></div>
+    <!-- ── ÍNDICE UVA ──────────────────── -->
+    <div class="sec-title">Índice UVA</div>
+
+    <!-- UVA en tiempo real (datos.gob.ar / BCRA) -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(155px,1fr));margin-bottom:4px;">
+      <div class="card">
+        <div class="kpi-label">UVA (valor actual)</div>
+        <div class="kpi-value" id="val-uva">—</div>
+        <div class="kpi-sub" id="src-uva">BCRA · datos.gob.ar</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Variación mensual</div>
+        <div class="kpi-value" id="val-uva-m">—</div>
+        <div class="kpi-sub">vs. 30 días atrás</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Variación interanual</div>
+        <div class="kpi-value" id="val-uva-ia">—</div>
+        <div class="kpi-sub">vs. mismo día año ant.</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Acum. en el año</div>
+        <div class="kpi-value" id="val-uva-ytd">—</div>
+        <div class="kpi-sub" id="val-uva-ytd-sub">vs. 31-dic año ant.</div>
+      </div>
+    </div>
+
+    <!-- Gráfico UVA desde API -->
+    <div id="uva-chart-section" style="margin-top:4px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución del índice UVA</div>
+        <select class="period-select" id="uva-range" onchange="renderUvaChart()">
+          <option value="365">Último año</option>
+          <option value="1095">Últimos 3 años</option>
+          <option value="1825">Últimos 5 años</option>
+          <option value="0">Histórico completo</option>
+        </select>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-uva" role="img" aria-label="Evolución del índice UVA"></canvas>
+      </div>
+    </div>
+
+    <!-- ─── CONSULTA UVA POR FECHA ─── -->
+    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;">
+      <div class="sub-title" style="margin-bottom:12px;">Consulta por fecha</div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
+          <select id="uva-q-anio" class="cac-q-select" onchange="onUvaQAnioChange()"></select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
+          <select id="uva-q-mes" class="cac-q-select" onchange="onUvaQMesChange()"></select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">DÍA</div>
+          <select id="uva-q-dia" class="cac-q-select" style="min-width:80px;" onchange="renderUvaConsulta()"></select>
+        </div>
+        <button type="button" class="cac-q-btn" onclick="uvaQHoy()">Hoy</button>
+      </div>
+
+      <div id="uva-q-result">
+        <div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">Cargando serie UVA...</div>
+      </div>
+    </div>
+    </div>
+
+    <div class="det-panel" id="det-dolar" style="display:none;">
+      <div class="det-analisis" id="an-dolar"></div>
+    <!-- ── DÓLAR BLUE ──────────────────── -->
+    <div class="sec-title">Dólar Blue</div>
+
+    <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(155px,1fr));margin-bottom:4px;">
+      <div class="card">
+        <div class="kpi-label">Compra</div>
+        <div class="kpi-value" id="val-blue-compra">—</div>
+        <div class="kpi-sub" id="src-blue">ArgentinaDatos</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Venta</div>
+        <div class="kpi-value" id="val-blue-venta">—</div>
+        <div class="kpi-sub" id="src-blue-fecha">—</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Variación mensual</div>
+        <div class="kpi-value" id="val-blue-m">—</div>
+        <div class="kpi-sub">venta vs. 30 días atrás</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Variación interanual</div>
+        <div class="kpi-value" id="val-blue-ia">—</div>
+        <div class="kpi-sub">venta vs. año anterior</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Acum. en el año</div>
+        <div class="kpi-value" id="val-blue-ytd">—</div>
+        <div class="kpi-sub" id="val-blue-ytd-sub">venta vs. 31-dic año ant.</div>
+      </div>
+      <div class="card">
+        <div class="kpi-label">Brecha vs. oficial</div>
+        <div class="kpi-value" id="val-blue-brecha">—</div>
+        <div class="kpi-sub">sobre venta</div>
+      </div>
+    </div>
+
+    <!-- ─── CONSULTA COTIZACIÓN POR FECHA ─── -->
+    <div style="background:var(--gris-med);border:1px solid var(--gris-brd);border-radius:10px;padding:16px 18px;margin-top:14px;">
+      <div class="sub-title" style="margin-bottom:12px;">Consulta por fecha</div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">COTIZACIÓN</div>
+          <select id="usd-q-casa" class="cac-q-select" onchange="onUsdQCasaChange()">
+            <option value="blue">Blue / Informal</option>
+            <option value="oficial">Oficial</option>
+            <option value="bolsa">MEP (Bolsa)</option>
+            <option value="contadoconliqui">CCL (Cable)</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
+          <select id="usd-q-anio" class="cac-q-select" onchange="onUsdQAnioChange()"></select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
+          <select id="usd-q-mes" class="cac-q-select" onchange="onUsdQMesChange()"></select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">DÍA</div>
+          <select id="usd-q-dia" class="cac-q-select" style="min-width:80px;" onchange="renderUsdConsulta()"></select>
+        </div>
+        <button type="button" class="cac-q-btn" onclick="usdQHoy()">Último disponible</button>
+      </div>
+
+      <div id="usd-q-result">
+        <div style="text-align:center;padding:14px;color:var(--gris-txt);font-size:12px;">Cargando cotizaciones...</div>
+      </div>
+    </div>
+    </div>
+
+    <div class="det-panel" id="det-apymeco" style="display:none;">
+      <div class="det-analisis" id="an-apymeco"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:26px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Los cuatro índices de costo, uno al lado del otro</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select class="period-select" id="comp-costos-modo" onchange="renderCompCostos()">
+            <option value="mensual" selected>Variación mensual</option>
+            <option value="ia">Variación interanual</option>
+            <option value="base">Índice base 100</option>
+          </select>
+          <select class="period-select" id="comp-costos-range" onchange="renderCompCostos()">
+            <option value="12" selected>Último año</option>
+            <option value="24">Últimos 2 años</option>
+            <option value="36">Últimos 3 años</option>
+          </select>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-comp-costos" role="img"
+                aria-label="Comparación de CAC, ICC Córdoba, ICC INDEC y APYMECO"></canvas>
+      </div>
+      <div style="font-size:10px;color:var(--gris-txt);margin-top:8px;line-height:1.6;" id="comp-costos-nota"></div>
+    <div class="q-box">
+      <div class="sub-title" style="margin-bottom:4px;">Consulta APYMECO por período</div>
+      <div style="font-size:11px;color:var(--gris-txt);margin-bottom:14px;">Costo del m² publicado en cualquier mes de la serie.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
+          <select id="qs-apymeco-anio" class="cac-q-select" onchange="qsAnioChange('apymeco')"></select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
+          <select id="qs-apymeco-mes" class="cac-q-select" onchange="qsRender('apymeco')"></select>
+        </div>
+        <button type="button" class="cac-q-btn" onclick="qsUltimo('apymeco')">Último disponible</button>
+      </div>
+      <div id="qs-apymeco-result"></div>
+    </div>
+
+    </div>
+
+    <div class="det-panel" id="det-salarios" style="display:none;">
+      <div class="det-analisis" id="an-salarios"></div>
+      <!-- ─── EMPLEO REGISTRADO · CÓRDOBA · IERIC ─── -->
+      <div style="margin:26px 0 8px;">
+        <div class="sub-title">
+          Empleo registrado en la construcción · Córdoba
+          <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="ier-pue-fecha"></span>
+        </div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;">
+          Puestos de trabajo registrados en la provincia, del padrón de la propia industria.
+          No es una encuesta ni una estimación: es un conteo.
+        </div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));"
+           id="ier-pue-kpis"></div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución del empleo</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select class="period-select" id="ier-pue-modo" onchange="renderIericChart('puestos')">
+            <option value="nivel">Puestos · Córdoba</option>
+            <option value="ia">Var. interanual · Córdoba y país</option>
+          </select>
+          <select class="period-select" id="ier-pue-range" onchange="renderIericChart('puestos')">
+            <option value="24">Últimos 2 años</option>
+            <option value="60" selected>Últimos 5 años</option>
+            <option value="120">Últimos 10 años</option>
+            <option value="0">Histórico completo</option>
+          </select>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-ier-pue" role="img"
+                aria-label="Puestos de trabajo registrados en la construcción, provincia de Córdoba"></canvas>
+      </div>
+      <div class="fuente-bloque" id="ier-pue-fuente"></div>
+
+      <!-- ─── SALARIO PROMEDIO PAGADO · CÓRDOBA · IERIC ─── -->
+      <div style="margin:26px 0 8px;">
+        <div class="sub-title">
+          Salario promedio pagado · Córdoba
+          <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="ier-sal-fecha"></span>
+        </div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;">
+          Salario mensual promedio de los trabajadores registrados, en pesos corrientes.
+          Es lo que efectivamente se liquida, contra el básico de convenio de más arriba.
+        </div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));"
+           id="ier-sal-kpis"></div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución del salario pagado</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select class="period-select" id="ier-sal-modo" onchange="renderIericChart('salario')">
+            <option value="ia" selected>Var. interanual · Córdoba y país</option>
+            <option value="nivel">Pesos corrientes · Córdoba</option>
+          </select>
+          <select class="period-select" id="ier-sal-range" onchange="renderIericChart('salario')">
+            <option value="24">Últimos 2 años</option>
+            <option value="60" selected>Últimos 5 años</option>
+            <option value="120">Últimos 10 años</option>
+            <option value="0">Histórico completo</option>
+          </select>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-ier-sal" role="img"
+                aria-label="Salario promedio de la construcción, provincia de Córdoba"></canvas>
+      </div>
+      <div class="fuente-bloque" id="ier-sal-fuente"></div>
+
+      <!-- ─── EMPLEO REGISTRADO PRIVADO · TOTAL PAÍS · INDEC ───
+           Estaba dentro de "Actividad de la construcción", junto a los permisos
+           de edificacion. Se movio aca para que el empleo quede todo junto. Los
+           permisos siguen alla, que es donde corresponden. -->
+      <div style="margin:26px 0 8px;">
+        <div class="sub-title">Empleo registrado privado · total país</div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;" id="isac-ep-sub">
+          Del informe mensual del INDEC · un mes más de rezago que el ISAC
+        </div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
+        <div class="card">
+          <div class="kpi-label">Puestos registrados</div>
+          <div class="kpi-value" id="kpi-emp-val">—</div>
+          <div class="kpi-sub" id="kpi-emp-fecha">sector privado</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Empleo · interanual</div>
+          <div class="kpi-value" id="kpi-emp-ia">—</div>
+          <div class="kpi-sub">vs. mismo mes año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Empleo · acum. año</div>
+          <div class="kpi-value" id="kpi-emp-acum">—</div>
+          <div class="kpi-sub">vs. igual período año ant.</div>
+        </div>
+      </div>
+      <div class="fuente-bloque">
+        Fuente: INDEC · Indicadores de coyuntura de la actividad de la construcción, cuadro 3
+        (puestos de asalariados registrados del sector privado, base SIPA).
+        <strong style="color:#999;">No es comparable en niveles con la serie del IERIC</strong>:
+        son universos distintos.
+      </div>
+    </div>
+
+    <div class="det-panel" id="det-isac" style="display:none;">
+      <div class="det-analisis" id="an-isac"></div>
+      <!-- ─── INSUMOS ─── -->
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:24px 0 10px;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div class="sub-title">Insumos para la construcción</div>
+          <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;" id="isac-ins-sub">
+            Consumo aparente por insumo · variación interanual y acumulada del año
+          </div>
+        </div>
+      </div>
+
+      <div class="ins-grid" id="isac-insumos"></div>
+
+      <div style="margin:18px 0 8px;">
+        <div class="sub-title">Interanual por insumo</div>
+      </div>
+      <div class="chart-wrap" style="height:340px;">
+        <canvas id="chart-isac-ins" role="img" aria-label="Variación interanual por insumo de la construcción"></canvas>
+      </div>
+
+      <div class="fuente-bloque">
+        Fuente: INDEC · Indicadores de coyuntura de la actividad de la construcción (ISAC),
+        base 2004=100 · serie de nivel general, desestacionalizada y consumo aparente de insumos
+      </div>
+
+      <!-- ─── EMPRESAS CONSTRUCTORAS EN ACTIVIDAD · CÓRDOBA · IERIC ─── -->
+      <div style="margin:26px 0 8px;">
+        <div class="sub-title">
+          Empresas constructoras en actividad · Córdoba
+          <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="ier-emp-fecha"></span>
+        </div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;">
+          Constructoras con inscripción al día en el registro de la industria, en la provincia.
+          Mide cuántas empresas están operando, no cuánto construyen.
+        </div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));"
+           id="ier-emp-kpis"></div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución de las empresas en actividad</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select class="period-select" id="ier-emp-modo" onchange="renderIericChart('empresas')">
+            <option value="nivel">Empresas · Córdoba</option>
+            <option value="ia">Var. interanual · Córdoba y país</option>
+          </select>
+          <select class="period-select" id="ier-emp-range" onchange="renderIericChart('empresas')">
+            <option value="24">Últimos 2 años</option>
+            <option value="60" selected>Últimos 5 años</option>
+            <option value="120">Últimos 10 años</option>
+            <option value="0">Histórico completo</option>
+          </select>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-ier-emp" role="img"
+                aria-label="Empresas constructoras en actividad, provincia de Córdoba"></canvas>
+      </div>
+      <div class="fuente-bloque" id="ier-emp-fuente"></div>
+
+      <!-- ─── PERMISOS DE EDIFICACIÓN · TOTAL PAÍS ───
+           El bloque de empleo que estaba aca se movio a "Salarios y empleo de
+           la construccion". Los permisos se quedan, que es donde corresponden. -->
+      <div style="margin:26px 0 10px;">
+        <div class="sub-title">Permisos de edificación · total país</div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;">
+          Superficie autorizada para construir · un mes más de rezago que el ISAC
+        </div>
+      </div>
+
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
+        <div class="card">
+          <div class="kpi-label">Superficie autorizada</div>
+          <div class="kpi-value" id="kpi-per-val">—</div>
+          <div class="kpi-sub" id="kpi-per-fecha">m² · 246 municipios</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Permisos · interanual</div>
+          <div class="kpi-value" id="kpi-per-ia">—</div>
+          <div class="kpi-sub" id="kpi-per-cant">—</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Permisos · acum. año</div>
+          <div class="kpi-value" id="kpi-per-acum">—</div>
+          <div class="kpi-sub">m² vs. igual período año ant.</div>
+        </div>
+      </div>
+      <div class="fuente-bloque">
+        Fuente: INDEC · Indicadores de coyuntura de la actividad de la construcción, cuadro 4.
+        El relevamiento cubre 246 municipios (de Córdoba entran Córdoba, Alta Gracia, Cosquín y
+        Unquillo) pero <strong>el INDEC publica solo el agregado nacional</strong>: no hay
+        apertura provincial, y no se estima acá.
+      </div>
+    <div class="q-box">
+      <div class="sub-title" style="margin-bottom:4px;">Consulta ISAC por período</div>
+      <div style="font-size:11px;color:var(--gris-txt);margin-bottom:14px;">Nivel general original y desestacionalizado de cualquier mes de la serie.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
+          <select id="qs-isac-anio" class="cac-q-select" onchange="qsAnioChange('isac')"></select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
+          <select id="qs-isac-mes" class="cac-q-select" onchange="qsRender('isac')"></select>
+        </div>
+        <button type="button" class="cac-q-btn" onclick="qsUltimo('isac')">Último disponible</button>
+      </div>
+      <div id="qs-isac-result"></div>
+    </div>
+
+    </div>
+
+    <div class="det-panel" id="det-construya" style="display:none;">
+      <div class="det-analisis" id="an-construya"></div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:26px 0 8px;flex-wrap:wrap;gap:8px;">
+      <div>
+        <div class="sub-title">Construya vs. ISAC · variación interanual</div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;">
+          Construya mide solo obra privada y se publica casi un mes antes que el INDEC.
+          Cuando el ISAC corre por encima, el que empuja es el Estado; cuando corre por debajo,
+          la obra privada está tirando del carro.
+        </div>
+      </div>
+      <select class="period-select" id="cy-isac-range" onchange="renderCyIsacChart()">
+        <option value="24">Últimos 2 años</option>
+        <option value="60" selected>Últimos 5 años</option>
+        <option value="0">Histórico completo</option>
+      </select>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="chart-cy-isac" role="img" aria-label="Construya contra ISAC, variación interanual"></canvas>
+    </div>
+    <div class="fuente-bloque" id="cy-isac-nota"></div>
+
+    <div style="margin:26px 0 10px;"><div class="sub-title">Serie mensual · últimos 24 meses</div></div>
+    <div id="cy-tabla"></div>
+
+    <div class="q-box">
+      <div class="sub-title" style="margin-bottom:4px;">Consulta Construya por período</div>
+      <div style="font-size:11px;color:var(--gris-txt);margin-bottom:14px;">Índice con estacionalidad y desestacionalizado de cualquier mes de la serie.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">AÑO</div>
+          <select id="qs-construya-anio" class="cac-q-select" onchange="qsAnioChange('construya')"></select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:5px;">MES</div>
+          <select id="qs-construya-mes" class="cac-q-select" onchange="qsRender('construya')"></select>
+        </div>
+        <button type="button" class="cac-q-btn" onclick="qsUltimo('construya')">Último disponible</button>
+      </div>
+      <div id="qs-construya-result"></div>
+    </div>
+
+    </div>
+
+  </div>
+  <div class="footer">© Grupo Elyon · Tablero de Gestión Interna</div>
 </div>
 
 <script>
@@ -4735,6 +4948,8 @@ window.APYMECO_CACHE = {
    pactado (ej. ago-2026 +9,1 con un acuerdo de +1,9). No es un error:
    son las SUMAS NO REMUNERATIVAS que se incorporan al basico. Por eso
    la variacion del basico NO equivale al aumento real de bolsillo.
+   Los porcentajes de acuerdo se cargan en uocra.pactado (mas abajo) y el
+   tablero los usa para mostrar el aumento real al lado del nominal.
 ═══════════════════════════════════════════════════════════════════ */
 
 window.SALARIOS_CACHE = {
@@ -4755,6 +4970,30 @@ window.SALARIOS_CACHE = {
       ["medioOficial", "Medio oficial"],
       ["ayudante",     "Ayudante"]
     ],
+    /* PORCENTAJES REALMENTE PACTADOS EN LA PARITARIA
+       -----------------------------------------------
+       El basico salta muy por encima del acuerdo en los meses en que se
+       INCORPORA al basico una suma no remunerativa que el trabajador ya venia
+       cobrando aparte. Ese salto no es aumento de bolsillo: solo cambia de
+       donde sale la plata. Ejemplo: ago-2026 muestra +9,1% de basico con un
+       acuerdo de +1,9%.
+
+       Aca va, mes por mes, el porcentaje que fija el acuerdo homologado. El
+       tablero arma con esto una serie homogenea y lee el poder de compra sin
+       el ruido de las incorporaciones. Los meses que no esten listados usan la
+       variacion del basico tal cual.
+
+       AL CARGAR UN ACUERDO NUEVO, agregar aca sus porcentajes.
+
+       Fuente: acuerdos homologados CCT 76/75 (UOCRA - CAMARCO/FAEC)
+         mar-2026  2,0 %                          jun-2026  2,1 %  (absorbe la SNR de mayo)
+         abr-2026  1,9 %  (absorbe parte de SNR)  jul-2026  2,0 %
+         may-2026  1,8 %                          ago-2026  1,9 %  (absorbe la SNR de julio) */
+    pactado: {
+      "2026-03": 2.0, "2026-04": 1.9, "2026-05": 1.8,
+      "2026-06": 2.1, "2026-07": 2.0, "2026-08": 1.9
+    },
+
     /* ["aaaa-mm", oficialEsp, oficial, medioOficial, ayudante]  -  $/hora */
     serie: [
       ["2022-05", 463, 394, 364, 334],
@@ -5654,12 +5893,12 @@ const PASSWORD = 'elyon2024';   // ← Cambiá la contraseña aquí
    DATOS CAC EMBEBIDOS (fallback si no carga cac_cache.js)
    Fuente: Camara Argentina de la Construccion / INDEC
    Base: Dic-2014 = 100
-   Serie corregida: ene-2011 a abr-2026 (184 registros)
+   Serie corregida: ene-2011 a jun-2026 (186 registros)
    Corregido el desfasaje de 1 mes que tenia 'CAC General' respecto de
    Materiales y Mano de Obra (ver update_cac_cache.py).
    Formato por registro: [fecha, CAC General, Materiales, Mano de Obra]
 ═══════════════════════════════════════ */
-const CAC_EMBEDDED = [["2011-01-01",38.1,37.5,38.8],["2011-02-01",38.6,38.2,38.9],["2011-03-01",39.0,39.0,38.9],["2011-04-01",40.5,39.6,41.4],["2011-05-01",42.8,40.3,45.3],["2011-06-01",41.2,41.0,41.3],["2011-07-01",43.5,41.6,45.4],["2011-08-01",43.1,42.2,43.9],["2011-09-01",45.0,42.5,47.5],["2011-10-01",45.3,43.1,47.5],["2011-11-01",45.1,43.7,46.5],["2011-12-01",45.4,44.3,46.5],["2012-01-01",47.4,44.8,49.9],["2012-02-01",47.6,45.3,49.9],["2012-03-01",47.9,45.8,49.9],["2012-04-01",48.4,46.6,50.2],["2012-05-01",47.5,47.4,47.6],["2012-06-01",53.0,48.1,57.7],["2012-07-01",58.0,48.8,67.1],["2012-08-01",54.9,49.6,60.2],["2012-09-01",55.5,50.1,60.7],["2012-10-01",56.0,51.1,60.7],["2012-11-01",56.6,52.4,60.7],["2012-12-01",57.1,53.0,61.0],["2013-01-01",58.2,54.0,62.3],["2013-02-01",58.3,54.6,62.0],["2013-03-01",60.1,55.6,64.6],["2013-04-01",61.0,56.8,65.1],["2013-05-01",61.2,58.0,64.4],["2013-06-01",67.1,58.9,75.0],["2013-07-01",68.1,59.9,76.2],["2013-08-01",68.7,61.1,76.2],["2013-09-01",69.1,62.2,76.0],["2013-10-01",69.9,63.8,76.0],["2013-11-01",71.1,66.2,76.0],["2013-12-01",73.8,69.2,78.3],["2014-01-01",77.1,74.9,79.2],["2014-02-01",79.1,79.1,79.2],["2014-03-01",79.8,81.33,78.4],["2014-04-01",87.4,84.2,90.5],["2014-05-01",88.3,86.4,90.1],["2014-06-01",88.9,87.7,90.1],["2014-07-01",94.6,89.5,99.5],["2014-08-01",96.0,92.3,99.7],["2014-09-01",97.0,94.4,99.7],["2014-10-01",98.3,96.7,100.0],["2014-11-01",99.5,98.9,100.0],["2014-12-01",100.0,100.0,100.0],["2015-01-01",102.1,101.6,102.7],["2015-02-01",104.1,103.7,104.6],["2015-03-01",105.1,104.4,104.6],["2015-04-01",105.1,107.2,101.9],["2015-05-01",112.8,109.2,118.0],["2015-06-01",120.2,110.7,134.3],["2015-07-01",114.6,112.2,118.2],["2015-08-01",120.1,114.4,128.5],["2015-09-01",121.1,116.1,128.5],["2015-10-01",122.3,117.9,128.7],["2015-11-01",124.8,122.1,128.7],["2015-12-01",131.2,132.3,129.6],["2016-01-01",135.1,137.4,131.7],["2016-02-01",138.8,141.8,134.4],["2016-03-01",140.2,144.1,134.4],["2016-04-01",151.6,146.8,158.7],["2016-05-01",153.1,149.1,159.0],["2016-06-01",154.4,150.6,159.9],["2016-07-01",156.4,153.2,161.2],["2016-08-01",157.0,154.2,161.2],["2016-09-01",158.2,156.2,161.2],["2016-10-01",165.8,158.4,176.6],["2016-11-01",167.4,161.1,176.6],["2016-12-01",171.3,163.6,182.6],["2017-01-01",178.3,167.8,193.6],["2017-02-01",179.0,169.0,193.6],["2017-03-01",180.0,170.7,193.6],["2017-04-01",187.3,173.2,207.9],["2017-05-01",189.4,176.0,209.2],["2017-06-01",191.2,179.0,209.2],["2017-07-01",202.2,184.5,228.1],["2017-08-01",204.5,188.4,228.1],["2017-09-01",206.2,191.3,228.1],["2017-10-01",208.0,194.2,228.1],["2017-11-01",210.1,197.8,228.1],["2017-12-01",212.7,202.2,228.1],["2018-01-01",220.2,209.4,236.1],["2018-02-01",224.3,214.1,239.3],["2018-03-01",229.8,220.7,243.2],["2018-04-01",239.6,227.7,257.1],["2018-05-01",248.5,242.7,257.1],["2018-06-01",259.4,260.6,257.5],["2018-07-01",264.4,268.4,258.5],["2018-08-01",283.6,291.1,272.6],["2018-09-01",305.1,319.4,284.2],["2018-10-01",311.5,330.0,284.5],["2018-11-01",323.7,338.7,301.7],["2018-12-01",331.5,344.5,312.5],["2019-01-01",339.3,353.6,318.2],["2019-02-01",346.1,364.3,319.3],["2019-03-01",361.0,382.0,330.1],["2019-04-01",381.5,394.8,361.9],["2019-05-01",395.6,404.8,382.3],["2019-06-01",400.9,413.5,382.4],["2019-07-01",410.7,418.7,398.9],["2019-08-01",453.4,480.9,412.9],["2019-09-01",459.0,490.5,412.9],["2019-10-01",486.4,515.1,444.2],["2019-11-01",507.4,532.8,470.2],["2019-12-01",513.1,542.4,470.2],["2020-01-01",539.6,552.4,520.7],["2020-02-01",560.2,564.6,553.7],["2020-03-01",565.3,572.9,554.1],["2020-04-01",573.0,584.6,556.0],["2020-05-01",588.1,606.9,560.5],["2020-06-01",598.6,624.0,561.3],["2020-07-01",615.2,651.8,561.6],["2020-08-01",631.5,679.3,561.6],["2020-09-01",655.8,717.6,565.2],["2020-10-01",695.1,780.7,569.8],["2020-11-01",763.4,833.0,661.4],["2020-12-01",794.4,884.8,662.0],["2021-01-01",824.9,936.1,662.0],["2021-02-01",872.7,987.4,704.7],["2021-03-01",896.7,1027.5,704.9],["2021-04-01",959.1,1074.2,790.3],["2021-05-01",988.4,1122.3,792.2],["2021-06-01",1011.3,1160.8,792.3],["2021-07-01",1065.8,1205.0,861.4],["2021-08-01",1089.8,1245.7,861.4],["2021-09-01",1131.2,1291.8,895.9],["2021-10-01",1180.2,1341.5,943.6],["2021-11-01",1210.0,1391.6,943.6],["2021-12-01",1234.3,1431.9,944.9],["2022-01-01",1281.5,1487.1,980.2],["2022-02-01",1344.5,1545.8,1049.4],["2022-03-01",1416.2,1624.6,1110.7],["2022-04-01",1467.2,1709.9,1111.5],["2022-05-01",1563.9,1801.7,1215.2],["2022-06-01",1670.2,1907.4,1322.6],["2022-07-01",1784.0,2098.7,1322.6],["2022-08-01",1905.9,2245.6,1407.6],["2022-09-01",2051.9,2399.4,1541.9],["2022-10-01",2211.9,2573.0,1682.6],["2022-11-01",2369.7,2747.7,1815.7],["2022-12-01",2552.3,2933.6,1993.4],["2023-01-01",2713.1,3113.8,2125.6],["2023-02-01",2865.3,3276.5,2262.7],["2023-03-01",2998.7,3482.1,2290.2],["2023-04-01",3228.5,3740.9,2477.5],["2023-05-01",3448.3,3985.6,2660.9],["2023-06-01",3662.2,4282.6,2752.8],["2023-07-01",4001.9,4678.3,3010.5],["2023-08-01",4789.7,5707.8,3444.1],["2023-09-01",5215.9,6219.5,3744.9],["2023-10-01",5790.0,6979.6,4046.5],["2023-11-01",6785.2,8345.6,4498.0],["2023-12-01",9049.8,11806.7,5009.0],["2024-01-01",10331.0,13277.8,6011.7],["2024-02-01",11228.3,14214.4,6851.6],["2024-03-01",11669.0,14955.8,6851.6],["2024-04-01",12216.2,15226.8,7803.5],["2024-05-01",12747.4,15537.5,8657.9],["2024-06-01",13295.8,15811.7,9608.3],["2024-07-01",13574.8,16281.0,9608.3],["2024-08-01",14017.6,16700.7,10084.9],["2024-09-01",14366.9,17016.6,10483.3],["2024-10-01",14614.9,17149.9,10899.2],["2024-11-01",15043.0,17375.7,11624.1],["2024-12-01",15356.4,17585.1,12089.7],["2025-01-01",15592.5,17825.2,12319.9],["2025-02-01",15852.4,17967.5,12752.3],["2025-03-01",15995.4,18122.5,12877.8],["2025-04-01",16253.5,18640.1,12755.3],["2025-05-01",16521.3,18695.2,13334.9],["2025-06-01",16643.4,18826.5,13443.5],["2025-07-01",16939.5,19141.7,13711.8],["2025-08-01",17187.6,19490.0,13812.6],["2025-09-01",17762.3,20187.5,14207.5],["2025-10-01",18172.8,20740.8,14408.8],["2025-11-01",18534.9,21055.9,14839.9],["2025-12-01",18776.5,21335.3,15026.2],["2026-01-01",19209.4,21778.0,15444.4],["2026-02-01",19453.0,22007.9,15708.2],["2026-03-01",19771.2,22204.2,16205.2],["2026-04-01",20493.2,22870.0,17009.6]];
+const CAC_EMBEDDED = [["2011-01-01",38.1,37.5,38.8],["2011-02-01",38.6,38.2,38.9],["2011-03-01",39.0,39.0,38.9],["2011-04-01",40.5,39.6,41.4],["2011-05-01",42.8,40.3,45.3],["2011-06-01",41.2,41.0,41.3],["2011-07-01",43.5,41.6,45.4],["2011-08-01",43.1,42.2,43.9],["2011-09-01",45.0,42.5,47.5],["2011-10-01",45.3,43.1,47.5],["2011-11-01",45.1,43.7,46.5],["2011-12-01",45.4,44.3,46.5],["2012-01-01",47.4,44.8,49.9],["2012-02-01",47.6,45.3,49.9],["2012-03-01",47.9,45.8,49.9],["2012-04-01",48.4,46.6,50.2],["2012-05-01",47.5,47.4,47.6],["2012-06-01",53.0,48.1,57.7],["2012-07-01",58.0,48.8,67.1],["2012-08-01",54.9,49.6,60.2],["2012-09-01",55.5,50.1,60.7],["2012-10-01",56.0,51.1,60.7],["2012-11-01",56.6,52.4,60.7],["2012-12-01",57.1,53.0,61.0],["2013-01-01",58.2,54.0,62.3],["2013-02-01",58.3,54.6,62.0],["2013-03-01",60.1,55.6,64.6],["2013-04-01",61.0,56.8,65.1],["2013-05-01",61.2,58.0,64.4],["2013-06-01",67.1,58.9,75.0],["2013-07-01",68.1,59.9,76.2],["2013-08-01",68.7,61.1,76.2],["2013-09-01",69.1,62.2,76.0],["2013-10-01",69.9,63.8,76.0],["2013-11-01",71.1,66.2,76.0],["2013-12-01",73.8,69.2,78.3],["2014-01-01",77.1,74.9,79.2],["2014-02-01",79.1,79.1,79.2],["2014-03-01",79.8,81.33,78.4],["2014-04-01",87.4,84.2,90.5],["2014-05-01",88.3,86.4,90.1],["2014-06-01",88.9,87.7,90.1],["2014-07-01",94.6,89.5,99.5],["2014-08-01",96.0,92.3,99.7],["2014-09-01",97.0,94.4,99.7],["2014-10-01",98.3,96.7,100.0],["2014-11-01",99.5,98.9,100.0],["2014-12-01",100.0,100.0,100.0],["2015-01-01",102.1,101.6,102.7],["2015-02-01",104.1,103.7,104.6],["2015-03-01",105.1,104.4,104.6],["2015-04-01",105.1,107.2,101.9],["2015-05-01",112.8,109.2,118.0],["2015-06-01",120.2,110.7,134.3],["2015-07-01",114.6,112.2,118.2],["2015-08-01",120.1,114.4,128.5],["2015-09-01",121.1,116.1,128.5],["2015-10-01",122.3,117.9,128.7],["2015-11-01",124.8,122.1,128.7],["2015-12-01",131.2,132.3,129.6],["2016-01-01",135.1,137.4,131.7],["2016-02-01",138.8,141.8,134.4],["2016-03-01",140.2,144.1,134.4],["2016-04-01",151.6,146.8,158.7],["2016-05-01",153.1,149.1,159.0],["2016-06-01",154.4,150.6,159.9],["2016-07-01",156.4,153.2,161.2],["2016-08-01",157.0,154.2,161.2],["2016-09-01",158.2,156.2,161.2],["2016-10-01",165.8,158.4,176.6],["2016-11-01",167.4,161.1,176.6],["2016-12-01",171.3,163.6,182.6],["2017-01-01",178.3,167.8,193.6],["2017-02-01",179.0,169.0,193.6],["2017-03-01",180.0,170.7,193.6],["2017-04-01",187.3,173.2,207.9],["2017-05-01",189.4,176.0,209.2],["2017-06-01",191.2,179.0,209.2],["2017-07-01",202.2,184.5,228.1],["2017-08-01",204.5,188.4,228.1],["2017-09-01",206.2,191.3,228.1],["2017-10-01",208.0,194.2,228.1],["2017-11-01",210.1,197.8,228.1],["2017-12-01",212.7,202.2,228.1],["2018-01-01",220.2,209.4,236.1],["2018-02-01",224.3,214.1,239.3],["2018-03-01",229.8,220.7,243.2],["2018-04-01",239.6,227.7,257.1],["2018-05-01",248.5,242.7,257.1],["2018-06-01",259.4,260.6,257.5],["2018-07-01",264.4,268.4,258.5],["2018-08-01",283.6,291.1,272.6],["2018-09-01",305.1,319.4,284.2],["2018-10-01",311.5,330.0,284.5],["2018-11-01",323.7,338.7,301.7],["2018-12-01",331.5,344.5,312.5],["2019-01-01",339.3,353.6,318.2],["2019-02-01",346.1,364.3,319.3],["2019-03-01",361.0,382.0,330.1],["2019-04-01",381.5,394.8,361.9],["2019-05-01",395.6,404.8,382.3],["2019-06-01",400.9,413.5,382.4],["2019-07-01",410.7,418.7,398.9],["2019-08-01",453.4,480.9,412.9],["2019-09-01",459.0,490.5,412.9],["2019-10-01",486.4,515.1,444.2],["2019-11-01",507.4,532.8,470.2],["2019-12-01",513.1,542.4,470.2],["2020-01-01",539.6,552.4,520.7],["2020-02-01",560.2,564.6,553.7],["2020-03-01",565.3,572.9,554.1],["2020-04-01",573.0,584.6,556.0],["2020-05-01",588.1,606.9,560.5],["2020-06-01",598.6,624.0,561.3],["2020-07-01",615.2,651.8,561.6],["2020-08-01",631.5,679.3,561.6],["2020-09-01",655.8,717.6,565.2],["2020-10-01",695.1,780.7,569.8],["2020-11-01",763.4,833.0,661.4],["2020-12-01",794.4,884.8,662.0],["2021-01-01",824.9,936.1,662.0],["2021-02-01",872.7,987.4,704.7],["2021-03-01",896.7,1027.5,704.9],["2021-04-01",959.1,1074.2,790.3],["2021-05-01",988.4,1122.3,792.2],["2021-06-01",1011.3,1160.8,792.3],["2021-07-01",1065.8,1205.0,861.4],["2021-08-01",1089.8,1245.7,861.4],["2021-09-01",1131.2,1291.8,895.9],["2021-10-01",1180.2,1341.5,943.6],["2021-11-01",1210.0,1391.6,943.6],["2021-12-01",1234.3,1431.9,944.9],["2022-01-01",1281.5,1487.1,980.2],["2022-02-01",1344.5,1545.8,1049.4],["2022-03-01",1416.2,1624.6,1110.7],["2022-04-01",1467.2,1709.9,1111.5],["2022-05-01",1563.9,1801.7,1215.2],["2022-06-01",1670.2,1907.4,1322.6],["2022-07-01",1784.0,2098.7,1322.6],["2022-08-01",1905.9,2245.6,1407.6],["2022-09-01",2051.9,2399.4,1541.9],["2022-10-01",2211.9,2573.0,1682.6],["2022-11-01",2369.7,2747.7,1815.7],["2022-12-01",2552.3,2933.6,1993.4],["2023-01-01",2713.1,3113.8,2125.6],["2023-02-01",2865.3,3276.5,2262.7],["2023-03-01",2998.7,3482.1,2290.2],["2023-04-01",3228.5,3740.9,2477.5],["2023-05-01",3448.3,3985.6,2660.9],["2023-06-01",3662.2,4282.6,2752.8],["2023-07-01",4001.9,4678.3,3010.5],["2023-08-01",4789.7,5707.8,3444.1],["2023-09-01",5215.9,6219.5,3744.9],["2023-10-01",5790.0,6979.6,4046.5],["2023-11-01",6785.2,8345.6,4498.0],["2023-12-01",9049.8,11806.7,5009.0],["2024-01-01",10331.0,13277.8,6011.7],["2024-02-01",11228.3,14214.4,6851.6],["2024-03-01",11669.0,14955.8,6851.6],["2024-04-01",12216.2,15226.8,7803.5],["2024-05-01",12747.4,15537.5,8657.9],["2024-06-01",13295.8,15811.7,9608.3],["2024-07-01",13574.8,16281.0,9608.3],["2024-08-01",14017.6,16700.7,10084.9],["2024-09-01",14366.9,17016.6,10483.3],["2024-10-01",14614.9,17149.9,10899.2],["2024-11-01",15043.0,17375.7,11624.1],["2024-12-01",15356.4,17585.1,12089.7],["2025-01-01",15592.5,17825.2,12319.9],["2025-02-01",15852.4,17967.5,12752.3],["2025-03-01",15995.4,18122.5,12877.8],["2025-04-01",16253.5,18640.1,12755.3],["2025-05-01",16521.3,18695.2,13334.9],["2025-06-01",16643.4,18826.5,13443.5],["2025-07-01",16939.5,19141.7,13711.8],["2025-08-01",17187.6,19490.0,13812.6],["2025-09-01",17762.3,20187.5,14207.5],["2025-10-01",18172.8,20740.8,14408.8],["2025-11-01",18534.9,21055.9,14839.9],["2025-12-01",18776.5,21335.3,15026.2],["2026-01-01",19209.4,21778.0,15444.4],["2026-02-01",19453.0,22007.9,15708.2],["2026-03-01",19771.2,22204.2,16205.2],["2026-04-01",20493.2,22870.0,17009.6],["2026-05-01",21035.6,23500.2,17423.2],["2026-06-01",21641.1,23901.9,18327.3]];
 
 /* ═══════════════════════════════════════
    NAVEGACIÓN / SESSION
@@ -5694,13 +5933,11 @@ function showScreen(id) {
    (initAjuste, las consultas por fecha) sigue encontrando sus ids igual que
    antes: solo cambia donde se ven, no cuando se inicializan. */
 const HERRAM_TITULOS = {
-  cac:    'Consulta CAC por período',
-  uva:    'Consulta UVA por fecha',
-  dolar:  'Consulta de tipo de cambio',
   ajuste: 'Calculadora de contratos y presupuestos',
 };
 
 function abrirHerramienta(id) {
+  guardarScrollTablero();
   document.querySelectorAll('.tool-panel').forEach(p => { p.style.display = 'none'; });
   const panel = document.getElementById('tool-' + id);
   if (panel) panel.style.display = '';
@@ -5712,8 +5949,11 @@ function abrirHerramienta(id) {
   if (cont) cont.scrollTop = 0;
 }
 
+/* Vuelve al tablero a la MISMA altura en la que estaba, no arriba de todo:
+   si estabas mirando el ISAC y entraste al detalle, al salir volves al ISAC. */
 function volverAlTablero() {
   showScreen('indicadores');
+  restaurarScrollTablero();
 }
 
 function doLogin() {
@@ -7497,6 +7737,12 @@ async function loadUVA() {
 ══════════════════════════════════════════ */
 
 // IDs de elementos de texto a guardar/restaurar
+/* IMPORTANTE: aca van SOLO los datos que vienen de una API.
+   Lo que sale de un *_cache.js local (CAC, los dos ICC, APYMECO, el Registro,
+   CEDUC, ISAC, Construya) NO se guarda ni se restaura: ese dato ya esta bien
+   apenas abre el tablero, y un snapshot viejo lo unico que hacia era pisarlo
+   con el valor del dia que se apreto Guardar. Asi se colaba, por ejemplo, un
+   CAC de abril cuando el cache ya traia junio. */
 const SNAP_IDS = [
   'val-inf-m','src-inf-m','val-inf-ia','src-inf-ia',
   'val-inf-acum','src-inf-acum','val-rem','src-rem',
@@ -7508,22 +7754,9 @@ const SNAP_IDS = [
   'val-blue-compra','val-blue-venta','src-blue','src-blue-fecha',
   'val-blue-m','val-blue-ia','val-blue-ytd','val-blue-ytd-sub','val-blue-brecha',
   'dolar-ts','refresh-ts',
-  'kpi-cac-gen','kpi-cac-mat','kpi-cac-mo','kpi-cac-ia','kpi-cac-fecha',
-  'kpi-cac-ytd','kpi-cac-ytd-sub',
-  'kpi-icc-idx','kpi-icc-fecha','kpi-icc-m','kpi-icc-ia','kpi-icc-ytd',
-  'kpi-icc-ytd-sub','kpi-icc-m2','kpi-icc-m2-sub',
-  'kpi-iccn-idx','kpi-iccn-fecha','kpi-iccn-m','kpi-iccn-ia','kpi-iccn-ytd','kpi-iccn-ytd-sub',
-  'kpi-apy-m2','kpi-apy-fecha','kpi-apy-m','kpi-apy-ia','kpi-apy-ytd','kpi-apy-ytd-sub',
   'kpi-apy-usd','kpi-apy-usd-sub',
-  'kpi-transf','kpi-transf-fecha','kpi-transf-ia','kpi-transf-acum','kpi-transf-acum-sub',
-  'kpi-hipo','kpi-hipo-fecha','kpi-hipo-ia','kpi-hipo-acum','kpi-hipo-acum-sub',
   'kpi-cred-stock','kpi-cred-fecha','kpi-cred-ia','kpi-cred-real',
   'kpi-cred-tasa','kpi-cred-tasa-sub',
-  'kpi-ceduc-dep','kpi-ceduc-dep-sub','kpi-ceduc-dep-nf','kpi-ceduc-dep-nf-sub',
-  'kpi-ceduc-dep-f','kpi-ceduc-dep-f-sub','kpi-ceduc-coch','kpi-ceduc-coch-sub',
-  'kpi-isac-idx','kpi-isac-fecha','kpi-isac-ia','kpi-isac-acum','kpi-isac-acum-sub',
-  'kpi-isac-desest',
-  'kpi-cy-idx','kpi-cy-fecha','kpi-cy-ia','kpi-cy-acum','kpi-cy-acum-sub','kpi-cy-desest',
   'kpi-emp-val','kpi-emp-fecha','kpi-emp-ia','kpi-emp-acum',
   'kpi-per-val','kpi-per-fecha','kpi-per-ia','kpi-per-acum','kpi-per-cant',
 ];
@@ -7579,16 +7812,27 @@ function loadSnapshot() {
     if (!raw) return false;
     const snap = JSON.parse(raw);
 
+    /* Un snapshot es un PLAN B para cuando no hay conexion: completa lo que
+       quedo vacio, nunca reemplaza un valor que ya se pinto. Si pisara, un
+       guardado viejo dejaria numeros desactualizados en pantalla sin aviso. */
+    const _vacio = t => {
+      const s = String(t == null ? '' : t).trim();
+      return !s || s === '—' || s === '-' || s === 'N/D' || s === 'Pend.' || /^Cargando/i.test(s);
+    };
+
     // Restaurar textos y colores
     Object.entries(snap.ids || {}).forEach(([id, val]) => {
       const el = document.getElementById(id);
-      if (el) { el.textContent = val.text; if (val.color) el.style.color = val.color; }
+      if (el && _vacio(el.textContent)) {
+        el.textContent = val.text;
+        if (val.color) el.style.color = val.color;
+      }
     });
 
     // Restaurar badges de variación
     Object.entries(snap.badges || {}).forEach(([id, val]) => {
       const el = document.getElementById(id);
-      if (el) { el.textContent = val.text; el.className = val.cls; }
+      if (el && _vacio(el.textContent)) { el.textContent = val.text; el.className = val.cls; }
     });
 
     // Restaurar valores de dólar
@@ -7597,8 +7841,8 @@ function loadSnapshot() {
       if (!card) return;
       const compra = card.querySelector('[data-f="compra"]');
       const venta  = card.querySelector('[data-f="venta"]');
-      if (compra) compra.textContent = vals.compra;
-      if (venta)  venta.textContent  = vals.venta;
+      if (compra && _vacio(compra.textContent)) compra.textContent = vals.compra;
+      if (venta  && _vacio(venta.textContent))  venta.textContent  = vals.venta;
     });
 
     // Mostrar timestamp del guardado
@@ -7636,7 +7880,8 @@ const COMP_SERIES = {
   iccIndecMat: { label: 'ICC INDEC materiales', color: '#fbcfe8', get: () => compIccIndec(2) },
   iccIndecMo:  { label: 'ICC INDEC mano obra',  color: '#d946ef', get: () => compIccIndec(3) },
   apymeco:   { label: 'APYMECO (pymes)',    color: '#22d3ee', get: () => compApymeco() },
-  uocra:     { label: 'Jornal UOCRA',       color: '#a3e635', get: () => salSerieUocra('oficial') },
+  uocra:     { label: 'Jornal UOCRA (básico)', color: '#a3e635', get: () => salSerieUocra('oficial') },
+  uocraReal: { label: 'Jornal UOCRA (paritaria)', color: '#65a30d', get: () => salSerieUocraReal('oficial') },
   uva:       { label: 'UVA',                color: '#c084fc', get: () => compUva() },
   oficial:   { label: 'Dólar oficial',      color: '#60a5fa', get: () => compUsd('oficial') },
   blue:      { label: 'Dólar blue',         color: '#22c55e', get: () => compUsd('blue') },
@@ -7953,6 +8198,10 @@ async function reloadAll() {
   // El comparador se arma al final: necesita saber que series terminaron
   // con datos para no ofrecer casillas que no dibujarian nada.
   initComparador();
+
+  // La lectura del mercado inmobiliario vive en el tablero, no en una pantalla
+  // aparte, asi que se repinta aca con el credito hipotecario ya bajado.
+  pintarAnalisis('inmobiliario');
 }
 
 /* ══════════════════════════════════════════
@@ -7980,6 +8229,83 @@ function salSerieUocra(cat) {
   return m.size ? m : null;
 }
 
+/* Porcentaje de paritaria realmente pactado para un mes, si esta cargado en
+   salarios_cache.js. Null = no declarado. */
+function salPactado(ym) {
+  const u = window.SALARIOS_CACHE && window.SALARIOS_CACHE.uocra;
+  const v = (u && u.pactado) ? u.pactado[ym] : null;
+  return (v == null || isNaN(v)) ? null : Number(v);
+}
+
+/* ═══ SERIE HOMOGENEA DEL JORNAL ═══
+   El basico de convenio pega saltos que no son aumento: cuando se INCORPORA
+   al basico una suma no remunerativa que el trabajador ya venia cobrando, el
+   valor hora salta (ago-2026: +9,1%) aunque la paritaria haya sido +1,9% y el
+   bolsillo haya subido eso. Leer el poder de compra sobre el basico nominal da
+   cualquier cosa.
+
+   Esta serie encadena el porcentaje PACTADO en los meses declarados y la
+   variacion observada en el resto, y queda como indice base 100. Es la que hay
+   que usar contra el IPC. El basico nominal sigue disponible aparte, porque es
+   el que nombran los contratos. */
+function salSerieUocraReal(cat) {
+  const base = salSerieUocra(cat);
+  if (!base) return null;
+  const ym = [...base.keys()].sort();
+  const out = new Map();
+  let nivel = 100;
+  out.set(ym[0], nivel);
+  for (let i = 1; i < ym.length; i++) {
+    const pact = salPactado(ym[i]);
+    const prev = base.get(ym[i - 1]);
+    const obs  = prev ? (base.get(ym[i]) / prev - 1) * 100 : 0;
+    nivel *= 1 + (pact != null ? pact : obs) / 100;
+    out.set(ym[i], nivel);
+  }
+  return out;
+}
+
+/* El jornal en PESOS, pero homogeneo. El ultimo mes vale exactamente lo que
+   vale hoy, y a los meses anteriores se les suma el efecto de las sumas no
+   remunerativas que despues se incorporaron al basico. O sea: reconstruye
+   "basico + la SNR que luego se absorbio", que es lo comparable contra si
+   mismo a lo largo del tiempo.
+
+   Es la serie que hay que deflactar por IPC. Sobre el basico nominal, cada
+   incorporacion aparece como un salto de 8 o 9 puntos que en pesos constantes
+   se lee como una recuperacion del salario que nunca ocurrio. */
+function salSerieUocraPesos(cat) {
+  const base = salSerieUocra(cat);
+  const idx  = salSerieUocraReal(cat);
+  if (!base || !idx) return null;
+  const ym  = [...base.keys()].sort();
+  const ult = ym[ym.length - 1];
+  const k   = (idx.get(ult) ? base.get(ult) / idx.get(ult) : null);
+  if (!k) return null;
+  const out = new Map();
+  ym.forEach(m => { if (idx.get(m) != null) out.set(m, idx.get(m) * k); });
+  return out;
+}
+
+/* Meses en los que el basico salto por encima del acuerdo. Si el acuerdo no
+   esta cargado, marca como sospechoso todo salto de mas de 4% en un mes. */
+function salSaltos(cat, desde) {
+  const base = salSerieUocra(cat || 'oficial');
+  if (!base) return [];
+  const ym = [...base.keys()].sort();
+  const out = [];
+  for (let i = 1; i < ym.length; i++) {
+    if (desde && ym[i] < desde) continue;
+    const prev = base.get(ym[i - 1]);
+    if (!prev) continue;
+    const obs  = (base.get(ym[i]) / prev - 1) * 100;
+    const pact = salPactado(ym[i]);
+    if (pact != null) { if (obs - pact > 0.5) out.push({ ym: ym[i], obs: obs, pact: pact }); }
+    else if (obs > 4) out.push({ ym: ym[i], obs: obs, pact: null });
+  }
+  return out;
+}
+
 function _salCard(label, valor, sub, color) {
   return '<div class="card">'
        + '<div class="kpi-label">' + label + '</div>'
@@ -8003,19 +8329,70 @@ function _pintarSalKpis() {
   const fe = document.getElementById('sal-uocra-fecha');
   if (fe) fe.textContent = '· ' + fmtMes(ym + '-01') + ' · ' + u.zona + ' · ' + u.cct;
 
+  /* Las variaciones se muestran a valores de PARITARIA, no del basico nominal:
+     el basico incluye los saltos por incorporacion de sumas no remunerativas y
+     eso no es aumento (ver salSerieUocraReal). El nominal va en la nota. */
+  let huboCorreccion = false;
+
   cont.innerHTML = u.categorias.map(([clave, label], i) => {
     const col = i + 1;
     const v   = ultima[col];
     const mm  = prevMes && prevMes[col] ? (v / prevMes[col] - 1) * 100 : null;
     const ia  = filaIA  && filaIA[col]  ? (v / filaIA[col]  - 1) * 100 : null;
+
+    const rv  = anVarsCF(salSerieUocraReal(clave));
+    const mmR = rv && rv.mensual != null ? rv.mensual : mm;
+    const iaR = rv && rv.ia      != null ? rv.ia      : ia;
+    if ((mm != null && mmR != null && Math.abs(mm - mmR) > 0.05) ||
+        (ia != null && iaR != null && Math.abs(ia - iaR) > 0.05)) huboCorreccion = true;
+
     return _salCard(
       label,
       '$ ' + fmtN(v, 0) + '<span style="font-size:11px;color:var(--gris-txt);"> /h</span>',
-      (mm == null ? '' : 'Mes ' + _signoPct(mm) + ' · ')
-        + (ia == null ? '' : 'Año ' + _signoPct(ia)),
+      (mmR == null ? '' : 'Mes ' + _signoPct(mmR) + ' · ')
+        + (iaR == null ? '' : 'Año ' + _signoPct(iaR)),
       '');
   }).join('');
+
+  _pintarSalNota(huboCorreccion, ultima, prevMes, filaIA);
   return true;
+}
+
+/* Aclara, cuando hace falta, por que el basico subio mas que la paritaria */
+function _pintarSalNota(hubo, ultima, prevMes, filaIA) {
+  const nota = document.getElementById('sal-uocra-nota');
+  if (!nota) return;
+  if (!hubo) { nota.innerHTML = ''; nota.style.display = 'none'; return; }
+
+  const mmNom = (prevMes && prevMes[2]) ? (ultima[2] / prevMes[2] - 1) * 100 : null;
+  const iaNom = (filaIA  && filaIA[2])  ? (ultima[2] / filaIA[2]  - 1) * 100 : null;
+  const rv    = anVarsCF(salSerieUocraReal('oficial'));
+  const saltos = salSaltos('oficial', (+ultima[0].slice(0, 4) - 1) + ultima[0].slice(4));
+  const sinCargar = saltos.filter(s => s.pact == null);
+
+  const pct = (v, d) => v == null ? '—' : (v >= 0 ? '+' : '') + fmtN(v, d == null ? 2 : d) + '%';
+
+  nota.style.display = '';
+  nota.innerHTML =
+      '<strong style="color:#ccc;">Los porcentajes son los de paritaria, no los del básico.</strong> '
+    + 'El básico del oficial subió ' + pct(mmNom) + ' en el mes y ' + pct(iaNom, 1)
+    + ' interanual, pero adentro de esos números están las <strong style="color:#ccc;">sumas no '
+    + 'remunerativas que se incorporaron al básico</strong> y que el trabajador ya venía cobrando '
+    + 'aparte: cambia de dónde sale la plata, no cuánto cobra. Descontadas, el aumento pactado fue '
+    + (rv ? '<strong style="color:#ccc;">' + pct(rv.mensual) + ' en el mes y ' + pct(rv.ia, 1)
+           + ' interanual</strong>' : 'el del acuerdo homologado')
+    + (saltos.length
+        ? '. Meses con incorporación en el último año: '
+          + saltos.map(s => fmtMes(s.ym + '-01') + ' (básico ' + pct(s.obs)
+              + (s.pact != null ? ', acuerdo ' + pct(s.pact) : ', acuerdo sin cargar') + ')').join(', ')
+        : '')
+    + '.'
+    + (sinCargar.length
+        ? ' <span style="color:var(--rojo-txt);">⚠ Falta cargar el % de acuerdo de '
+          + sinCargar.map(s => fmtMes(s.ym + '-01')).join(', ')
+          + ' en <code>uocra.pactado</code> de salarios_cache.js: hasta entonces esos meses se '
+          + 'leen por el básico y el interanual queda sobreestimado.</span>'
+        : '');
 }
 
 /* Tabla de la escala vigente de UECARA */
@@ -8115,15 +8492,17 @@ async function renderSalChart() {
   const meses  = parseInt((document.getElementById('sal-range') || {}).value || '36', 10);
   const nota   = document.getElementById('sal-nota');
 
-  const base = salSerieUocra(cat);
-  if (!base) return;
+  const baseNom = salSerieUocra(cat);
+  if (!baseNom) return;
+
+  const deflacta = u => u === 'real' || u === 'realNom';
 
   /* Las unidades derivadas necesitan series que se bajan por API */
-  if (unidad === 'real') await loadIpcSerie();
-  if (unidad === 'usd')  await loadUsdSerie('blue');
+  if (deflacta(unidad)) await loadIpcSerie();
+  if (unidad === 'usd') await loadUsdSerie('blue');
 
-  const ipc  = unidad === 'real' ? compIpc() : null;
-  const usd  = unidad === 'usd'  ? compUsd('blue') : null;
+  const ipc  = deflacta(unidad) ? compIpc() : null;
+  const usd  = unidad === 'usd' ? compUsd('blue') : null;
 
   /* Pesos constantes es la vista por defecto, pero el deflactor sale del IPC,
      que se baja por API. Sin conexion —la version portable, sobre todo— antes
@@ -8131,7 +8510,7 @@ async function renderSalChart() {
      realidad el dato local de las escalas estaba entero. Ahora cae a pesos
      corrientes, deja el selector sincronizado y lo dice en la nota. */
   let avisoFallback = '';
-  if (unidad === 'real' && !ipc) {
+  if (deflacta(unidad) && !ipc) {
     unidad = 'ars';
     const selU = document.getElementById('sal-unidad');
     if (selU) selU.value = 'ars';
@@ -8140,15 +8519,28 @@ async function renderSalChart() {
   }
   if (unidad === 'usd'  && !usd) { if (nota) nota.textContent = 'No se pudo bajar la serie del dólar blue. Probá de nuevo con el botón Actualizar.'; return; }
 
+  /* Pesos corrientes muestra el basico tal cual esta en la escala homologada,
+     que es el numero que se liquida. Las demas vistas comparan el jornal
+     contra si mismo en el tiempo, asi que van sobre la serie homogenea: sin
+     eso, cada incorporacion de suma no remunerativa se lee como un aumento. */
+  const base = (unidad === 'ars' || unidad === 'realNom')
+    ? baseNom
+    : (salSerieUocraPesos(cat) || baseNom);
+
   let ys = [...base.keys()].sort();
   if (meses > 0) ys = ys.slice(-meses);
 
-  const ipcUlt = ipc ? ipc.get([...ipc.keys()].sort().pop()) : null;
+  /* Base de la deflactacion = ultimo mes con IPC publicado. No es
+     necesariamente el ultimo mes de la escala: el INDEC publica el IPC a
+     mediados del mes siguiente, asi que suele ir un mes atras. Los meses sin
+     IPC quedan sin punto en vez de inventar un deflactor. */
+  const ipcBase = ipc ? [...ipc.keys()].sort().pop() : null;
+  const ipcUlt  = ipcBase ? ipc.get(ipcBase) : null;
 
   let datos = ys.map(ym => {
     const v = base.get(ym);
-    if (unidad === 'real') { const d = ipc.get(ym); return d ? v / d * ipcUlt : null; }
-    if (unidad === 'usd')  { const d = usd.get(ym); return d ? v / d : null; }
+    if (deflacta(unidad)) { const d = ipc.get(ym); return d ? v / d * ipcUlt : null; }
+    if (unidad === 'usd') { const d = usd.get(ym); return d ? v / d : null; }
     return v;
   });
 
@@ -8158,12 +8550,15 @@ async function renderSalChart() {
   }
 
   const catLabel = (window.SALARIOS_CACHE.uocra.categorias.find(c => c[0] === cat) || [, cat])[1];
-  const sufijo = { ars: '$/hora corrientes',
-                   real: '$/hora de hoy (deflactado por IPC)',
-                   usd: 'USD/hora al blue',
-                   idx: 'índice base 100 = ' + fmtMes(ys[0] + '-01') }[unidad];
+  const enPesosDe = ipcBase ? 'pesos de ' + fmtMes(ipcBase + '-01') : 'pesos constantes';
+  const sufijo = { ars:     '$/hora corrientes · básico de la escala',
+                   real:    '$/hora en ' + enPesosDe + ' · serie homogénea',
+                   realNom: '$/hora en ' + enPesosDe + ' · básico nominal',
+                   usd:     'USD/hora al blue · serie homogénea',
+                   idx:     'índice base 100 = ' + fmtMes(ys[0] + '-01') + ' · serie homogénea',
+                 }[unidad];
 
-  const decimales = unidad === 'usd' ? 2 : (unidad === 'idx' ? 0 : 0);
+  const decimales = unidad === 'usd' ? 2 : 0;
 
   if (salChart) salChart.destroy();
   salChart = new Chart(ctx.getContext('2d'), {
@@ -8197,10 +8592,12 @@ async function renderSalChart() {
 
   if (nota) {
     const txt = {
-      ars:  'Valor nominal del básico de convenio. Incluye las sumas no remunerativas que se fueron incorporando, por eso hay saltos que no coinciden con el porcentaje del acuerdo.',
-      real: 'Cada mes convertido a pesos de hoy con el IPC del INDEC. Si la línea baja, el salario perdió contra la inflación.',
-      usd:  'Jornal dividido por el dólar blue de cierre de cada mes. Es la referencia útil cuando el ingreso de la obra está dolarizado.',
-      idx:  'Todo arranca en 100 en el primer mes del período elegido, para ver la variación acumulada.',
+      ars:  'Valor nominal del básico de convenio, tal cual sale en la escala homologada. Incluye las sumas no remunerativas que se fueron incorporando al básico, por eso hay saltos que no coinciden con el porcentaje del acuerdo.',
+      real: 'Serie homogénea llevada a pesos del último mes con IPC publicado (el INDEC saca el IPC a mediados del mes siguiente, por eso el último mes de la escala puede quedar sin punto).'
+          + ' Deflactado con el IPC Nacional nivel general del INDEC. El último mes es el básico real; los anteriores se ajustan para incluir las sumas no remunerativas que después se incorporaron, así el salto contable no se lee como aumento. Si la línea baja, el salario perdió contra la inflación.',
+      realNom: '⚠ Básico nominal deflactado por IPC, sin corregir. Cada incorporación de suma no remunerativa aparece acá como un salto para arriba que NO es aumento de bolsillo. Está para comparar contra la serie homogénea, no para leer poder de compra.',
+      usd:  'Serie homogénea dividida por el dólar blue de cierre de cada mes. Es la referencia útil cuando el ingreso de la obra está dolarizado.',
+      idx:  'Serie homogénea, arranca en 100 en el primer mes del período elegido, para ver la variación acumulada sin los saltos por incorporación.',
     }[unidad];
     nota.textContent = avisoFallback + txt + ' Fuente: ' + window.SALARIOS_CACHE.uocra.fuente
                      + ' · actualizado ' + window.SALARIOS_CACHE.actualizado + '.';
@@ -8384,7 +8781,8 @@ const AJ_COMPONENTES = [
   { id: 'iccnMat', label: 'ICC INDEC · Materiales',   get: () => compIccIndec(2) },
   { id: 'iccnMo',  label: 'ICC INDEC · Mano de obra', get: () => compIccIndec(3) },
   { id: 'iccnGen', label: 'ICC INDEC · General',      get: () => compIccIndec(1) },
-  { id: 'uocra',  label: 'UOCRA · Oficial',    get: () => salSerieUocra('oficial') },
+  { id: 'uocra',  label: 'UOCRA · Oficial (básico)', get: () => salSerieUocra('oficial') },
+  { id: 'uocraReal', label: 'UOCRA · Oficial (paritaria)', get: () => salSerieUocraReal('oficial') },
   { id: 'ipc',    label: 'IPC (INDEC)',        get: () => compIpc()        },
   { id: 'uva',    label: 'UVA',                get: () => compUva()        },
   { id: 'usdOf',  label: 'Dólar oficial',      get: () => compUsd('oficial') },
@@ -8594,7 +8992,7 @@ function initCacFromEmbedded() {
 
   const label = fromCache
     ? `📊 cac_cache.js · actualizado ${new Date(window.CAC_CACHE.updated).toLocaleDateString('es-AR')} · ${window.CAC_CACHE.source}`
-    : '📊 Datos embebidos (sin cac_cache.js) · CAC ene-2011/abr-2026';
+    : '📊 Datos embebidos (sin cac_cache.js) · CAC ene-2011/jun-2026';
 
   renderCacKpis(cacData, label);
   renderCacChart();
@@ -9572,12 +9970,12 @@ function renderResumenConstruccion() {
 
   const tarjetas = [
     { nombre: 'CAC General',  pie: 'Cámara Arg. de la Construcción · nacional',
-      d: varsDeMapa(compCac('cacGen')), dec: 1 },
+      d: varsDeMapa(compCac('cacGen')), dec: 1, det: 'cac' },
     { nombre: 'ICC Córdoba',  pie: 'vivienda social 50,25 m² · base 2012=100',
-      d: varsDeMapa(compIccCba(1)), dec: 1 },
+      d: varsDeMapa(compIccCba(1)), dec: 1, det: 'icc-cba' },
     { nombre: 'ICC INDEC',    pie: 'Gran Buenos Aires · base 1993=100',
-      d: varsDeMapa(compIccIndec(1)), dec: 1 },
-    { nombre: 'UVA',          pie: 'unidad de indexación · BCRA',
+      d: varsDeMapa(compIccIndec(1)), dec: 1, det: 'icc-indec' },
+    { nombre: 'UVA',          pie: 'unidad de indexación · BCRA', det: 'uva',
       d: uvaResumen ? { mes: String(uvaResumen.fecha).slice(0, 7), valor: uvaResumen.valor,
                         mensual: uvaResumen.mensual, ia: uvaResumen.ia, ytd: uvaResumen.ytd } : null,
       dec: 2, pesos: true },
@@ -9602,6 +10000,8 @@ function renderResumenConstruccion() {
     +     '<div><span class="rot">Acum. en el año</span>'
     +       '<span class="val" style="color:' + color(t.d.ytd) + ';">' + pct(t.d.ytd) + '</span></div>'
     +   '</div>'
+    +   (t.det ? '<button class="btn btn-rojo res-btn" onclick="abrirDetalle(\'' + t.det + '\')">'
+                 + 'VER DETALLE &rsaquo;</button>' : '')
     + '</div>').join('');
 }
 
@@ -10523,6 +10923,814 @@ function renderConstruyaChart() {
       },
     },
   });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PANTALLAS DE DETALLE
+   ═══════════════════════════════════════════════════════════
+   El tablero se hizo largo de mas: se scrolleaba un minuto para llegar al
+   ISAC. Ahora cada seccion pesada muestra arriba lo que se mira de un vistazo
+   (las tarjetas y, cuando aporta, el grafico principal) y manda el resto a su
+   propia pantalla: apertura por rubro, buscador historico y la lectura
+   automatica del ultimo dato.
+
+   Todo vive en el MISMO archivo .html, igual que la pantalla Herramientas.
+   Los ids no cambiaron de nombre, solo de lugar, asi que el JS que ya
+   existia (initIccCba, renderIsacChart, las consultas por fecha) sigue
+   encontrando lo suyo sin tocarse.
+
+   Al volver, el tablero queda en la misma altura en la que estaba: se guarda
+   el scroll antes de salir y se restituye al entrar.
+═══════════════════════════════════════════════════════════ */
+
+const DET_TITULOS = {
+  'cac':          'Índice CAC',
+  'icc-cba':      'ICC Córdoba',
+  'icc-indec':    'ICC INDEC · Gran Buenos Aires',
+  'uva':          'Índice UVA',
+  'dolar':        'Dólar · análisis',
+  'apymeco':      'APYMECO · costo del m²',
+  'salarios':     'Salarios y empleo',
+  'isac':         'Insumos y actividad de la construcción',
+  'construya':    'Índice Construya',
+};
+
+let scrollTablero = 0;
+const detIniciado = {};
+
+function guardarScrollTablero() {
+  const sc = document.getElementById('screen-indicadores');
+  if (sc && sc.classList.contains('active')) {
+    scrollTablero = window.scrollY || document.documentElement.scrollTop || 0;
+  }
+}
+
+/* Volver al tablero tiene que dejarlo donde estaba, no arriba de todo.
+   Se repite el scroll unas cuantas veces porque el navegador recalcula el
+   layout recien despues de que la pantalla se vuelve visible, y un solo
+   scrollTo antes de eso no agarra. */
+function restaurarScrollTablero() {
+  const y = scrollTablero;
+  const ir = () => window.scrollTo(0, y);
+  ir();
+  if (window.requestAnimationFrame) requestAnimationFrame(ir);
+  setTimeout(ir, 60);
+  setTimeout(ir, 220);
+}
+
+/* Un canvas que se dibujo estando oculto queda de 0 px. Al mostrarlo hay que
+   pedirle a Chart.js que recalcule el tamaño. */
+function redibujarCanvas(cont) {
+  if (!cont || typeof Chart === 'undefined' || !Chart.getChart) return;
+  cont.querySelectorAll('canvas').forEach(c => {
+    const ch = Chart.getChart(c);
+    if (ch) { try { ch.resize(); ch.update('none'); } catch (_) {} }
+  });
+}
+
+function abrirDetalle(id) {
+  const panel = document.getElementById('det-' + id);
+  if (!panel) return;
+  guardarScrollTablero();
+
+  document.querySelectorAll('.det-panel').forEach(p => { p.style.display = 'none'; });
+  panel.style.display = '';
+
+  const tit = document.getElementById('detalle-titulo');
+  if (tit) tit.textContent = DET_TITULOS[id] || 'Detalle';
+
+  showScreen('detalle');
+  window.scrollTo(0, 0);
+
+  if (!detIniciado[id]) {
+    detIniciado[id] = true;
+    try { initDetalle(id); } catch (e) { console.warn('initDetalle', id, e); }
+  }
+  redibujarCanvas(panel);
+  pintarAnalisis(id);
+
+  /* El IPC se baja recien cuando hace falta (lo usa el comparador). Si todavia
+     no esta, se pide y se repinta la lectura cuando llega. */
+  if (typeof loadIpcSerie === 'function' && (!ipcSerie || !ipcSerie.length)) {
+    loadIpcSerie().then(() => pintarAnalisis(id)).catch(() => {});
+  }
+}
+
+/* Widgets que solo existen en las pantallas de detalle */
+function initDetalle(id) {
+  if (id === 'icc-cba')   qsInit('icccba');
+  if (id === 'icc-indec') qsInit('iccindec');
+  if (id === 'apymeco')   qsInit('apymeco');
+  if (id === 'isac')      qsInit('isac');
+  if (id === 'construya') { qsInit('construya'); renderCyIsacChart(); pintarCyTabla(); }
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   BUSCADOR HISTÓRICO GENÉRICO
+   ═══════════════════════════════════════════════════════════
+   El CAC, la UVA y el dolar ya tenian su consulta por fecha. Los demas
+   indices no, y es lo primero que se necesita cuando hay que redeterminar un
+   contrato: el valor de tal mes y cuanto subio desde entonces.
+
+   Una sola implementacion parametrizada. Cada indice declara de que serie
+   sale y que columnas tiene; el resto (armar los desplegables, calcular las
+   variaciones y el coeficiente de ajuste hasta el ultimo dato) es comun.
+═══════════════════════════════════════════════════════════ */
+
+const QS_DEFS = {
+  icccba: {
+    serie: () => iccCbaSerie, base: 'base 2012=100',
+    cols: [[1, 'Nivel general', 2], [2, 'Materiales', 2], [3, 'Mano de obra', 2],
+           [4, 'Varios', 2], [5, 'Valor del m²', 0, true]],
+  },
+  iccindec: {
+    serie: () => iccIndecSerie, base: 'índice encadenado base 100',
+    cols: [[1, 'Nivel general', 2], [2, 'Materiales', 2], [3, 'Mano de obra', 2],
+           [4, 'Gastos generales', 2]],
+  },
+  apymeco: {
+    serie: () => apymecoSerie, base: 'pesos por m² de obra',
+    cols: [[1, 'Costo del m²', 0, true], [2, 'Índice', 2]],
+  },
+  isac: {
+    serie: () => isacSerie, base: 'base 2004=100',
+    cols: [[1, 'Nivel general', 1], [2, 'Desestacionalizada', 1]],
+  },
+  construya: {
+    serie: () => construyaSerie, base: 'base 2002=100',
+    cols: [[1, 'Con estacionalidad', 1], [2, 'Desestacionalizada', 1]],
+  },
+};
+
+function qsSerie(key) {
+  const d = QS_DEFS[key];
+  let s = null;
+  try { s = d && d.serie(); } catch (_) { s = null; }
+  return (s && s.length) ? s : null;
+}
+
+const qsAddMes = (ym, delta) => {
+  const a = +ym.slice(0, 4), m = +ym.slice(5, 7) + delta;
+  const d = new Date(a, m - 1, 1);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+};
+
+function qsInit(key) {
+  const s = qsSerie(key);
+  const selA = document.getElementById('qs-' + key + '-anio');
+  if (!s || !selA) return;
+  const anios = [...new Set(s.map(r => String(r[0]).slice(0, 4)))].sort((a, b) => b.localeCompare(a));
+  selA.innerHTML = anios.map(a => '<option value="' + a + '">' + a + '</option>').join('');
+  selA.value = anios[0];
+  qsAnioChange(key, String(s[s.length - 1][0]).slice(5, 7));
+}
+
+function qsAnioChange(key, mesPref) {
+  const s = qsSerie(key);
+  const selA = document.getElementById('qs-' + key + '-anio');
+  const selM = document.getElementById('qs-' + key + '-mes');
+  if (!s || !selA || !selM) return;
+  const meses = s.filter(r => String(r[0]).slice(0, 4) === selA.value)
+                 .map(r => String(r[0]).slice(5, 7));
+  selM.innerHTML = meses.map(m =>
+    '<option value="' + m + '">' + ISAC_MESES[+m - 1] + '</option>').join('');
+  selM.value = (mesPref && meses.indexOf(mesPref) >= 0) ? mesPref : meses[meses.length - 1];
+  qsRender(key);
+}
+
+function qsUltimo(key) {
+  const s = qsSerie(key);
+  const selA = document.getElementById('qs-' + key + '-anio');
+  if (!s || !selA) return;
+  const ult = String(s[s.length - 1][0]);
+  selA.value = ult.slice(0, 4);
+  qsAnioChange(key, ult.slice(5, 7));
+}
+
+function qsRender(key) {
+  const d = QS_DEFS[key], s = qsSerie(key);
+  const cont = document.getElementById('qs-' + key + '-result');
+  if (!cont) return;
+  if (!s) {
+    cont.innerHTML = '<div style="color:var(--gris-txt);font-size:12px;">Sin datos cargados.</div>';
+    return;
+  }
+  const selA = document.getElementById('qs-' + key + '-anio');
+  const selM = document.getElementById('qs-' + key + '-mes');
+  if (!selA || !selM || !selM.value) return;
+  const ym = selA.value + '-' + selM.value;
+
+  const mapaDe = col => {
+    const m = new Map();
+    s.forEach(r => { if (r[col] != null && !isNaN(r[col])) m.set(String(r[0]).slice(0, 7), Number(r[col])); });
+    return m;
+  };
+
+  let ultimoMes = null;
+  const filas = d.cols.map(spec => {
+    const col = spec[0], nom = spec[1], dec = spec[2], money = spec[3];
+    const m = mapaDe(col);
+    const v = m.get(ym);
+    if (v == null) return null;
+    const keys = [...m.keys()].sort();
+    const ult = keys[keys.length - 1];
+    ultimoMes = ultimoMes || ult;
+    const pv = ref => (ref != null && ref !== 0) ? (v / ref - 1) * 100 : null;
+    return {
+      nom: nom, dec: dec, money: money, v: v, ult: ult,
+      mensual: pv(m.get(qsAddMes(ym, -1))),
+      ia:      pv(m.get(qsAddMes(ym, -12))),
+      ytd:     pv(m.get((+ym.slice(0, 4) - 1) + '-12')),
+      coef:    (m.get(ult) != null && v) ? m.get(ult) / v : null,
+    };
+  }).filter(Boolean);
+
+  if (!filas.length) {
+    cont.innerHTML = '<div style="color:var(--gris-txt);font-size:12px;">' +
+                     'No hay dato publicado para ' + isacMesLargo(ym + '-01') + '.</div>';
+    return;
+  }
+
+  const pct = v => v == null || isNaN(v) ? '—'
+    : '<span style="color:' + (v >= 0 ? 'var(--verde)' : 'var(--rojo-txt)') + ';">' +
+      (v >= 0 ? '+' : '') + fmtN(v, 2) + '%</span>';
+  const val = f => f.money ? fmtARS(f.v) : fmtN(f.v, f.dec);
+
+  cont.innerHTML =
+      '<div style="font-size:12px;color:var(--gris-txt);margin-bottom:10px;">'
+    +   'Dato de <strong style="color:#fff;">' + isacMesLargo(ym + '-01') + '</strong>'
+    +   (d.base ? ' · ' + d.base : '') + '</div>'
+    + '<div style="overflow-x:auto;"><table class="tab-mens"><thead><tr>'
+    +   '<th>Serie</th><th>Valor</th><th>Mensual</th><th>Interanual</th><th>Acum. año</th>'
+    +   '<th>Coef. a ' + (ultimoMes ? isacMesLargo(ultimoMes + '-01') : 'hoy') + '</th>'
+    + '</tr></thead><tbody>'
+    + filas.map(f =>
+        '<tr><td>' + f.nom + '</td>'
+      + '<td style="font-weight:700;">' + val(f) + '</td>'
+      + '<td>' + pct(f.mensual) + '</td><td>' + pct(f.ia) + '</td><td>' + pct(f.ytd) + '</td>'
+      + '<td style="font-weight:700;color:#fff;">'
+      + (f.coef != null ? '× ' + fmtN(f.coef, 4) : '—') + '</td></tr>').join('')
+    + '</tbody></table></div>'
+    + '<div style="font-size:10.5px;color:var(--gris-txt);margin-top:10px;line-height:1.6;">'
+    +   'El <strong style="color:#999;">coeficiente</strong> es lo que hay que multiplicar por un '
+    +   'monto pactado en ese mes para llevarlo al último dato publicado. Para repartir el ajuste '
+    +   'entre varios índices, usá la calculadora de contratos del tablero.</div>';
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   LECTURA AUTOMÁTICA DEL ÚLTIMO DATO
+   ═══════════════════════════════════════════════════════════
+   El comentario de cada pantalla no esta escrito a mano: se calcula con los
+   datos que ya tiene cargados el tablero, cada vez que se abre la pantalla.
+   Asi no queda nunca desactualizado ni contradice a las tarjetas de arriba.
+
+   Lo que mira, en este orden:
+     · el ultimo dato y sus tres variaciones;
+     · el RITMO: la tasa mensual promedio del ultimo trimestre contra la del
+       trimestre previo, que es lo que dice si esta acelerando o aflojando
+       (la interanual arrastra doce meses y tapa los giros recientes);
+     · la comparacion contra el IPC, que es la que define si el costo subio
+       de verdad o solo acompaño a la inflacion;
+     · la misma serie medida en dolares, que es como se firman los negocios
+       en desarrollismo, y cuanto le falta al maximo historico;
+     · la apertura por componente, cuando la serie la tiene.
+
+   Los colores siguen el signo economico, no el matematico: en un indice de
+   COSTO que suba es mala noticia y va en rojo; en uno de ACTIVIDAD que suba
+   es buena y va en verde.
+═══════════════════════════════════════════════════════════ */
+
+const anMes = ym => isacMesLargo(String(ym).slice(0, 7) + '-01');
+
+function anPct(v, dec, buenoSiSube) {
+  if (v == null || isNaN(v)) return '<span style="color:#777;">s/d</span>';
+  const cls = ((v >= 0) === !!buenoSiSube) ? 'an-bien' : 'an-mal';
+  return '<span class="' + cls + '">' + (v >= 0 ? '+' : '') +
+         fmtN(v, dec == null ? 1 : dec) + '%</span>';
+}
+const anPP = v => (v == null || isNaN(v)) ? 's/d' : (v >= 0 ? '+' : '') + fmtN(v, 1) + ' pp';
+
+/* Variación real: descuenta una serie de la otra en vez de restar puntos */
+const anReal = (a, b) => (a == null || b == null) ? null : ((1 + a / 100) / (1 + b / 100) - 1) * 100;
+
+function anBloque(items, nota) {
+  const li = items.filter(Boolean);
+  if (!li.length) return '';
+  return '<div class="an-tit">Lectura automática del último dato</div>'
+       + '<ul class="an-lista"><li>' + li.join('</li><li>') + '</li></ul>'
+       + (nota ? '<div class="an-nota">' + nota + '</div>' : '');
+}
+
+/* Tasa mensual promedio de los ultimos n meses y de los n previos */
+function anRitmo(mapa, n) {
+  if (!mapa || mapa.size < n * 2 + 1) return null;
+  const ym = [...mapa.keys()].sort();
+  const L = ym.length - 1;
+  const tasa = (i, j) => {
+    const a = mapa.get(ym[i]), b = mapa.get(ym[j]);
+    if (!a || !b || a <= 0) return null;
+    return (Math.pow(b / a, 1 / (j - i)) - 1) * 100;
+  };
+  const act = tasa(L - n, L), prev = tasa(L - 2 * n, L - n);
+  if (act == null || prev == null) return null;
+  return { act: act, prev: prev, tea: (Math.pow(1 + act / 100, 12) - 1) * 100 };
+}
+
+const anIA = mapa => { const v = varsDeMapa(mapa); return v ? v.ia : null; };
+
+/* Igual que varsDeMapa, pero tolera huecos en la serie: si falta el mes exacto
+   de referencia toma el ultimo mes disponible anterior. Hace falta para las
+   escalas de convenio, que no tienen dato todos los meses (solo hay fila
+   cuando se homologa un acuerdo). */
+function anVarsCF(mapa) {
+  if (!mapa || !mapa.size) return null;
+  const ym  = [...mapa.keys()].sort();
+  const ult = ym[ym.length - 1];
+  const v   = mapa.get(ult);
+  const anterior = obj => { let r = null; ym.forEach(k => { if (k <= obj) r = k; }); return r; };
+  const pct = k => (k && k !== ult && mapa.get(k)) ? (v / mapa.get(k) - 1) * 100 : null;
+  const a = +ult.slice(0, 4), mm = ult.slice(5, 7);
+  return {
+    mes: ult, valor: v,
+    mensual: pct(ym[ym.length - 2]),
+    ia:      pct(anterior((a - 1) + '-' + mm)),
+    ytd:     pct(anterior((a - 1) + '-12')),
+  };
+}
+
+/* ═══ COMPARAR DOS SERIES SIN CORRER LOS PERIODOS ═══
+   Cada fuente publica con su propio rezago: el IPC de julio ya salio, el CAC
+   llega hasta junio y la escala de UOCRA hasta agosto. Restar la interanual de
+   una contra la de la otra sin mirar el mes compara doce meses que no son los
+   mismos doce meses, y la diferencia que sale no existe.
+
+   Esto busca el ultimo mes que las dos series comparten (con su propio mes de
+   hace un año presente en ambas) y devuelve las dos interanuales medidas ahi.
+   Devuelve tambien el mes, para poder decirlo en pantalla. */
+function anIAAlineado(a, b) {
+  if (!a || !b) return null;
+  const comunes = [...a.keys()].filter(k => b.has(k)).sort();
+  for (let i = comunes.length - 1; i >= 0; i--) {
+    const ym   = comunes[i];
+    const prev = (+ym.slice(0, 4) - 1) + ym.slice(4);
+    if (a.get(prev) && b.get(prev)) {
+      return { mes: ym,
+               a: (a.get(ym) / a.get(prev) - 1) * 100,
+               b: (b.get(ym) / b.get(prev) - 1) * 100 };
+    }
+  }
+  return null;
+}
+
+/* Divide dos Map de niveles mes a mes (sirve para pasar un índice a dólares) */
+function anDividir(a, b) {
+  if (!a || !b) return null;
+  const m = new Map();
+  a.forEach((v, ym) => { const d = b.get(ym); if (d) m.set(ym, v / d); });
+  return m.size ? m : null;
+}
+
+/* ── Motor común de los índices ── */
+function anIndice(cfg) {
+  const mapa = cfg.mapa;
+  const v = varsDeMapa(mapa);
+  if (!v) return '';
+  const bs = !!cfg.buenoSiSube;
+  const it = [];
+
+  it.push('En <strong>' + anMes(v.mes) + '</strong> ' + cfg.nombre + ' marcó <strong>'
+    + (cfg.money ? fmtARS(v.valor) : fmtN(v.valor, cfg.dec == null ? 1 : cfg.dec))
+    + '</strong>: ' + anPct(v.mensual, 2, bs) + ' contra el mes anterior, '
+    + anPct(v.ia, 1, bs) + ' interanual y ' + anPct(v.ytd, 1, bs) + ' acumulado en el año.');
+
+  const r = anRitmo(mapa, 3);
+  if (r) {
+    const dif = r.act - r.prev;
+    const verbo = Math.abs(dif) < 0.15 ? 'viene <strong>parejo</strong>'
+      : (dif > 0 ? 'viene <strong>acelerando</strong>' : 'viene <strong>aflojando</strong>');
+    it.push('Ritmo del último trimestre: ' + anPct(r.act, 2, bs) + ' por mes ('
+      + fmtN(r.tea, 1) + '% anualizado si sigue así), contra ' + anPct(r.prev, 2, bs)
+      + ' del trimestre previo. ' + verbo.charAt(0).toUpperCase() + verbo.slice(1) + '.');
+  }
+
+  if (cfg.componentes && cfg.componentes.length) {
+    const cs = cfg.componentes.map(c => ({ n: c.nombre, v: varsDeMapa(c.mapa) }))
+                              .filter(c => c.v && c.v.ia != null);
+    if (cs.length >= 2) {
+      const ord = cs.slice().sort((a, b) => b.v.ia - a.v.ia);
+      it.push('Por dentro: ' + cs.map(c => c.n + ' ' + anPct(c.v.ia, 1, bs) + ' i.a.').join(', ')
+        + ' El que empuja es <strong>' + ord[0].n + '</strong>, '
+        + anPP(ord[0].v.ia - ord[ord.length - 1].v.ia) + ' por encima de '
+        + ord[ord.length - 1].n.toLowerCase() + '.');
+    }
+  }
+
+  const al = anIAAlineado(mapa, compIpc());
+  if (al) {
+    const real = anReal(al.a, al.b);
+    it.push('Contra la inflación, en los doce meses cerrados a <strong>' + anMes(al.mes)
+      + '</strong> (el último que comparten las dos series): ' + cfg.corto + ' '
+      + anPct(al.a, 1, bs) + ' contra un IPC de ' + fmtN(al.b, 1) + '%, o sea <strong>'
+      + anPP(al.a - al.b) + '</strong>. En términos reales '
+      + (real >= 0 ? 'se encareció' : 'se abarató') + ' <strong>'
+      + fmtN(Math.abs(real), 1) + '%</strong>.');
+  }
+
+  const rel = anDividir(mapa, compUsd('blue'));
+  const rv = varsDeMapa(rel);
+  if (rv && rv.ia != null) {
+    const ymr = [...rel.keys()].sort();
+    let maxYm = ymr[0];
+    ymr.forEach(k => { if (rel.get(k) > rel.get(maxYm)) maxYm = k; });
+    const desdeMax = (rel.get(ymr[ymr.length - 1]) / rel.get(maxYm) - 1) * 100;
+    it.push('Medido en <strong>dólares blue</strong>, ' + cfg.corto + ' varió '
+      + anPct(rv.ia, 1, bs) + ' i.a. y hoy está '
+      + (Math.abs(desdeMax) < 0.5
+          ? '<strong>en el máximo de la serie</strong>'
+          : '<strong>' + fmtN(Math.abs(desdeMax), 1) + '% por debajo</strong> del máximo, de '
+            + anMes(maxYm))
+      + '. Es la referencia para cotizar obra contra un presupuesto dolarizado.');
+  }
+
+  return anBloque(it, cfg.nota);
+}
+
+/* ── Lecturas específicas ── */
+
+function anDolar() {
+  const it = [];
+  const blue = compUsd('blue'), ofi = compUsd('oficial');
+  const vb = varsDeMapa(blue);
+  const bv = (typeof dolarVivo === 'object' && dolarVivo) ? dolarVivo.blue : null;
+  const ov = (typeof dolarVivo === 'object' && dolarVivo) ? dolarVivo.oficial : null;
+
+  if (bv && ov && ov.venta) {
+    const br = (bv.venta / ov.venta - 1) * 100;
+    it.push('Ahora mismo el blue vende a <strong>' + fmtARS(bv.venta) + '</strong> y el oficial a <strong>'
+      + fmtARS(ov.venta) + '</strong>: la brecha es de <strong>' + fmtN(br, 1) + '%</strong>'
+      + (br < 5 ? ', prácticamente cerrada.' : (br > 40 ? ', muy amplia.' : '.')));
+  }
+  if (vb) {
+    it.push('Al cierre de ' + anMes(vb.mes) + ' el blue acumulaba ' + anPct(vb.mensual, 1, false)
+      + ' en el mes, ' + anPct(vb.ia, 1, false) + ' interanual y ' + anPct(vb.ytd, 1, false)
+      + ' en lo que va del año.');
+  }
+  const r = anRitmo(blue, 3);
+  if (r) {
+    const dif = r.act - r.prev;
+    it.push('Ritmo del último trimestre: ' + anPct(r.act, 2, false) + ' mensual ('
+      + fmtN(r.tea, 1) + '% anualizado), contra ' + anPct(r.prev, 2, false) + ' del trimestre previo. '
+      + (Math.abs(dif) < 0.15 ? 'Estable.' : (dif > 0 ? 'Acelerando.' : 'Aflojando.')));
+  }
+  const alUsd = anIAAlineado(blue, compIpc());
+  if (alUsd) {
+    const real = anReal(alUsd.a, alUsd.b);
+    it.push('Contra el IPC, en los doce meses cerrados a <strong>' + anMes(alUsd.mes)
+      + '</strong>: el dólar ' + anPct(alUsd.a, 1, false) + ' contra una inflación de '
+      + fmtN(alUsd.b, 1) + '%, o sea ' + (alUsd.a >= alUsd.b ? 'le ganó' : 'quedó atrás')
+      + ' por <strong>' + anPP(alUsd.a - alUsd.b) + '</strong>. El tipo de cambio real se '
+      + (real >= 0 ? 'depreció' : 'apreció') + ' <strong>' + fmtN(Math.abs(real), 1) + '%</strong>. '
+      + (real < 0 ? 'Un peso más caro abarata el costo de obra medido en dólares.'
+                  : 'Un dólar más caro encarece todo lo importado de la obra.'));
+  }
+  const vc = varsDeMapa(compCac('cacGen'));
+  if (vc && vb && vc.ia != null && vb.ia != null) {
+    it.push('Contra el costo de obra (CAC ' + fmtN(vc.ia, 1) + '% i.a.), el dólar corre '
+      + anPP(vb.ia - vc.ia) + '. '
+      + (vb.ia < vc.ia
+          ? 'Construir se está encareciendo en dólares: el presupuesto dolarizado se queda corto.'
+          : 'Construir se abarata en dólares: conviene tener el precio pactado en moneda dura.'));
+  }
+  return anBloque(it,
+    'Los valores del día salen de las APIs en vivo; las variaciones mensuales usan la serie diaria ' +
+    'de cierre de ArgentinaDatos, que tiene un día de rezago.');
+}
+
+function anSalarios() {
+  const it = [];
+  const v  = anVarsCF(salSerieUocra('oficial'));      // básico nominal
+  const vr = anVarsCF(salSerieUocraReal('oficial'));  // paritaria, sin los saltos por SNR
+  const paritaria = vr || v;
+  const saltos = v ? salSaltos('oficial', (+v.mes.slice(0, 4) - 1) + v.mes.slice(4)) : [];
+
+  if (v) {
+    it.push('El jornal de convenio del <strong>oficial UOCRA</strong> vigente en ' + anMes(v.mes)
+      + ' es de <strong>' + fmtARS2(v.valor) + ' por hora</strong>. La paritaria de este mes fue '
+      + anPct(paritaria.mensual, 2, true) + ' y acumula ' + anPct(paritaria.ia, 1, true)
+      + ' en doce meses.');
+  }
+  if (saltos.length && v) {
+    const s = saltos[saltos.length - 1];
+    it.push('Ojo con el básico nominal: subió ' + anPct(v.mensual, 2, true) + ' en el mes y '
+      + anPct(v.ia, 1, true) + ' interanual, pero <strong>eso no es aumento de bolsillo</strong>. '
+      + 'En ' + saltos.map(x => fmtMes(x.ym + '-01')).join(', ') + ' se incorporaron al básico '
+      + 'sumas no remunerativas que el trabajador ya cobraba aparte (en ' + fmtMes(s.ym + '-01')
+      + ' el básico saltó ' + anPct(s.obs, 2, true)
+      + (s.pact != null ? ' con un acuerdo de ' + anPct(s.pact, 2, true) : '')
+      + '). Todo el análisis de acá abajo usa la serie de paritaria.');
+  }
+  /* El IPC va un mes por detras de la escala: si la paritaria llega a agosto y
+     el IPC a julio, se comparan los doce meses cerrados a julio en las dos. */
+  const alSal = anIAAlineado(salSerieUocraReal('oficial'), compIpc());
+  if (alSal) {
+    const real = anReal(alSal.a, alSal.b);
+    it.push('Poder de compra, en los doce meses cerrados a <strong>' + anMes(alSal.mes)
+      + '</strong> (último mes con IPC publicado): la paritaria acumuló ' + anPct(alSal.a, 1, true)
+      + ' contra una inflación de ' + fmtN(alSal.b, 1) + '%: el jornal '
+      + (real >= 0 ? '<strong class="an-bien">ganó</strong>' : '<strong class="an-mal">perdió</strong>')
+      + ' <strong>' + fmtN(Math.abs(real), 1) + '%</strong> de poder de compra.');
+  }
+  const mo = varsDeMapa(compIccCba(3));
+  if (mo && paritaria && mo.ia != null && paritaria.ia != null) {
+    it.push('El capítulo mano de obra del ICC Córdoba subió ' + anPct(mo.ia, 1, false)
+      + ' i.a., ' + anPP(mo.ia - paritaria.ia) + ' contra la paritaria. La diferencia son '
+      + 'antigüedad, horas extras, cargas y adicionales, que no están en la escala.');
+  }
+  const sal = iericBloque('salario'), pue = iericBloque('puestos');
+  if (sal) {
+    const u = sal.serie[sal.serie.length - 1];
+    it.push('Lo que <strong>efectivamente se liquida</strong> en Córdoba (IERIC, ' + anMes(u[0])
+      + ') promedia <strong>' + fmtARS(u[1]) + '</strong> por mes, ' + anPct(u[4], 1, true) + ' i.a.');
+  }
+  if (pue) {
+    const u = pue.serie[pue.serie.length - 1];
+    it.push('Hay <strong>' + fmtN(u[1], 0) + ' puestos registrados</strong> en la construcción en la '
+      + 'provincia (' + anMes(u[0]) + '), ' + anPct(u[4], 1, true) + ' i.a. y ' + anPct(u[3], 1, true)
+      + ' contra el mes anterior.');
+  }
+  return anBloque(it,
+    'El básico de convenio y el salario del IERIC no son comparables en nivel: uno es una escala ' +
+    'homologada por hora y el otro un promedio mensual efectivamente pagado. Lo que se lee es la ' +
+    'brecha entre cómo se mueven. Los porcentajes de paritaria salen de los acuerdos homologados ' +
+    'cargados en <code>uocra.pactado</code> de salarios_cache.js; los meses que no estén cargados ' +
+    'se leen por la variación del básico.');
+}
+
+function anIsac() {
+  const it = [];
+  const mapa = compIsac();
+  const v = varsDeMapa(mapa);
+  if (v) {
+    it.push('El ISAC de <strong>' + anMes(v.mes) + '</strong> marcó ' + fmtN(v.valor, 1)
+      + ': ' + anPct(v.ia, 1, true) + ' interanual y ' + anPct(isacVarAcum(mapa), 1, true)
+      + ' acumulado en el año. Es volumen físico de obra, no precios.');
+  }
+  const des = isacMapa(isacSerie.map(f => [f[0], f[2]]));
+  const r = anRitmo(des, 3);
+  if (r) {
+    it.push('Sobre la serie desestacionalizada, el último trimestre corre a ' + anPct(r.act, 2, true)
+      + ' por mes contra ' + anPct(r.prev, 2, true) + ' del trimestre previo: '
+      + (r.act - r.prev > 0.15 ? '<strong>la actividad está tomando envión</strong>'
+        : (r.act - r.prev < -0.15 ? '<strong>la actividad se está enfriando</strong>'
+                                  : '<strong>amesetada</strong>')) + '.');
+  }
+  const filas = [];
+  ISAC_INSUMOS.forEach(t => {
+    const m = isacMapa(isacInsumos[t[0]]);
+    if (m.size) { const ia = isacVarIA(m); if (ia != null) filas.push({ n: t[2], ia: ia }); }
+  });
+  if (filas.length >= 3) {
+    filas.sort((a, b) => b.ia - a.ia);
+    const suben = filas.filter(f => f.ia >= 0).length;
+    it.push('De los ' + filas.length + ' insumos que releva el INDEC, <strong>' + suben
+      + ' suben</strong> y ' + (filas.length - suben) + ' caen contra el año pasado. '
+      + 'Arriba: ' + filas.slice(0, 3).map(f => f.n.toLowerCase() + ' ' + anPct(f.ia, 1, true)).join(', ')
+      + '. Abajo: ' + filas.slice(-2).map(f => f.n.toLowerCase() + ' ' + anPct(f.ia, 1, true)).join(', ') + '.');
+    it.push('Los insumos de <strong>obra gruesa</strong> mandan al principio de la obra y los de '
+      + 'terminación al final: cuando los primeros caen y los segundos aguantan, lo que se está '
+      + 'terminando es el stock viejo y no hay obra nueva atrás.');
+  }
+  const vc = varsDeMapa(compCac('cacGen'));
+  if (vc && v && vc.ia != null && v.ia != null) {
+    it.push('El costo sube ' + anPct(vc.ia, 1, false) + ' i.a. y la actividad '
+      + anPct(v.ia, 1, true) + ': '
+      + (v.ia < 0 && vc.ia > 0
+          ? 'se construye menos y más caro, el peor de los cuadrantes para reponer stock.'
+          : 'costo y actividad se mueven en el mismo sentido.'));
+  }
+  return anBloque(it,
+    'El ISAC mide consumo aparente de insumos, o sea material que sale de fábrica: adelanta a la ' +
+    'obra ejecutada y puede sobreestimarla si las distribuidoras están armando stock.');
+}
+
+function anConstruya() {
+  const it = [];
+  const cy = compConstruya(), is = compIsac();
+  const v = varsDeMapa(cy);
+  if (v) {
+    it.push('El Índice Construya de <strong>' + anMes(v.mes) + '</strong> marcó ' + fmtN(v.valor, 1)
+      + ': ' + anPct(v.ia, 1, true) + ' interanual y ' + anPct(isacVarAcum(cy), 1, true)
+      + ' acumulado en el año.');
+  }
+  const vi = varsDeMapa(is);
+  if (v && vi) {
+    const mismoMes = vi.mes === v.mes;
+    it.push('El ISAC del INDEC llega hasta ' + anMes(vi.mes) + ' con ' + anPct(vi.ia, 1, true)
+      + ' i.a.' + (mismoMes ? '' : ', un mes por detrás: Construya ya está mostrando lo que el INDEC '
+      + 'va a publicar.'));
+    const ia = compVarIA(cy), ib = compVarIA(is);
+    const comunes = [...ia.keys()].filter(k => ib.has(k)).sort();
+    if (comunes.length) {
+      const k = comunes[comunes.length - 1];
+      const dif = ia.get(k) - ib.get(k);
+      it.push('En ' + anMes(k) + ', el mes más reciente que comparten, Construya corrió ' + anPP(dif)
+        + ' respecto del ISAC. '
+        + (dif > 1 ? 'La <strong>obra privada</strong> va más rápido que el total: el Estado está restando.'
+          : (dif < -1 ? 'El total va más rápido que lo privado: <strong>la obra pública está empujando</strong>.'
+                      : 'Van casi juntos: el movimiento es parejo entre lo privado y lo público.')));
+    }
+  }
+  const des = isacMapa(construyaSerie.map(f => [f[0], f[2]]));
+  const r = anRitmo(des, 3);
+  if (r) {
+    it.push('Desestacionalizado, el último trimestre corre a ' + anPct(r.act, 2, true) + ' mensual '
+      + 'contra ' + anPct(r.prev, 2, true) + ' del previo.');
+  }
+  return anBloque(it,
+    'Construya toma el volumen despachado por las empresas líderes de materiales al sector privado. ' +
+    'No incluye obra pública ni marcas chicas, así que la diferencia contra el ISAC es orientativa, ' +
+    'no una medición del gasto estatal.');
+}
+
+function anInmobiliario() {
+  const it = [];
+  const c = window.RGP_CBA_CACHE;
+  if (c && c.transferencias && c.transferencias.length) {
+    const t = serieMapa(c.transferencias), h = serieMapa(c.hipotecas || []);
+    const ut = serieUltimoMes(t);
+    it.push('En <strong>' + anMes(ut) + '</strong> ingresaron <strong>' + fmtN(t.get(ut), 0)
+      + ' transferencias</strong> al Registro General de Córdoba: ' + anPct(serieVarIA(t), 1, true)
+      + ' i.a. y ' + anPct(serieVarAcum(t), 1, true) + ' acumulado en el año.');
+    const uh = serieUltimoMes(h);
+    if (uh) {
+      const part = t.get(uh) ? (h.get(uh) / t.get(uh)) * 100 : null;
+      it.push('Las hipotecas fueron <strong>' + fmtN(h.get(uh), 0) + '</strong> ('
+        + anPct(serieVarIA(h), 1, true) + ' i.a.)'
+        + (part != null ? ', el <strong>' + fmtN(part, 1) + '%</strong> de las transferencias del mes. '
+          + (part < 10 ? 'Sigue siendo un mercado que se mueve casi todo con plata propia.'
+                       : 'El crédito ya explica una porción relevante de las operaciones.') : '.'));
+    }
+    const r = anRitmo(t, 3);
+    if (r) {
+      it.push('Ritmo de las transferencias en el último trimestre: ' + anPct(r.act, 2, true)
+        + ' por mes contra ' + anPct(r.prev, 2, true) + ' del trimestre previo.');
+    }
+  }
+  const dep = ceducIA(1), dep3 = ceduc3m(1);
+  if (dep != null) {
+    it.push('Del lado de los desarrollistas (CEDUC), las ventas de departamentos y casas van '
+      + anPct(dep, 1, true) + ' i.a.'
+      + (dep3 != null ? ' y ' + anPct(dep3, 1, true) + ' en el último trimestre desestacionalizado '
+        + 'contra el anterior.' : '.'));
+  }
+  return anBloque(it,
+    'El Registro cuenta documentos ingresados, no escrituras firmadas: hay unas semanas de desfasaje ' +
+    'contra la operación real. CEDUC releva a sus asociados de Córdoba, no al mercado completo.');
+}
+
+/* ── Ruteo ── */
+const AN_FN = {
+  'cac': () => anIndice({
+    mapa: compCac('cacGen'), nombre: 'el CAC general', corto: 'el CAC', dec: 1,
+    componentes: [{ nombre: 'Materiales', mapa: compCac('mat') },
+                  { nombre: 'Mano de obra', mapa: compCac('mo') }],
+    nota: 'El CAC es nacional y mide un edificio tipo de Buenos Aires. Para obra en Córdoba se lee ' +
+          'junto al ICC provincial: si los contratos nombran al CAC, manda el CAC, pero la brecha ' +
+          'entre los dos es plata.',
+  }),
+  'icc-cba': () => anIndice({
+    mapa: compIccCba(1), nombre: 'el ICC de Córdoba', corto: 'el ICC Córdoba', dec: 2,
+    componentes: [{ nombre: 'Materiales', mapa: compIccCba(2) },
+                  { nombre: 'Mano de obra', mapa: compIccCba(3) },
+                  { nombre: 'Varios', mapa: compIccCba(4) }],
+    nota: 'Mide una vivienda social tipo de 50,25 m². Sirve como referencia de costo local, pero la ' +
+          'canasta no es la de un edificio en altura: en obras con mucha terminación e instalaciones ' +
+          'suele quedar corto.',
+  }),
+  'icc-indec': () => anIndice({
+    mapa: compIccIndec(1), nombre: 'el ICC del INDEC', corto: 'el ICC INDEC', dec: 2,
+    componentes: [{ nombre: 'Materiales', mapa: compIccIndec(2) },
+                  { nombre: 'Mano de obra', mapa: compIccIndec(3) },
+                  { nombre: 'Gastos generales', mapa: compIccIndec(4) }],
+    nota: 'Es el índice al que remite el Decreto 1.295/02 para redeterminar obra pública. Si el ' +
+          'contrato es con el Estado, este es el que hay que mirar aunque la obra sea en Córdoba.',
+  }),
+  'uva': () => anIndice({
+    mapa: compUva(), nombre: 'la UVA', corto: 'la UVA', dec: 2, money: true,
+    nota: 'La UVA sigue al CER, o sea al IPC con 45 días de rezago. En un crédito o un boleto ' +
+          'indexado por UVA lo que importa no es la UVA contra la inflación (van juntas por ' +
+          'construcción) sino la UVA contra el salario y contra el costo de obra.',
+  }),
+  'dolar': anDolar,
+  'apymeco': () => anIndice({
+    mapa: compApymeco(), nombre: 'el costo del m² de APYMECO', corto: 'el m² de APYMECO', dec: 2,
+    nota: 'Es costo directo de obra en el Gran La Plata, sin IVA, terreno, honorarios ni utilidad. ' +
+          'Para un desarrollo en Córdoba se usa como contraste de orden de magnitud, nunca como ' +
+          'presupuesto.',
+  }),
+  'salarios': anSalarios,
+  'isac': anIsac,
+  'construya': anConstruya,
+  'inmobiliario': anInmobiliario,
+};
+
+function pintarAnalisis(id) {
+  const el = document.getElementById('an-' + id);
+  if (!el) return;
+  let html = '';
+  try { html = AN_FN[id] ? AN_FN[id]() : ''; }
+  catch (e) { console.warn('análisis', id, e); html = ''; }
+  el.innerHTML = html;
+  el.style.display = html ? '' : 'none';
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   CONSTRUYA · CONTRA EL ISAC Y SERIE MENSUAL
+   Solo viven en la pantalla de detalle del Construya.
+═══════════════════════════════════════════════════════════ */
+let cyIsacChart = null;
+
+function renderCyIsacChart() {
+  const ctx = document.getElementById('chart-cy-isac');
+  if (!ctx || typeof Chart === 'undefined') return;
+  const cy = compVarIA(compConstruya()), is = compVarIA(compIsac());
+  if (!cy.size) return;
+
+  const rangeEl = document.getElementById('cy-isac-range');
+  const meses = rangeEl ? parseInt(rangeEl.value, 10) : 60;
+  let ym = [...new Set([...cy.keys(), ...is.keys()])].sort();
+  if (meses > 0) ym = ym.slice(-meses);
+
+  const linea = (mapa, label, color) => ({
+    label: label, borderColor: color, backgroundColor: color,
+    data: ym.map(k => mapa.has(k) ? mapa.get(k) : null),
+    borderWidth: 2, pointRadius: 0, tension: .25, spanGaps: true,
+  });
+
+  if (cyIsacChart) cyIsacChart.destroy();
+  cyIsacChart = new Chart(ctx.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: ym.map(k => ISAC_MESES[+k.slice(5, 7) - 1].slice(0, 3) + '-' + k.slice(2, 4)),
+      datasets: [linea(cy, 'Construya · privado', '#eab308'),
+                 linea(is, 'ISAC · total', '#94a3b8')],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#aaa', font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: '#1C1C1C', borderColor: '#383838', borderWidth: 1,
+          titleColor: '#fff', bodyColor: '#aaa',
+          callbacks: { label: c => ' ' + c.dataset.label + ': ' + fmtN(c.parsed.y, 1) + '%' },
+        },
+      },
+      scales: {
+        x: { ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 12 }, grid: { color: '#222' } },
+        y: { ticks: { color: '#555', font: { size: 9 }, callback: v => v + '%' }, grid: { color: '#222' } },
+      },
+    },
+  });
+
+  const nota = document.getElementById('cy-isac-nota');
+  if (nota) {
+    const comunes = [...cy.keys()].filter(k => is.has(k)).sort();
+    const k = comunes[comunes.length - 1];
+    nota.innerHTML = k
+      ? 'Último mes comparable: ' + isacMesLargo(k + '-01') + ' · Construya ' + fmtN(cy.get(k), 1)
+        + '% i.a. contra ISAC ' + fmtN(is.get(k), 1) + '% i.a. · brecha de '
+        + fmtN(cy.get(k) - is.get(k), 1) + ' pp.'
+      : 'Sin meses comparables entre las dos series.';
+  }
+}
+
+function pintarCyTabla() {
+  const cont = document.getElementById('cy-tabla');
+  if (!cont || !construyaSerie.length) return;
+  const conEst = isacMapa(construyaSerie.map(f => [f[0], f[1]]));
+  const filas = construyaSerie.slice(-24).slice().reverse();
+  const pct = v => v == null || isNaN(v) ? '—'
+    : '<span style="color:' + (v >= 0 ? 'var(--verde)' : 'var(--rojo-txt)') + ';">' +
+      (v >= 0 ? '+' : '') + fmtN(v, 1) + '%</span>';
+
+  cont.innerHTML = '<div style="overflow-x:auto;"><table class="tab-mens"><thead><tr>'
+    + '<th>Mes</th><th>Índice</th><th>Mensual</th><th>Interanual</th><th>Desestacionalizada</th>'
+    + '</tr></thead><tbody>'
+    + filas.map(f => {
+        const ym = String(f[0]).slice(0, 7);
+        const prev = conEst.get(qsAddMes(ym, -1)), ant = conEst.get(qsAddMes(ym, -12));
+        const v = conEst.get(ym);
+        return '<tr><td>' + isacMesLargo(ym + '-01') + '</td>'
+          + '<td style="font-weight:700;">' + fmtN(v, 1) + '</td>'
+          + '<td>' + pct(prev ? (v / prev - 1) * 100 : null) + '</td>'
+          + '<td>' + pct(ant ? (v / ant - 1) * 100 : null) + '</td>'
+          + '<td>' + (f[2] != null ? fmtN(f[2], 1) : '—') + '</td></tr>';
+      }).join('')
+    + '</tbody></table></div>';
 }
 
 </script>
