@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------
    acciones_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-08-18T17:02:39
+   Generado: 2026-08-18T18:00:05
    Las 3 mayores subas y las 3 mayores bajas del PANEL LIDER del
    Merval en la rueda. Fuente: data912 (panel de BYMA).
    pct = variacion % contra el cierre anterior
@@ -8,7 +8,7 @@
 ----------------------------------------------------------------- */
 window.ACCIONES_CACHE = {
   mejores: [
-    { symbol: "YPFD", nombre: "YPF", precio: 7995.0, pct: 1.71 },
+    { symbol: "YPFD", nombre: "YPF", precio: 7990.0, pct: 1.65 },
     { symbol: "MIRG", nombre: "Mirgor", precio: 1650.0, pct: 1.53 },
     { symbol: "CVH", nombre: "Cablevisión Holding", precio: 9460.0, pct: 0.74 }
   ],
@@ -19,5 +19,5 @@ window.ACCIONES_CACHE = {
   ],
   panel: 23,
   fuente: "Panel líder · BYMA vía data912",
-  updated: "2026-08-18T17:02:39"
+  updated: "2026-08-18T18:00:05"
 };
