@@ -8,7 +8,7 @@
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.CONSTRUYA_CACHE = {
-  chequeado: "2026-08-19T11:00:45",
+  chequeado: "2026-08-19T11:01:02",
   aviso: "[ERROR] La pagina no trajo ninguna tabla. Se conserva el construya_cache.js anterior.",
   updated: "2026-08-13T01:49:56",
   source: "Grupo Construya (indice_construya)",
