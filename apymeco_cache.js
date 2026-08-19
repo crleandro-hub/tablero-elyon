@@ -10,7 +10,7 @@
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.APYMECO_CACHE = {
-  updated: "2026-08-19T11:00:32",
+  updated: "2026-08-19T11:00:45",
   source: "APYMECO - Indice general de la construccion",
   hasta: "2026-07",
   ratio: 151.374,
