@@ -51,10 +51,13 @@ import html as _html
 import os
 import re
 import ssl
+import sys
 import urllib.request as req
 from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, BASE_DIR)
+from marca_cache import marcar, guardar_diagnostico  # noqa: E402
 CACHE_PATH = os.path.join(BASE_DIR, "construya_cache.js")
 
 URL = "https://www.grupoconstruya.com.ar/servicios/indice_construya"
@@ -186,6 +189,7 @@ def parsear(html):
     """[(periodo, con_est, desest, var_ia, var_acum, var_mes)] ascendente."""
     filas = filas_html(html)
     if not filas:
+        guardar_diagnostico(BASE_DIR, "construya", html)
         raise SystemExit("[ERROR] La pagina no trajo ninguna tabla. "
                          "Se conserva el construya_cache.js anterior.")
 
@@ -353,4 +357,13 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # Corra bien o falle, queda constancia de que el script se ejecuto. Sin
+    # esto, un cache que no se reescribe se lee como "el script no corre" y a
+    # los 6 dias verificar.py frena la publicacion de TODO el tablero.
+    try:
+        main()
+        marcar(CACHE_PATH)
+    except SystemExit as e:
+        if e.code:
+            marcar(CACHE_PATH, e.code)
+        raise

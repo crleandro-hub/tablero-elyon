@@ -309,6 +309,16 @@ body {
 .acc-tkr    { font-size: 12px; font-weight: 700; color: #fff; letter-spacing: .3px; }
 .acc-nom    { font-size: 9px; color: #8f8f8f; margin-left: 5px; font-weight: 400;
               overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Las tarjetas de acciones ahora ocupan una sola columna, igual que las demas:
+   asi entran los cuatro KPIs del MERVAL en la misma linea. El nombre de la
+   empresa es lo unico que sobra al angostarse, asi que se corta con puntos
+   suspensivos y nunca empuja al porcentaje. */
+#card-acc-suben .acc-nom,
+#card-acc-bajan .acc-nom { max-width: 88px; }
+@media (max-width: 1320px) {
+  #card-acc-suben .acc-nom,
+  #card-acc-bajan .acc-nom { display: none; }
+}
 .acc-izq    { display: flex; align-items: baseline; min-width: 0; }
 .acc-pct    { font-size: 13px; font-weight: 700; white-space: nowrap; }
 
@@ -616,6 +626,21 @@ body {
         <div class="kpi-sub" id="src-tamar">Bancos priv. · BCRA</div>
       </div>
 
+      <!-- Las dos puntas del mostrador: lo que el banco paga por un plazo fijo
+           minorista y lo que cobra por un prestamo personal. Miradas juntas
+           dan el costo real del dinero para una obra que se financia. -->
+      <div class="card" id="card-pasiva">
+        <div class="kpi-label">Tasa pasiva · 30 días</div>
+        <div class="kpi-value" id="val-pasiva">—</div>
+        <div class="kpi-sub" id="src-pasiva">Depósitos a 30 días · BCRA</div>
+      </div>
+
+      <div class="card" id="card-personales">
+        <div class="kpi-label">Préstamos personales</div>
+        <div class="kpi-value" id="val-personales">—</div>
+        <div class="kpi-sub" id="src-personales">Sector privado · BCRA</div>
+      </div>
+
       <div class="card" id="card-merval">
         <div class="kpi-label">MERVAL (pesos)</div>
         <div class="kpi-value" id="val-merval">—</div>
@@ -628,13 +653,13 @@ body {
         <div class="kpi-sub" id="src-merval-usd">Merval ÷ CCL</div>
       </div>
 
-      <div class="card" id="card-acc-suben" style="grid-column:span 2;">
+      <div class="card" id="card-acc-suben">
         <div class="kpi-label">Mayores subas · panel líder</div>
         <div class="acc-lista" id="lista-acc-suben"></div>
         <div class="kpi-sub" id="src-acc-suben">Panel líder · BYMA</div>
       </div>
 
-      <div class="card" id="card-acc-bajan" style="grid-column:span 2;">
+      <div class="card" id="card-acc-bajan">
         <div class="kpi-label">Mayores bajas · panel líder</div>
         <div class="acc-lista" id="lista-acc-bajan"></div>
         <div class="kpi-sub" id="src-acc-bajan">Panel líder · BYMA</div>
@@ -2445,6 +2470,38 @@ async function loadRiesgo() {
 }
 
 /* ── BADLAR (BCRA serie 7 — TNA bancos privados) ── */
+/* Tasa efectiva anual a partir de una TNA con capitalizacion mensual. Es la
+   que hay que mirar para comparar contra la inflacion o contra un ajuste por
+   indice: la TNA sola subestima el costo cuando la tasa es alta. */
+const _tea = tna => (Math.pow(1 + tna / 100 / 12, 12) - 1) * 100;
+
+/* Las dos salen del mismo bcra_cache.js que TAMAR y BADLAR (series 12 y 14 de
+   la API oficial). Son porcentajes directos, no indices: se muestran igual que
+   las otras tasas. */
+function loadTasaBCRA(clave, valId, srcId, pie, color) {
+  const c = window.BCRA_CACHE && window.BCRA_CACHE[clave];
+  if (c && c.valor != null) {
+    setMacro(valId, srcId,
+      fmtN(c.valor, 2) + '% TNA',
+      fmtN(_tea(c.valor), 1) + '% TEA · ' + fmtFecha(c.fecha) + ' · ' + pie,
+      color);
+    return;
+  }
+  /* La serie recien aparece en bcra_cache.js despues de la primera corrida
+     con el script nuevo: se dice eso, y no "falta el archivo", que asusta. */
+  setMacro(valId, srcId, 'N/D', 'Se completa al actualizar · ' + pie, '');
+}
+
+function loadPasiva() {
+  loadTasaBCRA('pasiva', 'val-pasiva', 'src-pasiva',
+               'Plazo fijo · BCRA', '#22C55E');
+}
+
+function loadPersonales() {
+  loadTasaBCRA('personales', 'val-personales', 'src-personales',
+               'Sector privado · BCRA', '#f59e0b');
+}
+
 async function loadBADLAR() {
   // 1) Caché local actualizado por tarea diaria (bcra_cache.js)
   if (window.BCRA_CACHE?.badlar?.valor != null) {
@@ -3759,6 +3816,7 @@ const SNAP_IDS = [
   'val-riesgo','src-riesgo',
   'val-badlar','src-badlar',
   'val-tamar','src-tamar',
+  'val-pasiva','src-pasiva','val-personales','src-personales',
   'val-merval','src-merval','val-merval-usd','src-merval-usd',
   'val-uva','src-uva','val-uva-m','val-uva-ia','val-uva-ytd','val-uva-ytd-sub',
   'val-blue-compra','val-blue-venta','src-blue','src-blue-fecha',
@@ -3908,7 +3966,20 @@ const COMP_DEFAULT = ['ipc', 'cac', 'iccCba', 'uva', 'blue'];
 
 /* ── Normalizadores: cada uno devuelve Map 'aaaa-mm' -> nivel ── */
 
-/* De una serie diaria toma el ultimo valor de cada mes (cierre mensual) */
+/* De una serie diaria toma el ultimo valor de cada mes (cierre mensual).
+
+   Solo devuelve meses CERRADOS. Sin este filtro el mes en curso entra con un
+   valor de mitad de mes y se lee como si fuera el cierre: la variacion mensual
+   sale de 15 dias y la interanual compara fechas que no se corresponden.
+
+   El caso que lo hizo evidente es la UVA: el BCRA la publica con casi un mes
+   de anticipacion (hoy la serie llega al 15/09), asi que el tablero mostraba
+   "septiembre" con +1,15% mensual cuando agosto habia cerrado en +1,86%, y
+   ademas no coincidia con la tarjeta del resumen, que si estaba bien.
+
+   Un mes cuenta como cerrado si ya termino en el calendario, o si la serie
+   llega hasta su ultimo dia (que es justo el caso de la UVA publicada por
+   adelantado: agosto ya esta completo aunque estemos a 19). */
 function _mensualDesdeDiaria(pares) {
   const ultimo = new Map();   // aaaa-mm -> [fecha, valor]
   pares.forEach(([iso, v]) => {
@@ -3917,7 +3988,17 @@ function _mensualDesdeDiaria(pares) {
     const prev = ultimo.get(ym);
     if (!prev || iso > prev[0]) ultimo.set(ym, [iso, Number(v)]);
   });
-  return new Map([...ultimo].map(([ym, par]) => [ym, par[1]]));
+
+  const hoy   = new Date();
+  const hoyYM = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0');
+
+  const out = new Map();
+  ultimo.forEach((par, ym) => {
+    if (ym < hoyYM) { out.set(ym, par[1]); return; }          // mes ya terminado
+    const fin = new Date(+ym.slice(0, 4), +ym.slice(5, 7), 0).getDate();
+    if (+String(par[0]).slice(8, 10) >= fin) out.set(ym, par[1]);   // llega al ultimo dia
+  });
+  return out;
 }
 
 function compUsd(casa) {
@@ -4188,6 +4269,8 @@ async function reloadAll() {
     loadRiesgo(),
     loadBADLAR(),
     loadTAMAR(),
+    loadPasiva(),
+    loadPersonales(),
     loadCaucion(),
     loadRofex(),
     loadReservas(),
@@ -4305,7 +4388,7 @@ function salSaltos(cat, desde) {
   const ym = [...base.keys()].sort();
   const out = [];
   for (let i = 1; i < ym.length; i++) {
-    if (desde && ym[i] < desde) continue;
+    if (desde && ym[i] <= desde) continue;   // el mes base no entra en la ventana
     const prev = base.get(ym[i - 1]);
     if (!prev) continue;
     const obs  = (base.get(ym[i]) / prev - 1) * 100;
@@ -4360,7 +4443,7 @@ function _pintarSalKpis() {
       label,
       '$ ' + fmtN(v, 0) + '<span style="font-size:11px;color:var(--gris-txt);"> /h</span>',
       (mmR == null ? '' : 'Mes ' + _signoPct(mmR) + ' · ')
-        + (iaR == null ? '' : 'Año ' + _signoPct(iaR)),
+        + (iaR == null ? '' : '12 meses ' + _signoPct(iaR)),
       '');
   }).join('');
 
@@ -4822,11 +4905,22 @@ function _serieCac(campo) {
 }
 
 /* Valor del indice en un mes; si ese mes no existe toma el ultimo anterior */
-function _valorEn(serie, ym) {
+/* Valor de la serie en un mes. Si ese mes todavia no se publico, cae al ultimo
+   anterior disponible. Devuelve tambien QUE mes uso: cada indice tiene su
+   propio rezago (hoy el CAC llega a junio y el IPC a julio) y sin saber el mes
+   efectivo el ajuste mezcla periodos distintos sin avisar. */
+function _valorEnMes(serie, ym) {
   if (!serie) return null;
-  if (serie.has(ym)) return serie.get(ym);
+  if (serie.has(ym)) return { v: serie.get(ym), mes: ym };
   const previos = [...serie.keys()].filter(k => k <= ym).sort();
-  return previos.length ? serie.get(previos[previos.length - 1]) : null;
+  if (!previos.length) return null;
+  const k = previos[previos.length - 1];
+  return { v: serie.get(k), mes: k };
+}
+
+function _valorEn(serie, ym) {
+  const r = _valorEnMes(serie, ym);
+  return r ? r.v : null;
 }
 
 function _mesesDisponibles() {
@@ -4920,12 +5014,13 @@ async function renderAjuste() {
     const w = pesos[c.id];
     if (!w) return;
     const serie = c.get();
-    const v0 = _valorEn(serie, desde), v1 = _valorEn(serie, hasta);
-    if (!v0 || !v1) { faltantes.push(c.label); return; }
-    const varPct = (v1 / v0 - 1) * 100;
-    const aporte = (w / 100) * (v1 / v0);
+    const r0 = _valorEnMes(serie, desde), r1 = _valorEnMes(serie, hasta);
+    if (!r0 || !r1 || !r0.v || !r1.v) { faltantes.push(c.label); return; }
+    const varPct = (r1.v / r0.v - 1) * 100;
+    const aporte = (w / 100) * (r1.v / r0.v);
     factor += aporte; pesoValido += w;
-    filas.push({ label: c.label, w, varPct, aporte, montoParte: monto * (w / 100) * (v1 / v0) });
+    filas.push({ label: c.label, w, varPct, aporte,
+                 mesDesde: r0.mes, mesHasta: r1.mes, razon: r1.v / r0.v });
   });
 
   if (!filas.length) {
@@ -4939,13 +5034,27 @@ async function renderAjuste() {
   const factorNorm = pesoValido ? factor * (100 / pesoValido) : 0;
   const ajustado = monto * factorNorm;
 
+  /* El monto de cada fila se reparte sobre el peso VALIDO, no sobre 100: asi la
+     columna suma exactamente el monto ajustado de arriba. Antes se dividia por
+     100 y, cuando los pesos no sumaban 100 o faltaba un componente, la tabla no
+     cerraba contra el titular y la diferencia no se explicaba en ningun lado. */
+  filas.forEach(f => { f.montoParte = monto * (f.w / pesoValido) * f.razon; });
+
+  /* Periodo REALMENTE cubierto: cada indice tiene su rezago, asi que el tramo
+     comun es del mes de arranque mas tardio al de cierre mas temprano. */
+  const desdeEf = filas.map(f => f.mesDesde).sort().pop();
+  const hastaEf = filas.map(f => f.mesHasta).sort()[0];
+  const mesesEf = Math.max(_difMeses(desdeEf, hastaEf), 1);
+  const desfasados = filas.filter(f => f.mesHasta !== hasta);
+
   kpis.innerHTML =
-      _salCard('Factor de ajuste', fmtN(factorNorm, 4), fmtMes(desde + '-01') + ' → ' + fmtMes(hasta + '-01'), '')
+      _salCard('Factor de ajuste', fmtN(factorNorm, 4),
+        fmtMes(desdeEf + '-01') + ' → ' + fmtMes(hastaEf + '-01')
+        + (desdeEf !== desde || hastaEf !== hasta ? ' · datos disponibles' : ''), '')
     + _salCard('Monto ajustado', '$ ' + fmtN(ajustado, 0), 'Original $ ' + fmtN(monto, 0), '#22c55e')
     + _salCard('Diferencia', '$ ' + fmtN(ajustado - monto, 0), _signoPct((factorNorm - 1) * 100) + ' sobre el original', '')
-    + _salCard('Meses transcurridos',
-        String(_difMeses(desde, hasta)),
-        'Equivale a ' + fmtN((Math.pow(factorNorm, 1 / Math.max(_difMeses(desde, hasta), 1)) - 1) * 100, 2) + '% mensual', '');
+    + _salCard('Meses transcurridos', String(mesesEf),
+        'Equivale a ' + fmtN((Math.pow(factorNorm, 1 / mesesEf) - 1) * 100, 2) + '% mensual', '');
 
   if (det) {
     det.innerHTML =
@@ -4954,6 +5063,7 @@ async function renderAjuste() {
       + '<thead><tr style="color:var(--gris-txt);font-size:10px;text-transform:uppercase;letter-spacing:.7px;">'
       + '<th style="text-align:left;padding:6px 10px;">Componente</th>'
       + '<th style="text-align:right;padding:6px 10px;">Peso</th>'
+      + '<th style="text-align:right;padding:6px 10px;">Período usado</th>'
       + '<th style="text-align:right;padding:6px 10px;">Variación</th>'
       + '<th style="text-align:right;padding:6px 10px;">Monto ajustado</th>'
       + '</tr></thead><tbody>'
@@ -4961,13 +5071,25 @@ async function renderAjuste() {
           '<tr>'
         + '<td style="padding:6px 10px;border-bottom:1px solid var(--gris-brd);">' + f.label + '</td>'
         + '<td style="padding:6px 10px;border-bottom:1px solid var(--gris-brd);text-align:right;">' + fmtN(f.w, 2) + '%</td>'
+        + '<td style="padding:6px 10px;border-bottom:1px solid var(--gris-brd);text-align:right;'
+        + (f.mesHasta !== hasta ? 'color:#f59e0b;' : 'color:var(--gris-txt);') + '">'
+        + fmtMes(f.mesDesde + '-01') + ' → ' + fmtMes(f.mesHasta + '-01') + '</td>'
         + '<td style="padding:6px 10px;border-bottom:1px solid var(--gris-brd);text-align:right;">' + _signoPct(f.varPct) + '</td>'
         + '<td style="padding:6px 10px;border-bottom:1px solid var(--gris-brd);text-align:right;font-variant-numeric:tabular-nums;">$ ' + fmtN(f.montoParte, 0) + '</td>'
         + '</tr>').join('')
       + '</tbody></table></div>'
       + (faltantes.length
           ? '<div style="font-size:10px;color:#f59e0b;margin-top:10px;">⚠ Sin datos en el período para: '
-            + faltantes.join(', ') + '. El factor se recalculó sobre el resto.</div>'
+            + faltantes.join(', ') + '. El factor se repartió entre los ' + fmtN(pesoValido, 2)
+            + '% restantes, así que esos puntos se ajustan como el promedio de los demás.</div>'
+          : '')
+      + (desfasados.length
+          ? '<div style="font-size:10px;color:#f59e0b;margin-top:8px;line-height:1.5;">'
+            + '⚠ Pediste hasta ' + fmtMes(hasta + '-01') + ' pero '
+            + desfasados.map(f => f.label + ' llega a ' + fmtMes(f.mesHasta + '-01')).join(', ')
+            + '. El factor mezcla componentes con distinto cierre: si el contrato se discute mes a mes, '
+            + 'conviene poner como "hasta" ' + fmtMes(hastaEf + '-01') + ', que es el último mes que '
+            + 'tienen todos.</div>'
           : '')
       + '<div style="font-size:10px;color:var(--gris-txt);margin-top:10px;line-height:1.5;">'
       + 'El CAC y el IPC son mensuales y se publican con rezago: si el mes elegido todavía no salió, '
@@ -5995,8 +6117,14 @@ function renderResumenConstruccion() {
       d: varsDeMapa(compIccCba(1)), dec: 1, det: 'icc-cba' },
     { nombre: 'ICC INDEC',    pie: 'Gran Buenos Aires · base 1993=100',
       d: varsDeMapa(compIccIndec(1)), dec: 1, det: 'icc-indec' },
+    /* La UVA es diaria: el valor es el DEL DIA y las variaciones son moviles
+       (30 dias atras, mismo dia del año pasado). Los otros tres son mensuales
+       y cerrados. Por eso el pie lleva la fecha exacta y no el nombre del mes:
+       si dice "agosto" al lado de un valor del 19 de agosto, no cierra contra
+       el cierre de agosto que muestra la pantalla de detalle. */
     { nombre: 'UVA',          pie: 'unidad de indexación · BCRA', det: 'uva',
       d: uvaResumen ? { mes: String(uvaResumen.fecha).slice(0, 7), valor: uvaResumen.valor,
+                        dia: String(uvaResumen.fecha).slice(0, 10),
                         mensual: uvaResumen.mensual, ia: uvaResumen.ia, ytd: uvaResumen.ytd } : null,
       dec: 2, pesos: true },
   ].filter(t => t.d && t.d.valor != null);
@@ -6011,7 +6139,9 @@ function renderResumenConstruccion() {
       '<div class="card">'
     +   '<div class="kpi-label">' + t.nombre + '</div>'
     +   '<div class="kpi-value">' + (t.pesos ? '$ ' : '') + fmtN(t.d.valor, t.dec) + '</div>'
-    +   '<div class="kpi-sub">' + isacMesLargo(t.d.mes + '-01') + ' · ' + t.pie + '</div>'
+    +   '<div class="kpi-sub">'
+    +     (t.d.dia ? 'al ' + fmtFecha(t.d.dia) : isacMesLargo(t.d.mes + '-01'))
+    +     ' · ' + t.pie + '</div>'
     +   '<div class="res-vars">'
     +     '<div><span class="rot">Mensual</span>'
     +       '<span class="val" style="color:' + color(t.d.mensual) + ';">' + pct(t.d.mensual) + '</span></div>'
@@ -7073,12 +7203,18 @@ const QS_DEFS = {
     serie: () => apymecoSerie, base: 'pesos por m² de obra',
     cols: [[1, 'Costo del m²', 0, true], [2, 'Índice', 2]],
   },
+  /* El ISAC y el Construya son indices de VOLUMEN y muy estacionales: el
+     acumulado del año se mide sumando enero-a-mes contra los mismos meses del
+     año anterior, que es el criterio del INDEC y el de la camara. Medirlo
+     punta contra diciembre -como en los indices de precio- da cualquier cosa:
+     diciembre es un mes bajo, y asi el Construya de julio daba +11% cuando la
+     camara publica -0,6%. */
   isac: {
-    serie: () => isacSerie, base: 'base 2004=100',
+    serie: () => isacSerie, base: 'base 2004=100', acumSumas: true,
     cols: [[1, 'Nivel general', 1], [2, 'Desestacionalizada', 1]],
   },
   construya: {
-    serie: () => construyaSerie, base: 'base 2002=100',
+    serie: () => construyaSerie, base: 'base 2002=100', acumSumas: true,
     cols: [[1, 'Con estacionalidad', 1], [2, 'Desestacionalizada', 1]],
   },
 };
@@ -7088,6 +7224,20 @@ function qsSerie(key) {
   let s = null;
   try { s = d && d.serie(); } catch (_) { s = null; }
   return (s && s.length) ? s : null;
+}
+
+/* Acumulado del año por SUMAS: enero-a-mes contra los mismos meses del año
+   anterior. Es el criterio del INDEC para las series de volumen. */
+function qsAcumSumas(mapa, ym) {
+  const anio = +ym.slice(0, 4), hasta = +ym.slice(5, 7);
+  let act = 0, ant = 0;
+  for (let k = 1; k <= hasta; k++) {
+    const mm = '-' + String(k).padStart(2, '0');
+    const a = mapa.get(anio + mm), b = mapa.get((anio - 1) + mm);
+    if (a == null || b == null) return null;
+    act += a; ant += b;
+  }
+  return ant ? (act / ant - 1) * 100 : null;
 }
 
 const qsAddMes = (ym, delta) => {
@@ -7161,7 +7311,7 @@ function qsRender(key) {
       nom: nom, dec: dec, money: money, v: v, ult: ult,
       mensual: pv(m.get(qsAddMes(ym, -1))),
       ia:      pv(m.get(qsAddMes(ym, -12))),
-      ytd:     pv(m.get((+ym.slice(0, 4) - 1) + '-12')),
+      ytd:     d.acumSumas ? qsAcumSumas(m, ym) : pv(m.get((+ym.slice(0, 4) - 1) + '-12')),
       coef:    (m.get(ult) != null && v) ? m.get(ult) / v : null,
     };
   }).filter(Boolean);
@@ -7182,7 +7332,8 @@ function qsRender(key) {
     +   'Dato de <strong style="color:#fff;">' + isacMesLargo(ym + '-01') + '</strong>'
     +   (d.base ? ' · ' + d.base : '') + '</div>'
     + '<div style="overflow-x:auto;"><table class="tab-mens"><thead><tr>'
-    +   '<th>Serie</th><th>Valor</th><th>Mensual</th><th>Interanual</th><th>Acum. año</th>'
+    +   '<th>Serie</th><th>Valor</th><th>Mensual</th><th>Interanual</th>'
+    +   '<th>' + (d.acumSumas ? 'Acum. año (ene→mes)' : 'Acum. año (vs dic)') + '</th>'
     +   '<th>Coef. a ' + (ultimoMes ? isacMesLargo(ultimoMes + '-01') : 'hoy') + '</th>'
     + '</tr></thead><tbody>'
     + filas.map(f =>
@@ -7415,11 +7566,12 @@ function anDolar() {
       + (real < 0 ? 'Un peso más caro abarata el costo de obra medido en dólares.'
                   : 'Un dólar más caro encarece todo lo importado de la obra.'));
   }
-  const vc = varsDeMapa(compCac('cacGen'));
-  if (vc && vb && vc.ia != null && vb.ia != null) {
-    it.push('Contra el costo de obra (CAC ' + fmtN(vc.ia, 1) + '% i.a.), el dólar corre '
-      + anPP(vb.ia - vc.ia) + '. '
-      + (vb.ia < vc.ia
+  const alCac = anIAAlineado(blue, compCac('cacGen'));
+  if (alCac) {
+    it.push('Contra el costo de obra, en los doce meses cerrados a <strong>'
+      + anMes(alCac.mes) + '</strong>: el dólar ' + anPct(alCac.a, 1, false) + ' contra un CAC de '
+      + fmtN(alCac.b, 1) + '%, o sea <strong>' + anPP(alCac.a - alCac.b) + '</strong>. '
+      + (alCac.a < alCac.b
           ? 'Construir se está encareciendo en dólares: el presupuesto dolarizado se queda corto.'
           : 'Construir se abarata en dólares: conviene tener el precio pactado en moneda dura.'));
   }
@@ -7462,11 +7614,15 @@ function anSalarios() {
       + (real >= 0 ? '<strong class="an-bien">ganó</strong>' : '<strong class="an-mal">perdió</strong>')
       + ' <strong>' + fmtN(Math.abs(real), 1) + '%</strong> de poder de compra.');
   }
-  const mo = varsDeMapa(compIccCba(3));
-  if (mo && paritaria && mo.ia != null && paritaria.ia != null) {
-    it.push('El capítulo mano de obra del ICC Córdoba subió ' + anPct(mo.ia, 1, false)
-      + ' i.a., ' + anPP(mo.ia - paritaria.ia) + ' contra la paritaria. La diferencia son '
-      + 'antigüedad, horas extras, cargas y adicionales, que no están en la escala.');
+  /* El ICC llega a junio y la escala a agosto: sin alinear se restaban dos
+     interanuales de meses distintos y la brecha salia 2 pp mas chica. */
+  const alMo = anIAAlineado(compIccCba(3), salSerieUocraReal('oficial'));
+  if (alMo) {
+    it.push('En los doce meses cerrados a <strong>' + anMes(alMo.mes) + '</strong>, el capítulo '
+      + 'mano de obra del ICC Córdoba subió ' + anPct(alMo.a, 1, false) + ' contra '
+      + anPct(alMo.b, 1, true) + ' de la paritaria: <strong>' + anPP(alMo.a - alMo.b)
+      + '</strong>. La diferencia son antigüedad, horas extras, cargas y adicionales, que no '
+      + 'están en la escala.');
   }
   const sal = iericBloque('salario'), pue = iericBloque('puestos');
   if (sal) {
@@ -7738,7 +7894,8 @@ function pintarCyTabla() {
       (v >= 0 ? '+' : '') + fmtN(v, 1) + '%</span>';
 
   cont.innerHTML = '<div style="overflow-x:auto;"><table class="tab-mens"><thead><tr>'
-    + '<th>Mes</th><th>Índice</th><th>Mensual</th><th>Interanual</th><th>Desestacionalizada</th>'
+    + '<th>Mes</th><th>Índice</th><th>Mensual (con estac.)</th><th>Interanual</th>'
+    + '<th>Desestacionalizada</th>'
     + '</tr></thead><tbody>'
     + filas.map(f => {
         const ym = String(f[0]).slice(0, 7);

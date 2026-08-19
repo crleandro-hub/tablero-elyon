@@ -25,13 +25,20 @@ import ssl
 import urllib.request as req
 from datetime import datetime, timedelta
 
-CACHE_PATH = r"C:\Users\LMoreno\Dropbox\CLAUDE\Tablero General Grupo Elyon\bcra_cache.js"
+import os
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CACHE_PATH = os.path.join(BASE_DIR, "bcra_cache.js")
 
 API = "https://api.bcra.gob.ar/estadisticas/v4.0/monetarias/{id}?desde={desde}&hasta={hasta}"
 
 VARS = {
     "tamar":  {"id": 44, "dec": 4, "desc": "TAMAR bancos privados - TNA"},
     "badlar": {"id": 7,  "dec": 4, "desc": "BADLAR bancos privados - TNA"},
+    # Las dos puntas del mostrador, para leer el costo del dinero de un vistazo:
+    # lo que el banco PAGA por un plazo fijo minorista y lo que COBRA por un
+    # prestamo personal. La brecha entre las dos es el spread bancario.
+    "pasiva":     {"id": 12, "dec": 4, "desc": "Depositos a 30 dias - TNA"},
+    "personales": {"id": 14, "dec": 4, "desc": "Prestamos personales - TNA"},
     "uva":    {"id": 31, "dec": 2, "desc": "UVA en pesos"},
     # Las reservas no son una tasa: se guarda ademas la variacion contra ~30
     # dias atras, porque el nivel suelto no dice nada. Se mueven fuerte dia a
@@ -118,6 +125,8 @@ def write_cache(data):
         f"   Generado: {ts}   Fuente: API BCRA Estadisticas Monetarias v4.0",
         "   tamar = serie 44 (TNA, bancos privados)",
         "   badlar = serie 7 (TNA, bancos privados)",
+        "   pasiva = serie 12 (TNA, depositos a 30 dias)",
+        "   personales = serie 14 (TNA, prestamos personales)",
         "   uva = serie 31",
         "   reservas = serie 1 (millones de US$); var30 = % contra ~30 dias atras",
         "----------------------------------------------------------------- */",

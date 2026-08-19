@@ -80,10 +80,12 @@ FRESCURA = {
     # y la camara publica de forma irregular. Por eso no se controla cuando
     # corrio el script y el limite del dato es holgado: 150 dias.
     "ceduc_cache.js":     ("mensual", 150, None),
-    # El REM hoy se carga a mano: update_rem_cache.py todavia no funciona en
-    # esta PC. Por eso no se controla hace cuanto corrio el script, solo que
-    # el relevamiento no quede viejo.
-    "rem_cache.js":       ("mensual", 75,  None),
+    # El REM se publica una vez por mes (el relevamiento de un mes sale a
+    # principios del siguiente), asi que el archivo pasa semanas sin cambiar.
+    # Lo que se controla es "chequeado", que update_rem_cache.py reescribe en
+    # CADA corrida aunque no haya nada nuevo: 8 dias sin chequear si es que el
+    # script dejo de correr.
+    "rem_cache.js":       ("mensual", 75,  8),
     "salarios_cache.js":  ("manual",  240, None),   # se edita a mano
 }
 
@@ -276,7 +278,11 @@ def revisar_cache(archivo):
     hoy = date.today()
 
     # ¿Hace cuanto que no corre el script?
-    m = re.search(r'(?:updated|actualizado)\s*:\s*"([\d\-T:]+)"', txt)
+    # "chequeado" gana sobre "updated": lo escribe el script en cada corrida
+    # aunque el dato no cambie. Mirar solo "updated" hace que una fuente
+    # mensual parezca caida entre publicacion y publicacion.
+    m = (re.search(r'chequeado\s*:\s*"([\d\-T:]+)"', txt)
+         or re.search(r'(?:updated|actualizado)\s*:\s*"([\d\-T:]+)"', txt))
     if m and dias_script is not None:
         d = a_date(m.group(1)[:10])
         edad = (hoy - d).days
@@ -297,7 +303,18 @@ def revisar_cache(archivo):
         edad = (hoy - ult).days
         etiqueta = "ultimo dato %s (%d dias)" % (ult, edad)
         if dias_dato and edad > dias_dato:
-            err("%s: %s. Esperado para una fuente %s: hasta %d dias."
+            # AVISO y no ERROR a proposito. Que una fuente tarde en publicar no
+            # es un problema del tablero: el INDEC saca el ISAC a mitad del mes
+            # siguiente y el IERIC con dos meses de rezago, asi que todos los
+            # meses hay una ventana de dias en que estan "vencidos". Si eso
+            # frenara la publicacion, dejarian de subirse tambien el dolar, el
+            # riesgo pais y el MERVAL, y -peor- el sitio publico quedaria
+            # congelado en la version anterior, SIN el cartel rojo que avisa
+            # que hay fuentes viejas. Publicar con el cartel es estrictamente
+            # mejor que no publicar. Los errores quedan para lo que si rompe:
+            # cache ausente, estructura mala, fechas desordenadas o repetidas.
+            avi("%s: %s. Esperado para una fuente %s: hasta %d dias. "
+                "Se publica igual; el tablero lo muestra en el cartel de fuentes."
                 % (archivo, etiqueta, frecuencia, dias_dato))
         else:
             ok(etiqueta)

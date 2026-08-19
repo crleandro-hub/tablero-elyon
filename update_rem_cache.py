@@ -262,7 +262,9 @@ def _tcn(header, datos, anio):
                 else:
                     dic_prev = v
     ia = round((dic_act / dic_prev - 1) * 100, 1) if (dic_act and dic_prev) else None
-    return dic_act, ia
+    # El TCN va redondeado: la planilla trae la mediana con 12 decimales y sin
+    # esto el cache guardaba "1651.792801841703", que ademas se ve en pantalla.
+    return (round(dic_act, 2) if dic_act is not None else None), ia
 
 
 def _volcar_diagnostico(contenido, motivo):

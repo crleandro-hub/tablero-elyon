@@ -61,12 +61,15 @@ import html as _html
 import os
 import re
 import ssl
+import zlib
 import sys
 import time
 import urllib.request as req
 from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, BASE_DIR)
+from marca_cache import marcar, guardar_diagnostico  # noqa: E402
 CACHE_PATH = os.path.join(BASE_DIR, "apymeco_cache.js")
 
 URL = "https://www.apymeco.com.ar/001.php?id=3"
@@ -110,6 +113,10 @@ def _get(url, sin_verificar=False):
         ctx.verify_mode = ssl.CERT_NONE
     with req.urlopen(r, timeout=TIMEOUT, context=ctx) as resp:
         crudo = resp.read()
+    if crudo[:5] == b"%PDF-":
+        # Un PDF no es texto. Se decodifica con latin-1, que es 1 byte = 1
+        # caracter, para poder recuperar los bytes originales mas adelante.
+        return crudo.decode("latin-1")
     for enc in ("utf-8", "latin-1"):
         try:
             return crudo.decode(enc)
@@ -159,6 +166,11 @@ def diagnosticar_html(html):
         return ("la respuesta tiene solo %d caracteres: llego cortada o el "
                 "sitio devolvio un error. Proba de nuevo mas tarde. "
                 "Empieza con: %r" % (n, texto[:200]))
+    if html.lstrip()[:5] == "%PDF-":
+        return ("la fuente devolvio un PDF de %d bytes en vez de la pagina HTML. "
+                "El script ya sabe leerlo; si igual no salieron filas, el PDF usa "
+                "fuentes con codificacion propia y hay que mirarlo a mano "
+                "(quedo guardado como _apymeco_diagnostico.pdf)." % n)
     if "apymeco" not in sin_tildes(texto.lower()):
         return ("llegaron %d caracteres pero no dicen APYMECO por ningun lado: "
                 "lo mas probable es una pagina de error del proxy o del "
@@ -302,8 +314,49 @@ def parsear_texto(html):
     return salida
 
 
+def texto_de_pdf(datos):
+    """Texto de un PDF simple, usando solo la libreria estandar.
+
+    APYMECO dejo de publicar la tabla en HTML y ahora sirve un PDF en la misma
+    direccion (el log lo mostro: la respuesta empieza con "%PDF-1.7"). Un PDF
+    es una serie de objetos con streams comprimidos en zlib; dentro de esos
+    streams, los operadores de texto llevan las cadenas entre parentesis.
+
+    Con eso alcanza para recuperar la tabla y pasarsela al mismo parseo por
+    texto plano que ya existia como respaldo. No pretende ser un lector de PDF
+    completo: si el PDF usara fuentes con codificacion propia esto devolveria
+    cualquier cosa, y por eso el resultado igual pasa por todos los controles
+    de siempre antes de escribirse."""
+    partes = []
+    for m in re.finditer(rb"stream\r?\n(.*?)endstream", datos, re.S):
+        bruto = m.group(1)
+        try:
+            partes.append(zlib.decompress(bruto))
+        except Exception:
+            partes.append(bruto)          # streams sin comprimir
+    if not partes:
+        partes = [datos]
+
+    def _desescapar(s):
+        s = re.sub(rb"\\([()\\])", rb"\1", s)
+        return re.sub(rb"\\([0-7]{1,3})",
+                      lambda g: bytes([int(g.group(1), 8) & 0xFF]), s)
+
+    salida = []
+    for bloque in partes:
+        for m in re.finditer(rb"\((?:\\.|[^\\()])*\)", bloque, re.S):
+            salida.append(_desescapar(m.group(0)[1:-1]))
+    return b" ".join(salida).decode("latin-1", "replace")
+
+
 def parsear(html):
     """[(periodo, precioM2, indice, varMensualPub)] ascendente."""
+    if html and html.lstrip()[:5] == "%PDF-":
+        print("   La fuente respondio un PDF: se extrae el texto y se parsea igual.")
+        try:
+            html = texto_de_pdf(html.encode("latin-1", "replace"))
+        except Exception as e:
+            print("   [AVISO] No se pudo leer el PDF: %s" % e)
     filas = parsear_tabla(html)
     if len(filas) < MIN_FILAS:
         alt = parsear_texto(html)
@@ -356,6 +409,10 @@ def controlar(filas, bajadas, html=None):
     """Aborta si la serie no tiene sentido. Vale mas quedarse con el cache
     viejo que pisarlo con un parseo roto."""
     if len(bajadas) < MIN_FILAS:
+        es_pdf = bool(html) and html.lstrip()[:5] == "%PDF-"
+        guardar_diagnostico(BASE_DIR, "apymeco",
+                            html.encode("latin-1", "replace") if es_pdf else html,
+                            ".pdf" if es_pdf else ".html")
         raise SystemExit(
             "[ERROR] Se parsearon %d meses de la pagina y el minimo es %d.\n"
             "        Motivo: %s\n"
@@ -506,4 +563,13 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # Corra bien o falle, queda constancia de que el script se ejecuto. Sin
+    # esto, un cache que no se reescribe se lee como "el script no corre" y a
+    # los 6 dias verificar.py frena la publicacion de TODO el tablero.
+    try:
+        main()
+        marcar(CACHE_PATH)
+    except SystemExit as e:
+        if e.code:
+            marcar(CACHE_PATH, e.code)
+        raise
