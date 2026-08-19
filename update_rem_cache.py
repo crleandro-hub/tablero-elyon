@@ -89,152 +89,228 @@ def sin_tildes(s):
 # ─────────────────────────────────────────────────────────────
 #  Fuente 1: planilla oficial del BCRA
 # ─────────────────────────────────────────────────────────────
-def _bloque_ipc_general(filas):
-    """Ubica el cuadro del IPC nivel general y devuelve (header, filas_datos)."""
-    inicio = None
+#  La planilla "Cuadros de resultados" no tiene una posicion fija: segun el
+#  mes, las tablas arrancan en la columna A o en la B (el BCRA suele dejar una
+#  columna de margen), los numeros vienen como numero o como texto con coma
+#  decimal, y el rotulo del periodo puede ser una fecha ("2026-08-01"), una
+#  abreviatura ("ago-26") o un año suelto ("2026").
+#
+#  La version anterior daba por sentado que el periodo estaba en la columna 0.
+#  Cuando el BCRA corrio las tablas una columna a la derecha, TODAS las filas
+#  quedaban con rotulo vacio, no matcheaba ninguna y el script terminaba en
+#  "la planilla no trae medianas de IPC" — que es lo que venia pasando.
+#
+#  Ahora no se asume nada de la ubicacion: el rotulo es la primera celda no
+#  vacia de la fila y la mediana se busca por el encabezado. Si aun asi falla,
+#  se deja _rem_diagnostico.txt con el volcado de la hoja para poder arreglarlo
+#  sin tener que adivinar.
+# ─────────────────────────────────────────────────────────────
+DIAG_PATH = os.path.join(BASE_DIR, "_rem_diagnostico.txt")
+
+MES_ABREV = {"ene": 1, "feb": 2, "mar": 3, "abr": 4, "may": 5, "jun": 6,
+             "jul": 7, "ago": 8, "sep": 9, "set": 9, "oct": 10, "nov": 11, "dic": 12}
+
+
+def _texto(c):
+    """Celda -> texto limpio. Los años vienen como 2026.0 y hay que verlos 2026."""
+    if c is None:
+        return ""
+    if isinstance(c, float) and c == int(c):
+        return str(int(c))
+    return str(c).strip()
+
+
+def _num(v):
+    """Numero tolerante: acepta 2.1, '2,1', '2,1%', '1.234,56' y ' '."""
+    if v is None or isinstance(v, bool):
+        return None
+    if isinstance(v, (int, float)):
+        return float(v)
+    s = str(v).strip().replace("%", "").replace(" ", "").replace("\u00a0", "")
+    if not s or s in ("-", "--", "s/d", "n/d"):
+        return None
+    if "," in s and "." in s:          # 1.234,56 -> formato local
+        s = s.replace(".", "").replace(",", ".")
+    else:
+        s = s.replace(",", ".")
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
+def _rotulo(fila):
+    """Primera celda no vacia: el periodo, este en la columna que este."""
+    for c in fila:
+        t = _texto(c)
+        if t:
+            return t
+    return ""
+
+
+def _fila_texto(fila):
+    return " ".join(sin_tildes(_texto(c)) for c in fila if _texto(c))
+
+
+def _es_mes(per):
+    """'2026-08-01', 'ago-26', 'ago-2026', '2026-08' -> True."""
+    if re.match(r"^\d{4}-\d{1,2}", per):
+        return True
+    m = re.match(r"^([a-z]{3})[-/\s.]*(\d{2,4})$", per)
+    return bool(m and m.group(1) in MES_ABREV)
+
+
+def _bloques(filas, es_titulo, es_corte):
+    """Todos los cuadros cuyo titulo matchea. Devuelve [(header, filas), ...].
+
+    Se devuelven todos los candidatos y no el primero, porque la hoja suele
+    tener un indice arriba que menciona los mismos titulos: si se agarra ese,
+    no hay datos abajo. El que llama prueba en orden y se queda con el que
+    realmente trae medianas."""
+    out = []
     for i, fila in enumerate(filas):
-        texto = " ".join(sin_tildes(c) for c in fila if c is not None)
-        if "ipc nivel general" in texto and "nucleo" not in texto:
-            inicio = i
-            break
-    if inicio is None:
-        return None, []
-
-    # El encabezado es la primera fila siguiente que menciona "periodo"
-    header = hdr_idx = None
-    for j in range(inicio + 1, min(inicio + 8, len(filas))):
-        texto = " ".join(sin_tildes(c) for c in filas[j] if c is not None)
-        if "periodo" in texto or "referencia" in texto:
-            header, hdr_idx = filas[j], j
-            break
-    if header is None:
-        return None, []
-
-    # Los datos van hasta el titulo del cuadro siguiente o una fila vacia doble
-    datos, vacias = [], 0
-    for k in range(hdr_idx + 1, len(filas)):
-        fila = filas[k]
-        texto = " ".join(sin_tildes(c) for c in fila if c is not None)
-        if not texto:
-            vacias += 1
-            if vacias >= 2:
-                break
+        if not es_titulo(_fila_texto(fila)):
             continue
-        vacias = 0
-        if "precios minoristas" in texto or "tasa de interes" in texto \
-           or "tipo de cambio" in texto:
-            break
-        datos.append(fila)
-    return header, datos
-
-
-def _bloque_tcn(filas):
-    """Ubica el cuadro de tipo de cambio nominal y devuelve (header, filas).
-
-    En la planilla del BCRA el cuadro se titula "Tipo de cambio nominal
-    ($/US$)". A diferencia del IPC, aca la mediana NO es una variacion sino
-    el nivel esperado del dolar mayorista (A3500) promedio de cada mes."""
-    inicio = None
-    for i, fila in enumerate(filas):
-        texto = " ".join(sin_tildes(c) for c in fila if c is not None)
-        if "tipo de cambio nominal" in texto:
-            inicio = i
-            break
-    if inicio is None:
-        return None, []
-
-    header = hdr_idx = None
-    for j in range(inicio + 1, min(inicio + 8, len(filas))):
-        texto = " ".join(sin_tildes(c) for c in filas[j] if c is not None)
-        if "periodo" in texto or "referencia" in texto:
-            header, hdr_idx = filas[j], j
-            break
-    if header is None:
-        return None, []
-
-    datos, vacias = [], 0
-    for k in range(hdr_idx + 1, len(filas)):
-        fila = filas[k]
-        texto = " ".join(sin_tildes(c) for c in fila if c is not None)
-        if not texto:
-            vacias += 1
-            if vacias >= 2:
+        header = hdr_i = None
+        for j in range(i + 1, min(i + 8, len(filas))):
+            t = _fila_texto(filas[j])
+            if "periodo" in t or "referencia" in t or "mediana" in t:
+                header, hdr_i = filas[j], j
                 break
+        if header is None:
             continue
-        vacias = 0
-        # El cuadro siguiente arranca con otro titulo: ahi se corta
-        if "tasa de interes" in texto or "precios minoristas" in texto \
-           or "actividad economica" in texto or "ipc nivel general" in texto:
-            break
-        datos.append(fila)
-    return header, datos
+        datos, vacias = [], 0
+        for k in range(hdr_i + 1, len(filas)):
+            t = _fila_texto(filas[k])
+            if not t:
+                vacias += 1
+                if vacias >= 2:
+                    break
+                continue
+            vacias = 0
+            if es_corte(t):
+                break
+            datos.append(filas[k])
+        if datos:
+            out.append((header, datos))
+    return out
+
+
+_CORTES = ("precios minoristas", "tasa de interes", "tipo de cambio",
+           "actividad economica", "ipc nivel general", "ipc nucleo",
+           "tasa de politica monetaria", "desocupacion", "exportaciones")
+
+
+def _bloques_ipc(filas):
+    return _bloques(
+        filas,
+        lambda t: "ipc nivel general" in t and "nucleo" not in t,
+        lambda t: any(c in t for c in _CORTES if c != "ipc nivel general"))
+
+
+def _bloques_tcn(filas):
+    return _bloques(
+        filas,
+        lambda t: "tipo de cambio nominal" in t,
+        lambda t: any(c in t for c in _CORTES if c != "tipo de cambio"))
 
 
 def _col_mediana(header):
     for i, c in enumerate(header):
-        if c is not None and "mediana" in sin_tildes(c):
+        if c is not None and "mediana" in sin_tildes(_texto(c)):
             return i
-    return 2   # en la planilla del BCRA la mediana es la tercera columna
+    return 2   # en la planilla del BCRA la mediana suele ser la tercera columna
+
+
+def _medianas_ipc(header, datos, anio):
+    col = _col_mediana(header)
+    res = {"m12": None, "anual": None, "mensual": None}
+    for fila in datos:
+        per = sin_tildes(_rotulo(fila))
+        if not per:
+            continue
+        v = _num(fila[col]) if col < len(fila) else None
+        if v is None:
+            continue
+        if "12 meses" in per:
+            if res["m12"] is None:
+                res["m12"] = round(v, 4)
+        elif re.fullmatch(r"%d(\.0)?" % anio, per):
+            if res["anual"] is None:
+                res["anual"] = round(v, 4)
+        elif _es_mes(per) and res["mensual"] is None:
+            res["mensual"] = round(v, 4)
+    return res
+
+
+def _tcn(header, datos, anio):
+    """Nivel esperado del dolar mayorista para dic del año y del anterior."""
+    col = _col_mediana(header)
+    dic_act = dic_prev = None
+    for fila in datos:
+        per = sin_tildes(_rotulo(fila))
+        if not per:
+            continue
+        v = _num(fila[col]) if col < len(fila) else None
+        if v is None:
+            continue
+        for a, marca in ((anio, "act"), (anio - 1, "prev")):
+            if re.match(r"^%d-12" % a, per) or re.match(r"^dic[-/\s.]*%s$" % str(a)[2:], per) \
+               or re.match(r"^dic[-/\s.]*%d$" % a, per):
+                if marca == "act":
+                    dic_act = v
+                else:
+                    dic_prev = v
+    ia = round((dic_act / dic_prev - 1) * 100, 1) if (dic_act and dic_prev) else None
+    return dic_act, ia
+
+
+def _volcar_diagnostico(contenido, motivo):
+    """Deja la hoja en texto plano para poder corregir el parser sin adivinar."""
+    try:
+        from xlsx_lite import nombres_de_hojas
+        lineas = ["Diagnostico REM - " + datetime.now().strftime("%Y-%m-%d %H:%M"),
+                  "Motivo: " + motivo, ""]
+        try:
+            lineas.append("Hojas del archivo: " + ", ".join(nombres_de_hojas(contenido)))
+        except Exception as e:
+            lineas.append("No se pudieron listar las hojas: %s" % e)
+        lineas.append("")
+        filas = leer_hoja(contenido, HOJA)
+        lineas.append("Hoja '%s': %d filas. Primeras 220:" % (HOJA, len(filas)))
+        for i, fila in enumerate(filas[:220]):
+            celdas = " | ".join(_texto(c) for c in fila)
+            if celdas.strip():
+                lineas.append("%4d: %s" % (i, celdas[:300]))
+        with open(DIAG_PATH, "w", encoding="utf-8") as f:
+            f.write("\n".join(lineas) + "\n")
+        print("   [diagnostico] volcado en _rem_diagnostico.txt")
+    except Exception as e:
+        print("   [diagnostico] no se pudo volcar: %s" % e)
 
 
 def parsear_xlsx(contenido, anio):
     filas = leer_hoja(contenido, HOJA)
-    header, datos = _bloque_ipc_general(filas)
-    if not datos:
+
+    candidatos = _bloques_ipc(filas)
+    if not candidatos:
         raise ValueError("No se encontro el cuadro de IPC nivel general")
 
-    col = _col_mediana(header)
+    res = None
+    for header, datos in candidatos:
+        parcial = _medianas_ipc(header, datos, anio)
+        if parcial["m12"] is not None or parcial["anual"] is not None:
+            res = parcial
+            break
+    if res is None:
+        raise ValueError("El cuadro de IPC no trajo medianas reconocibles")
 
-    def valor(fila):
-        v = fila[col] if col < len(fila) else None
-        try:
-            return round(float(v), 4)
-        except (TypeError, ValueError):
-            return None
-
-    res = {"m12": None, "anual": None, "mensual": None}
-    for fila in datos:
-        per = sin_tildes(fila[0]) if fila and fila[0] is not None else ""
-        if not per:
-            continue
-        if "12 meses" in per and res["m12"] is None:
-            res["m12"] = valor(fila)
-        elif per in (str(anio), str(anio) + ".0", "%s.0" % anio) and res["anual"] is None:
-            res["anual"] = valor(fila)
-        elif per[:4].isdigit() and "-" in per and res["mensual"] is None:
-            res["mensual"] = valor(fila)
-
-    # ── Tipo de cambio nominal esperado ──────────────────────────
-    # Se guarda el NIVEL de dic del año en curso (por ej. 1652 $/US$). La
-    # devaluacion en % la calcula el tablero, que es el unico que sabe contra
-    # que quiere compararla.
-    res["tcnDic"] = None
-    res["tcnIa"] = None
-    hdr_t, datos_t = _bloque_tcn(filas)
-    if datos_t:
-        col_t = _col_mediana(hdr_t)
-
-        def valor_t(fila):
-            v = fila[col_t] if col_t < len(fila) else None
-            try:
-                return round(float(v), 2)
-            except (TypeError, ValueError):
-                return None
-
-        # Diciembre del año en curso y, si la planilla lo trae como referencia,
-        # el de diciembre anterior: con los dos sale la devaluacion i.a.
-        tcn_prev = None
-        for fila in datos_t:
-            per = sin_tildes(fila[0]) if fila and fila[0] is not None else ""
-            if re.match(r"^%d-12" % anio, per) or re.match(r"^dic-%s" % str(anio)[2:], per):
-                res["tcnDic"] = valor_t(fila)
-            elif re.match(r"^%d-12" % (anio - 1), per) \
-                    or re.match(r"^dic-%s" % str(anio - 1)[2:], per):
-                tcn_prev = valor_t(fila)
-
-        if res["tcnDic"] and tcn_prev:
-            res["tcnIa"] = round((res["tcnDic"] / tcn_prev - 1) * 100, 1)
-
+    res["tcnDic"], res["tcnIa"] = None, None
+    for header, datos in _bloques_tcn(filas):
+        dic, ia = _tcn(header, datos, anio)
+        if dic is not None:
+            res["tcnDic"], res["tcnIa"] = dic, ia
+            break
     return res
 
 
@@ -265,9 +341,11 @@ def _intentar_xlsx(url, etiqueta):
         res = parsear_xlsx(contenido, datetime.now().year)
     except Exception as e:
         print("   [%s] no se pudo parsear: %s" % (etiqueta, e))
+        _volcar_diagnostico(contenido, "%s: %s" % (etiqueta, e))
         return None
     if res["m12"] is None and res["anual"] is None:
         print("   [%s] la planilla no trae medianas de IPC" % etiqueta)
+        _volcar_diagnostico(contenido, "%s: sin medianas de IPC" % etiqueta)
         return None
     return res
 
@@ -325,27 +403,12 @@ def desde_bcra():
 
         for ab in abrevs:
             url = BCRA_URL.format(mes=ab, anio=anio)
-            try:
-                contenido = _get(url, binario=True)
-            except Exception as e:
-                print("   [%s-%s] no se pudo bajar: %s" % (ab, anio, e))
-                continue
-            if contenido[:2] != b"PK":     # no es un xlsx valido
-                print("   [%s-%s] la respuesta no es un xlsx (%d bytes)"
-                      % (ab, anio, len(contenido)))
-                continue
-            try:
-                res = parsear_xlsx(contenido, datetime.now().year)
-            except Exception as e:
-                print("   [%s-%s] no se pudo parsear: %s" % (ab, anio, e))
-                continue
-            if res["m12"] is None and res["anual"] is None:
-                print("   [%s-%s] la planilla no trae medianas de IPC" % (ab, anio))
-                continue
-            res["relev"] = "%04d-%02d" % (anio, mes)
-            res["fuente"] = "BCRA (planilla oficial)"
-            print("[OK] REM %s-%s desde la planilla del BCRA" % (ab, anio))
-            return res
+            res = _intentar_xlsx(url, "%s-%s" % (ab, anio))
+            if res:
+                res["relev"] = "%04d-%02d" % (anio, mes)
+                res["fuente"] = "BCRA (planilla oficial)"
+                print("[OK] REM %s-%s desde la planilla del BCRA" % (ab, anio))
+                return res
     return None
 
 
@@ -418,11 +481,40 @@ def relev_actual():
         return None
 
 
+def marcar_chequeado(aviso=None):
+    """Deja constancia de que el script CORRIO, sin tocar los datos.
+
+    Hace falta para no mentirle al tablero. El REM se publica una vez por mes:
+    entre publicacion y publicacion el archivo no cambia, y el tablero -que
+    miraba la fecha de "updated"- concluia que "el script no corre desde hace N
+    dias" cuando en realidad corria todos los dias y no habia nada nuevo que
+    traer. Ahora "chequeado" dice cuando corrio y "aviso" por que no se pudo
+    refrescar, que son dos cosas distintas."""
+    try:
+        with open(CACHE_PATH, encoding="utf-8") as f:
+            txt = f.read()
+    except Exception:
+        return
+    # se sacan las marcas anteriores y se reescriben arriba de todo, asi nunca
+    # quedan al final (donde una coma de mas romperia el objeto)
+    txt = re.sub(r"\n\s*(chequeado|aviso):[^\n]*", "", txt)
+    marca = '\n  chequeado: "%s",' % datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    if aviso:
+        marca += '\n  aviso: "%s",' % str(aviso).replace('"', "'")[:180]
+    txt = txt.replace("window.REM_CACHE = {", "window.REM_CACHE = {" + marca, 1)
+    try:
+        with open(CACHE_PATH, "w", encoding="utf-8") as f:
+            f.write(txt)
+    except Exception:
+        pass
+
+
 def main():
     print("Actualizando rem_cache.js ...")
 
     res = desde_bcra() or desde_api()
     if not res:
+        marcar_chequeado("no se pudo bajar el REM de ninguna fuente")
         raise SystemExit("[ERROR] No se pudo obtener el REM. "
                          "Se conserva el cache anterior.")
 
@@ -433,7 +525,23 @@ def main():
     if previo and res.get("relev") and res["relev"] < previo:
         print("[SIN CAMBIOS] El cache ya tiene el relevamiento %s, mas nuevo "
               "que el %s que devolvio %s." % (previo, res["relev"], res["fuente"]))
+        marcar_chequeado(
+            "la planilla del BCRA no se pudo leer; %s solo llega a %s y el cache "
+            "ya tiene %s" % (res["fuente"], res["relev"], previo)
+            if res["fuente"] != "BCRA (planilla oficial)" else None)
         return
+    if previo and res.get("relev") == previo:
+        # Mismo relevamiento. Si vino de la planilla oficial se reescribe igual:
+        # es la fuente autoritativa y conviene que pise cualquier carga manual.
+        # Si vino del respaldo, no se toca el dato: solo se deja constancia de
+        # que el script corrio.
+        if res["fuente"] != "BCRA (planilla oficial)":
+            print("[SIN CAMBIOS] El BCRA sigue en el relevamiento %s y el dato "
+                  "actual no viene de la planilla oficial: no se toca." % previo)
+            marcar_chequeado()
+            return
+        print("[IGUAL RELEVAMIENTO] %s ya estaba cargado; se reescribe con los "
+              "valores de la planilla oficial." % previo)
 
     anio = datetime.now().year
 
@@ -453,6 +561,8 @@ def main():
         "   tcnIa  = devaluacion % i.a. esperada a dic contra dic anterior\n"
         "----------------------------------------------------------------- */\n"
         "window.REM_CACHE = {\n"
+        '  chequeado: "' + datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + '",\n'
+        "  aviso: null,\n"
         "  m12: " + js(res["m12"]) + ",\n"
         "  anual: " + js(res["anual"]) + ",\n"
         "  mensual: " + js(res["mensual"]) + ",\n"

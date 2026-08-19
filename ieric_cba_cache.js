@@ -1,6 +1,6 @@
 /* ═══════════════════════════
    ieric_cba_cache.js  -  Grupo Elyon
-   Generado por update_ieric_cba_cache.py el 18/08/2026 22:41
+   Generado por update_ieric_cba_cache.py el 18/08/2026 23:22
    Fuente: IERIC - series estadisticas de la provincia de Cordoba
    https://www.ieric.org.ar/series_estadisticas/cordoba/
 
@@ -14,7 +14,7 @@
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.IERIC_CBA_CACHE = {
-  updated: "2026-08-18T22:41:40",
+  updated: "2026-08-18T23:22:44",
   source: "IERIC - Instituto de Estadistica y Registro de la Industria de la Construccion",
   pagina: "https://www.ieric.org.ar/series_estadisticas/cordoba/",
   puestos: {

@@ -5912,11 +5912,21 @@ function revisarFuentes() {
     const c = window[clave];
     if (!c) { problemas.push([nombre, 'falta el archivo de datos']); return; }
 
-    const edadScript = _diasDesde(c.updated || c.actualizado);
+    /* "chequeado" lo escribe el script en CADA corrida, aunque no haya nada
+       nuevo que traer. "updated" solo cambia cuando cambia el dato. Mirar
+       updated hacia que una fuente MENSUAL como el REM apareciera como caida
+       todos los meses: el script corria todos los dias, pero como el BCRA
+       publica una vez por mes el archivo no se tocaba y a los 6 dias saltaba
+       "el script no corre". Son dos cosas distintas y ahora se miden aparte. */
+    const edadScript = _diasDesde(c.chequeado || c.updated || c.actualizado);
     if (diasScript != null && edadScript != null && edadScript > diasScript) {
       problemas.push([nombre, 'el script no corre desde hace ' + edadScript + ' días']);
       return;   // si no corre, que el dato sea viejo es consecuencia, no otra falla
     }
+
+    /* El script corrio pero no pudo refrescar: lo dice con nombre y apellido
+       en vez de dejar que se lea como "no corre". */
+    if (c.aviso) { problemas.push([nombre, c.aviso]); return; }
 
     const ult = _ultimaFechaCache(c);
     const edadDato = _diasDesde(ult);
