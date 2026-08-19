@@ -8,14 +8,30 @@ Capital Federal") y regenera cac_cache.js con la serie completa correcta,
 para que tablero_elyon.html la cargue automaticamente sin depender del
 arrastrar-y-soltar manual ni de datos embebidos desactualizados.
 
+DE DONDE SALE EL DATO
+---------------------
+La CAC no publica API ni un link fijo: la serie historica sale como Excel
+desde CIFRAS ON LINE (cifrasonline.com.ar/indice-cac), que es de donde se
+venia bajando a mano todos los meses.
+
+Ahora el script lo hace solo: entra a esa pagina, busca el link del Excel
+de la serie historica, lo baja y RECIEN DESPUES parsea. La descarga es a
+prueba de accidentes: el archivo nuevo se valida contra el que ya esta y
+solo lo reemplaza si parsea bien y trae al menos los mismos meses. Si algo
+falla -sin internet, cambio la pagina, Excel roto- avisa y sigue con el
+Excel local de siempre. Nunca se queda sin dato ni lo pisa con basura.
+
+El Excel anterior no se borra: queda en la subcarpeta _cac_backup.
+
 COMO EJECUTAR
 -------------
-  1. Descarga / actualiza el Excel del CAC en la carpeta del tablero
-     (podes pisar el archivo existente o dejar uno nuevo con "CAC" en
-     el nombre).
-  2. Corre:
+  1. Corre:
         python update_cac_cache.py
-  3. Refresca tablero_elyon.html en el navegador (Ctrl+F5).
+     (o el paso 3 de 2-ACTUALIZAR-TABLERO.bat, que lo llama solo)
+  2. Refresca tablero_elyon.html en el navegador (Ctrl+F5).
+
+  Para trabajar sin internet, o para forzar el uso del Excel que ya tenes:
+        python update_cac_cache.py --sin-descarga
 
 Que hace distinto de la carga manual anterior
 ----------------------------------------------
@@ -47,7 +63,9 @@ Columnas (0-based, segun pandas/openpyxl con header=None):
 import json
 import os
 import re
+import shutil
 import sys
+import urllib.request
 from datetime import datetime
 
 import pandas as pd
@@ -63,9 +81,141 @@ CAC_XLS_DEFAULT = os.path.join(BASE_DIR, "Indicador CAC_serie histórica.xls")
 
 CACHE_JS_PATH = os.path.join(BASE_DIR, "cac_cache.js")
 
+# -- DESCARGA AUTOMATICA (CIFRAS ON LINE) --------------------------------
+CIFRAS_PAGINA = "https://www.cifrasonline.com.ar/indice-cac/"
+# Ultimo link conocido, por si la pagina cambia de estructura y no se puede
+# leer el href. Es el plan B, no el camino principal.
+CIFRAS_FALLBACK = ("https://www.cifrasonline.com.ar/wp-content/uploads/2025/01/"
+                   "Indicador-CAC_serie-historica-2024-actualizada.xls")
+BACKUP_DIR = os.path.join(BASE_DIR, "_cac_backup")
+UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+      "(KHTML, like Gecko) Chrome/124.0 Safari/537.36")
+TIMEOUT = 45
+
 COL_FECHA = 1   # B
 COL_DEN = 3     # D
 COL_IDX = 5     # F
+
+
+# -- DESCARGA DESDE CIFRAS ON LINE ---------------------------------------
+def _abrir(url):
+    req = urllib.request.Request(url, headers={
+        "User-Agent": UA,
+        "Accept": "*/*",
+        "Referer": "https://www.cifrasonline.com.ar/",
+    })
+    return urllib.request.urlopen(req, timeout=TIMEOUT)
+
+
+def buscar_link_excel():
+    """Lee la pagina del indice CAC y devuelve la URL del Excel de la serie
+    historica. Se queda con el link que mas pinta de serie completa; si no
+    encuentra ninguno, cae al ultimo link conocido."""
+    try:
+        with _abrir(CIFRAS_PAGINA) as r:
+            html = r.read().decode("utf-8", errors="ignore")
+    except Exception as e:
+        print("     [AVISO] No se pudo abrir " + CIFRAS_PAGINA + " (" + str(e) + ").")
+        return CIFRAS_FALLBACK
+
+    urls = re.findall(r'href=["\']([^"\']+\.xlsx?)["\']', html, re.I)
+    # normalizar links relativos
+    urls = [u if u.startswith("http") else ("https://www.cifrasonline.com.ar" + u
+            if u.startswith("/") else "https://www.cifrasonline.com.ar/" + u)
+            for u in urls]
+
+    def puntaje(u):
+        n = u.lower()
+        p = 0
+        if "serie" in n and ("histor" in n or "hist%c3%b3r" in n): p += 10
+        if "cac" in n or "indicador" in n: p += 5
+        if "actualizada" in n: p += 2
+        return p
+
+    urls = [u for u in urls if puntaje(u) > 0]
+    if not urls:
+        print("     [AVISO] La pagina no expuso ningun Excel reconocible; se usa el link conocido.")
+        return CIFRAS_FALLBACK
+    urls.sort(key=puntaje, reverse=True)
+    return urls[0]
+
+
+def _resumen(path):
+    """(cantidad de meses, ultimo mes) de un Excel del CAC. None si no parsea."""
+    try:
+        registros, _, _ = parse_cac(read_raw(path))
+    except SystemExit:
+        return None
+    except Exception:
+        return None
+    if not registros:
+        return None
+    return len(registros), registros[-1]["fecha"]
+
+
+def intentar_descarga():
+    """Baja el Excel de cifrasonline y reemplaza el local SOLO si el nuevo
+    parsea bien y no es peor que el que ya esta. Cualquier problema termina
+    en un aviso y se sigue con el Excel de siempre."""
+    print("Buscando la serie historica del CAC en cifrasonline...")
+    url = buscar_link_excel()
+    print("     Link: " + url)
+
+    ext = ".xlsx" if url.lower().rstrip("/").endswith(".xlsx") else ".xls"
+    tmp = os.path.join(BASE_DIR, "_cac_descarga" + ext)
+    try:
+        with _abrir(url) as r, open(tmp, "wb") as f:
+            shutil.copyfileobj(r, f)
+    except Exception as e:
+        print("     [AVISO] Fallo la descarga (" + str(e) + "). Se sigue con el Excel local.")
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        return
+
+    tam = os.path.getsize(tmp)
+    if tam < 10000:
+        print("     [AVISO] El archivo bajado pesa " + str(tam) + " bytes: no parece el Excel. Se descarta.")
+        os.remove(tmp)
+        return
+
+    nuevo = _resumen(tmp)
+    if not nuevo:
+        print("     [AVISO] El archivo bajado no tiene la estructura del CAC. Se descarta.")
+        os.remove(tmp)
+        return
+
+    actual = find_cac_excel()
+    viejo = _resumen(actual) if actual else None
+
+    if viejo:
+        if nuevo[1] < viejo[1] or nuevo[0] < viejo[0]:
+            print("     [AVISO] Lo bajado es PEOR que lo que ya tenes ("
+                  + nuevo[1].strftime("%Y-%m") + " / " + str(nuevo[0]) + " meses, contra "
+                  + viejo[1].strftime("%Y-%m") + " / " + str(viejo[0]) + "). Se descarta.")
+            os.remove(tmp)
+            return
+        if nuevo[1] == viejo[1]:
+            print("     [SIN NOVEDAD] cifrasonline sigue en " + nuevo[1].strftime("%Y-%m")
+                  + ", igual que tu Excel. No se reemplaza nada.")
+            os.remove(tmp)
+            return
+
+    # A partir de aca el archivo nuevo es mejor: se guarda el viejo y se pisa.
+    if actual and os.path.exists(actual):
+        os.makedirs(BACKUP_DIR, exist_ok=True)
+        destino_bkp = os.path.join(
+            BACKUP_DIR,
+            datetime.now().strftime("%Y%m%d_%H%M%S_") + os.path.basename(actual))
+        shutil.move(actual, destino_bkp)
+        print("     Excel anterior guardado en _cac_backup/" + os.path.basename(destino_bkp))
+
+    destino = os.path.join(BASE_DIR, "Indicador CAC_serie histórica" + ext)
+    if os.path.exists(destino):
+        os.remove(destino)
+    shutil.move(tmp, destino)
+    print("     [ACTUALIZADO] Excel nuevo: hasta " + nuevo[1].strftime("%Y-%m")
+          + " (" + str(nuevo[0]) + " meses)"
+          + (" · antes " + viejo[1].strftime("%Y-%m") if viejo else ""))
 
 
 # -- LOCALIZAR EL ARCHIVO EXCEL ------------------------------------------
@@ -263,8 +413,15 @@ def leer_ultimo_mes_cache():
 
 
 def main():
-    print("Actualizando cac_cache.js desde el Excel local del CAC...")
+    print("Actualizando cac_cache.js...")
     mes_previo = leer_ultimo_mes_cache()
+
+    hubo_descarga = not ("--sin-descarga" in sys.argv or "--offline" in sys.argv)
+    if hubo_descarga:
+        intentar_descarga()
+    else:
+        print("(--sin-descarga: no se consulta cifrasonline, se usa el Excel que ya esta)")
+
     path = find_cac_excel()
     if not path:
         sys.exit(
@@ -315,9 +472,16 @@ def main():
     dias = (datetime.now() - ultimo["fecha"]).days
     mes_legible = ultimo["fecha"].strftime("%m/%Y")
     if dias > 70:
-        print("[EXCEL DESACTUALIZADO] El ultimo dato del Excel es de " + mes_legible
-              + " (" + str(dias) + " dias). Descarga la serie historica actualizada "
-              "desde camarco.org.ar/indicadores y pisa el archivo en esta carpeta.")
+        if hubo_descarga:
+            print("[SERIE ATRASADA] El ultimo dato es de " + mes_legible + " (" + str(dias)
+                  + " dias). La descarga corrio y no encontro nada mas nuevo, asi que lo mas "
+                  "probable es que cifrasonline todavia no haya publicado el mes siguiente. "
+                  "Si sabes que ya salio, fijate en cifrasonline.com.ar/indice-cac, deja el "
+                  "Excel en esta carpeta y volve a correr el script.")
+        else:
+            print("[EXCEL DESACTUALIZADO] El ultimo dato es de " + mes_legible + " (" + str(dias)
+                  + " dias) y corriste con --sin-descarga. Corre el script sin esa opcion para "
+                  "que baje solo la serie de cifrasonline.com.ar/indice-cac.")
     else:
         print("[EXCEL AL DIA] Ultimo dato: " + mes_legible + " (" + str(dias) + " dias).")
 
