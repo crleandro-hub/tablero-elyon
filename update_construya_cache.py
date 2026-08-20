@@ -130,6 +130,46 @@ def filas_html(html):
     return out
 
 
+def filas_div(html):
+    """Filas de la maqueta NUEVA, hecha con <div> en lugar de <table>.
+
+    En agosto de 2026 Grupo Construya rehizo la pagina: la tabla dejo de ser
+    <table>/<tr>/<td> y paso a ser una grilla de <div class="TablaRowIndice">.
+    Cada celda lleva adelante su propio rotulo en un <span class="tituloInline">
+    (es el rotulo que se ve cuando la pagina se mira en el celular):
+
+        <div class="TablaRowIndice">
+          <div><span class="tituloInline">Mes: </span>Julio 2026</div>
+          <div class="conestac"><span class="tituloInline">Con Estacionalidad: </span>280,0</div>
+          ...
+
+    Ese rotulo es una ventaja: en vez de depender del orden de las columnas, se
+    arma un encabezado con los rotulos y las filas con los valores. El resto del
+    script (mapear_columnas, a_periodo, los controles) sigue funcionando igual
+    que con la tabla vieja, y si algun dia vuelven a <table> tampoco se rompe."""
+    bloques = re.split(r'<div[^>]*class="[^"]*TablaRowIndice[^"]*"[^>]*>',
+                       html, flags=re.I)[1:]
+    if not bloques:
+        return []
+
+    # El valor se toma hasta que cierra la celda, no hasta el primer "<": los
+    # meses de enero vienen en negrita (<strong>Enero 2026</strong>) y cortando
+    # en el "<" quedaban vacios, con lo que se perdian nueve eneros de la serie.
+    # El rotulo de "% Anual Acumulado" ademas va envuelto en un <h5>.
+    par = re.compile(
+        r'<span[^>]*tituloInline[^>]*>(.*?)</span>(.*?)</(?:div|h5)>', re.S | re.I)
+    encabezado, out = None, []
+    for bloque in bloques:
+        pares = [(limpiar(r).rstrip(": "), limpiar(v)) for r, v in par.findall(bloque)]
+        if len(pares) < 3:                   # fila incompleta o de corte
+            continue
+        if encabezado is None:
+            encabezado = [r for r, _ in pares]
+            out.append(encabezado)
+        out.append([v for _, v in pares])
+    return out
+
+
 def sin_tildes(s):
     for a, b in zip("áéíóúÁÉÍÓÚüÜ", "aeiouAEIOUuU"):
         s = s.replace(a, b)
@@ -189,9 +229,14 @@ def parsear(html):
     """[(periodo, con_est, desest, var_ia, var_acum, var_mes)] ascendente."""
     filas = filas_html(html)
     if not filas:
+        filas = filas_div(html)
+        if filas:
+            print("   La pagina ya no usa <table>: se leyo la grilla de <div>.")
+    if not filas:
         guardar_diagnostico(BASE_DIR, "construya", html)
-        raise SystemExit("[ERROR] La pagina no trajo ninguna tabla. "
-                         "Se conserva el construya_cache.js anterior.")
+        raise SystemExit("[ERROR] La pagina no trajo la serie, ni como <table> "
+                         "ni como grilla de <div>. Quedo _construya_diagnostico.html "
+                         "con lo que llego. Se conserva el construya_cache.js anterior.")
 
     mapa, datos = {}, []
     for fila in filas:
