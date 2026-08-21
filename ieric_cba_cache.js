@@ -14,7 +14,7 @@
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.IERIC_CBA_CACHE = {
-  updated: "2026-08-21T11:01:20",
+  updated: "2026-08-21T11:01:29",
   source: "IERIC - Instituto de Estadistica y Registro de la Industria de la Construccion",
   pagina: "https://www.ieric.org.ar/series_estadisticas/cordoba/",
   puestos: {
