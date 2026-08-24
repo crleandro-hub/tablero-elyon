@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------
    acciones_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-08-24T17:00:07
+   Generado: 2026-08-24T17:02:42
    Las 3 mayores subas y las 3 mayores bajas del PANEL LIDER del
    Merval en la rueda. Fuente: data912 (panel de BYMA).
    pct = variacion % contra el cierre anterior
@@ -10,7 +10,7 @@ window.ACCIONES_CACHE = {
   mejores: [
     { symbol: "SUPV", nombre: "Grupo Supervielle", precio: 2715.0, pct: 8.27 },
     { symbol: "MIRG", nombre: "Mirgor", precio: 1735.0, pct: 5.79 },
-    { symbol: "BBAR", nombre: "Banco Francés", precio: 7915.0, pct: 5.67 }
+    { symbol: "EDN", nombre: "Edenor", precio: 1875.0, pct: 5.63 }
   ],
   peores: [
     { symbol: "METR", nombre: "Metrogas", precio: 2250.0, pct: -1.09 },
@@ -19,5 +19,5 @@ window.ACCIONES_CACHE = {
   ],
   panel: 23,
   fuente: "Panel líder · BYMA vía data912",
-  updated: "2026-08-24T17:00:07"
+  updated: "2026-08-24T17:02:42"
 };
