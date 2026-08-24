@@ -43,10 +43,13 @@ import json
 import os
 import re
 import ssl
+import sys
 import urllib.request as req
 from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, BASE_DIR)
+from marca_cache import marcar, guardar_diagnostico  # noqa: E402
 CACHE_PATH = os.path.join(BASE_DIR, "icc_cba_cache.js")
 TIMEOUT = 40
 
@@ -102,20 +105,42 @@ def url_del_recurso():
     return CSV_URL
 
 
-def _num(txt):
-    """'4.583,74' -> 4583.74   |   '133,22' -> 133.22   |   '' -> None"""
-    txt = (txt or "").strip().replace("%", "")
+def _num(txt, sep=";"):
+    """'4.583,74' -> 4583.74   |   '133,22' -> 133.22   |   '' -> None
+
+    El decimal depende de como venga separado el CSV: con ";" las columnas
+    usan coma decimal (convencion local) y con "," usan punto. Adivinarlo mal
+    convierte 4583.74 en 458374, asi que se decide por el separador y no por
+    el contenido."""
+    txt = (txt or "").strip().strip('"').replace("%", "").replace("\xa0", "")
     if not txt:
         return None
+    if sep == ";":
+        txt = txt.replace(".", "").replace(",", ".")
+    else:
+        txt = txt.replace(",", "")
     try:
-        return float(txt.replace(".", "").replace(",", "."))
+        return float(txt)
     except ValueError:
         return None
 
 
 def _fecha(txt):
-    """'oct-13' -> '2013-10-01'. Devuelve None si no es un periodo."""
-    m = re.match(r"^\s*([a-zA-Z]{3})[\s\-/]*(\d{2,4})\s*$", txt or "")
+    """'oct-13' -> '2013-10-01'. Devuelve None si no es un periodo.
+
+    Se aceptan tambien los formatos que aparecen cuando el portal rehace el
+    dataset: '2026-06', '2026-06-01', '06/2026' y 'junio 2026'."""
+    txt = (txt or "").strip().strip('"')
+
+    m = re.match(r"^\s*(\d{4})-(\d{1,2})(?:-\d{1,2})?\s*$", txt)
+    if m:
+        return "%04d-%02d-01" % (int(m.group(1)), int(m.group(2)))
+
+    m = re.match(r"^\s*(\d{1,2})/(\d{4})\s*$", txt)
+    if m:
+        return "%04d-%02d-01" % (int(m.group(2)), int(m.group(1)))
+
+    m = re.match(r"^\s*([a-zA-Z]{3,10})[\s\-/]*(\d{2,4})\s*$", txt)
     if not m:
         return None
     mes = MESES.get(m.group(1)[:3].lower())
@@ -127,26 +152,41 @@ def _fecha(txt):
     return "%04d-%02d-01" % (anio, mes)
 
 
-def parsear(csv_txt):
-    """Columnas: Periodo ; NG ; Materiales ; Mano de obra ; Varios ;
-                 4 columnas de variacion mensual ; Valor del m2"""
+def _parsear_con(csv_txt, sep):
+    """Columnas: Periodo | NG | Materiales | Mano de obra | Varios |
+                 4 columnas de variacion mensual | Valor del m2"""
     filas = []
     for linea in csv_txt.splitlines():
-        partes = linea.split(";")
+        partes = linea.split(sep)
         if len(partes) < 6:
             continue
         f = _fecha(partes[0])
         if not f:
             continue
-        ng = _num(partes[1])
+        ng = _num(partes[1], sep)
         if ng is None:
             continue
         filas.append([
-            f, ng, _num(partes[2]), _num(partes[3]), _num(partes[4]),
-            _num(partes[9]) if len(partes) > 9 else None,
+            f, ng, _num(partes[2], sep), _num(partes[3], sep), _num(partes[4], sep),
+            _num(partes[9], sep) if len(partes) > 9 else None,
         ])
     filas.sort(key=lambda r: r[0])
     return filas
+
+
+def parsear(csv_txt):
+    """El portal ya cambio de maqueta otras veces, asi que no se da por sentado
+    el separador: se prueban los tres habituales y gana el que devuelve mas
+    meses. Con 0 filas en los tres, el CSV cambio de verdad y hay que mirarlo."""
+    mejor, mejor_sep = [], ";"
+    for sep in (";", ",", "\t"):
+        filas = _parsear_con(csv_txt, sep)
+        if len(filas) > len(mejor):
+            mejor, mejor_sep = filas, sep
+    if mejor and mejor_sep != ";":
+        print("   El CSV vino separado por %r (antes era ';')."
+              % mejor_sep)
+    return mejor
 
 
 def num(v):
@@ -161,10 +201,13 @@ def main():
     print("Actualizando ICC de Cordoba (Estadistica y Censos de Cordoba)...")
 
     url = url_del_recurso()
-    serie = parsear(_get(url))
+    crudo = _get(url)
+    serie = parsear(crudo)
 
     if len(serie) < 12:
+        guardar_diagnostico(BASE_DIR, "icc_cba", crudo, ".csv")
         raise SystemExit("[ERROR] El CSV no trajo una serie usable (%d filas). "
+                         "Quedo _icc_cba_diagnostico.csv con lo que llego. "
                          "Se conserva el icc_cba_cache.js anterior." % len(serie))
 
     hasta = serie[-1][0][:7]
@@ -204,4 +247,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+        marcar(CACHE_PATH)
+    except SystemExit as e:
+        if e.code:
+            marcar(CACHE_PATH, e.code)
+        raise
