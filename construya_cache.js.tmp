@@ -8,6 +8,8 @@
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.CONSTRUYA_CACHE = {
+  chequeado: "2026-08-24T10:58:38",
+  aviso: null,
   updated: "2026-08-24T10:58:38",
   source: "Grupo Construya (indice_construya)",
   hasta: "2026-07",
