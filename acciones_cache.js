@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------
    acciones_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-08-25T18:02:44
+   Generado: 2026-08-26T10:27:52
    Las 3 mayores subas y las 3 mayores bajas del PANEL LIDER del
    Merval en la rueda. Fuente: data912 (panel de BYMA).
    pct = variacion % contra el cierre anterior
@@ -15,9 +15,9 @@ window.ACCIONES_CACHE = {
   peores: [
     { symbol: "YPFD", nombre: "YPF", precio: 8005.0, pct: -2.07 },
     { symbol: "PAMP", nombre: "Pampa Energía", precio: 5090.0, pct: -1.16 },
-    { symbol: "TECO2", nombre: "Telecom", precio: 4310.0, pct: -0.4 }
+    { symbol: "COME", nombre: "Sociedad Comercial del Plata", precio: 40.91, pct: -0.34 }
   ],
-  panel: 23,
+  panel: 19,
   fuente: "Panel líder · BYMA vía data912",
-  updated: "2026-08-25T18:02:44"
+  updated: "2026-08-26T10:27:52"
 };

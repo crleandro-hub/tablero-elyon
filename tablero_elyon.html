@@ -709,6 +709,8 @@ body {
           </div>
 
           <select class="period-select" id="comp-range" onchange="renderCompChart()">
+            <option value="ytd">Lo que va de este año</option>
+            <option value="12">Último año</option>
             <option value="24">Últimos 2 años</option>
             <option value="36" selected>Últimos 3 años</option>
             <option value="60">Últimos 5 años</option>
@@ -4168,7 +4170,7 @@ function renderCompChart() {
 
   const sel     = compSel();
   const rangeEl = document.getElementById('comp-range');
-  const meses   = rangeEl ? parseInt(rangeEl.value, 10) : 36;
+  const rango   = rangeEl ? rangeEl.value : '36';
 
   // Cada serie ya convertida a variacion interanual
   const series = sel.map(k => ({ k, cfg: COMP_SERIES[k], ia: compVarIA(COMP_SERIES[k].get()) }))
@@ -4178,7 +4180,17 @@ function renderCompChart() {
   const todos = new Set();
   series.forEach(s => s.ia.forEach((_, ym) => todos.add(ym)));
   let labels = [...todos].sort();
-  if (meses > 0) labels = labels.slice(-meses);
+  if (rango === 'ytd') {
+    /* Enero del año en curso hasta el ultimo mes con dato. No es "los ultimos
+       12 meses": arranca siempre en enero, que es contra lo que se mide el
+       acumulado del año en los contratos. En enero y febrero va a mostrar uno
+       o dos puntos, y esta bien que asi sea. */
+    const anio = new Date().getFullYear();
+    labels = labels.filter(ym => +ym.slice(0, 4) === anio);
+  } else {
+    const meses = parseInt(rango, 10) || 0;
+    if (meses > 0) labels = labels.slice(-meses);
+  }
 
   if (!labels.length) {
     if (compChart) { compChart.destroy(); compChart = null; }
