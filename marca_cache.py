@@ -79,6 +79,23 @@ def marcar(cache_path, aviso=None):
         return False
 
 
+def limpiar_diagnostico(base_dir, nombre, *extensiones):
+    """Borra el volcado de diagnostico cuando la fuente vuelve a funcionar.
+
+    Si no se borra, queda un archivo viejo en la carpeta que parece una falla
+    actual y manda a buscar un problema que ya no existe. La regla es simple:
+    si hay _X_diagnostico.*, X esta roto AHORA."""
+    for ext in (extensiones or (".html", ".csv", ".pdf", ".txt")):
+        ruta = os.path.join(base_dir, "_%s_diagnostico%s" % (nombre, ext))
+        if os.path.exists(ruta):
+            try:
+                os.remove(ruta)
+                print("   [diagnostico] %s ya no hace falta, se borro."
+                      % os.path.basename(ruta))
+            except Exception:
+                pass
+
+
 def guardar_diagnostico(base_dir, nombre, contenido, extension=".html"):
     """Deja lo que llego de la fuente para poder arreglar el parseo sin adivinar."""
     if not contenido:

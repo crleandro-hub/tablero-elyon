@@ -39,6 +39,8 @@ Uso:
     python update_icc_cba_cache.py
 """
 
+import csv
+import io
 import json
 import os
 import re
@@ -49,7 +51,7 @@ from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
-from marca_cache import marcar, guardar_diagnostico  # noqa: E402
+from marca_cache import marcar, guardar_diagnostico, limpiar_diagnostico  # noqa: E402
 CACHE_PATH = os.path.join(BASE_DIR, "icc_cba_cache.js")
 TIMEOUT = 40
 
@@ -105,20 +107,32 @@ def url_del_recurso():
     return CSV_URL
 
 
-def _num(txt, sep=";"):
-    """'4.583,74' -> 4583.74   |   '133,22' -> 133.22   |   '' -> None
+def _num(txt, sep=None):
+    """'4.583,74' -> 4583.74   |   '28691,52' -> 28691.52   |   '' -> None
 
-    El decimal depende de como venga separado el CSV: con ";" las columnas
-    usan coma decimal (convencion local) y con "," usan punto. Adivinarlo mal
-    convierte 4583.74 en 458374, asi que se decide por el separador y no por
-    el contenido."""
+    NO se decide por el separador de columnas. Se decidia asi y salio caro: el
+    portal paso a publicar el CSV separado por comas y con los numeros entre
+    comillas ("28691,52"), el separador elegido fue "," y cada numero quedo
+    partido al medio. El valor del m2 de junio, que son $971.978,35, quedo
+    guardado como 4.
+
+    Ahora se mira el contenido, que es lo unico confiable:
+      · si hay coma, la coma es el decimal (convencion local) y el punto separa
+        miles -> "4.583,74" y "28691,52";
+      · si solo hay puntos y el ultimo grupo tiene 3 digitos, son miles
+        -> "971.978" es 971978, no 971,978;
+      · cualquier otro punto es decimal -> "28691.52".
+    El separador se sigue recibiendo por compatibilidad, pero no se usa."""
     txt = (txt or "").strip().strip('"').replace("%", "").replace("\xa0", "")
+    txt = txt.replace(" ", "")
     if not txt:
         return None
-    if sep == ";":
+    if "," in txt:
         txt = txt.replace(".", "").replace(",", ".")
-    else:
-        txt = txt.replace(",", "")
+    elif txt.count(".") >= 1:
+        entero, _, ultimo = txt.rpartition(".")
+        if len(ultimo) == 3 and entero.replace(".", "").replace("-", "").isdigit():
+            txt = txt.replace(".", "")          # 971.978 -> 971978
     try:
         return float(txt)
     except ValueError:
@@ -154,21 +168,31 @@ def _fecha(txt):
 
 def _parsear_con(csv_txt, sep):
     """Columnas: Periodo | NG | Materiales | Mano de obra | Varios |
-                 4 columnas de variacion mensual | Valor del m2"""
+                 4 columnas de variacion mensual | Valor del m2
+
+    Se usa el modulo csv y no un split() a mano porque el portal ahora
+    entrecomilla los valores: con "28691,52" como campo, partir por comas lo
+    corta al medio. csv.reader respeta las comillas y devuelve el numero
+    entero, tal como esta publicado."""
+    try:
+        lector = csv.reader(io.StringIO(csv_txt), delimiter=sep, quotechar='"')
+        lineas = list(lector)
+    except Exception:
+        lineas = [l.split(sep) for l in csv_txt.splitlines()]
+
     filas = []
-    for linea in csv_txt.splitlines():
-        partes = linea.split(sep)
+    for partes in lineas:
         if len(partes) < 6:
             continue
         f = _fecha(partes[0])
         if not f:
             continue
-        ng = _num(partes[1], sep)
+        ng = _num(partes[1])
         if ng is None:
             continue
         filas.append([
-            f, ng, _num(partes[2], sep), _num(partes[3], sep), _num(partes[4], sep),
-            _num(partes[9], sep) if len(partes) > 9 else None,
+            f, ng, _num(partes[2]), _num(partes[3]), _num(partes[4]),
+            _num(partes[9]) if len(partes) > 9 else None,
         ])
     filas.sort(key=lambda r: r[0])
     return filas
@@ -197,6 +221,72 @@ def num(v):
     return ("%.2f" % v).rstrip("0").rstrip(".")
 
 
+def _serie_del_cache():
+    """Lo que ya esta guardado: {fecha: [ng, mat, mo, varios, m2]}."""
+    try:
+        with open(CACHE_PATH, encoding="utf-8") as f:
+            txt = f.read()
+    except Exception:
+        return {}
+    out = {}
+    for f_, resto in re.findall(r'\["(\d{4}-\d{2}-\d{2})",([^\]]*)\]', txt):
+        vals = []
+        for t in resto.split(","):
+            t = t.strip()
+            vals.append(None if t in ("null", "") else float(t))
+        out[f_] = vals
+    return out
+
+
+def controlar(serie, crudo):
+    """Aborta si lo parseado no tiene sentido, conservando el cache anterior.
+
+    El control que importa es el ultimo: un mes que YA estaba guardado tiene
+    que volver a dar el mismo numero. Si no da, no cambiaron los datos sino la
+    forma de leerlos, y eso es exactamente lo que paso cuando el portal empezo
+    a entrecomillar los valores: el nivel general de junio siguio pareciendo
+    razonable (28691) pero el valor del m2 se desplomo de $971.978,35 a $4 y
+    nadie se entero hasta mirar el tablero.
+
+    Es el control mas barato y el mas potente que hay para un scraper: el
+    pasado no cambia."""
+    ult = serie[-1]
+    if not ult[1] or ult[1] < 100:
+        guardar_diagnostico(BASE_DIR, "icc_cba", crudo, ".csv")
+        raise SystemExit("[ERROR] El nivel general de %s dio %s, que no puede ser "
+                         "(la serie va por los 28.000). Quedo _icc_cba_diagnostico.csv. "
+                         "Se conserva el cache anterior." % (ult[0][:7], ult[1]))
+
+    if ult[5] is not None and ult[5] < 100000:
+        guardar_diagnostico(BASE_DIR, "icc_cba", crudo, ".csv")
+        raise SystemExit("[ERROR] El valor del m2 de %s dio $%s y ya viene arriba del "
+                         "millon: el CSV cambio de formato. Quedo "
+                         "_icc_cba_diagnostico.csv. Se conserva el cache anterior."
+                         % (ult[0][:7], ult[5]))
+
+    previo = _serie_del_cache()
+    nombres = ["nivel general", "materiales", "mano de obra", "varios", "valor del m2"]
+    difs = []
+    for fila in serie:
+        viejo = previo.get(fila[0])
+        if not viejo:
+            continue
+        for i in range(5):
+            a_, b_ = viejo[i] if i < len(viejo) else None, fila[i + 1]
+            if a_ is None or b_ is None or a_ == 0:
+                continue
+            if abs(b_ / a_ - 1) > 0.01:
+                difs.append((fila[0][:7], nombres[i], a_, b_))
+    if difs:
+        guardar_diagnostico(BASE_DIR, "icc_cba", crudo, ".csv")
+        detalle = "; ".join("%s %s: %s -> %s" % d for d in difs[:4])
+        raise SystemExit(
+            "[ERROR] %d valor(es) de meses YA guardados cambiaron al releer el CSV. "
+            "El pasado no cambia: lo que cambio es el formato del archivo. %s. "
+            "Quedo _icc_cba_diagnostico.csv. Se conserva el cache anterior."
+            % (len(difs), detalle))
+
+
 def main():
     print("Actualizando ICC de Cordoba (Estadistica y Censos de Cordoba)...")
 
@@ -210,6 +300,8 @@ def main():
                          "Quedo _icc_cba_diagnostico.csv con lo que llego. "
                          "Se conserva el icc_cba_cache.js anterior." % len(serie))
 
+    controlar(serie, crudo)
+    limpiar_diagnostico(BASE_DIR, "icc_cba")
     hasta = serie[-1][0][:7]
     fuente = "Direccion General de Estadistica y Censos de Cordoba"
 

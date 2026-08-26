@@ -57,7 +57,7 @@ from datetime import datetime
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
-from marca_cache import marcar, guardar_diagnostico  # noqa: E402
+from marca_cache import marcar, guardar_diagnostico, limpiar_diagnostico  # noqa: E402
 CACHE_PATH = os.path.join(BASE_DIR, "construya_cache.js")
 
 URL = "https://www.grupoconstruya.com.ar/servicios/indice_construya"
@@ -387,6 +387,7 @@ def main():
     informe = buscar_informe(html)
 
     js = emitir(filas, informe, "Grupo Construya (indice_construya)")
+    limpiar_diagnostico(BASE_DIR, "construya")
     with open(CACHE_PATH, "w", encoding="utf-8") as f:
         f.write(js)
 
