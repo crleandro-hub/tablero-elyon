@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------
    acciones_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-08-26T17:00:06
+   Generado: 2026-08-26T17:02:42
    Las 3 mayores subas y las 3 mayores bajas del PANEL LIDER del
    Merval en la rueda. Fuente: data912 (panel de BYMA).
    pct = variacion % contra el cierre anterior
@@ -8,9 +8,9 @@
 ----------------------------------------------------------------- */
 window.ACCIONES_CACHE = {
   mejores: [
-    { symbol: "TRAN", nombre: "Transener", precio: 3665.0, pct: 4.71 },
-    { symbol: "COME", nombre: "Sociedad Comercial del Plata", precio: 42.1, pct: 3.11 },
-    { symbol: "METR", nombre: "Metrogas", precio: 2349.0, pct: 2.98 }
+    { symbol: "TRAN", nombre: "Transener", precio: 3670.0, pct: 4.85 },
+    { symbol: "METR", nombre: "Metrogas", precio: 2349.0, pct: 2.98 },
+    { symbol: "COME", nombre: "Sociedad Comercial del Plata", precio: 42.0, pct: 2.86 }
   ],
   peores: [
     { symbol: "ALUA", nombre: "Aluar", precio: 855.0, pct: -2.06 },
@@ -19,5 +19,5 @@ window.ACCIONES_CACHE = {
   ],
   panel: 23,
   fuente: "Panel líder · BYMA vía data912",
-  updated: "2026-08-26T17:00:06"
+  updated: "2026-08-26T17:02:42"
 };
