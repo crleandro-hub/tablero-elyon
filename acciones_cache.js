@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------
    acciones_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-08-27T12:02:39
+   Generado: 2026-08-27T13:00:07
    Las 3 mayores subas y las 3 mayores bajas del PANEL LIDER del
    Merval en la rueda. Fuente: data912 (panel de BYMA).
    pct = variacion % contra el cierre anterior
@@ -8,16 +8,16 @@
 ----------------------------------------------------------------- */
 window.ACCIONES_CACHE = {
   mejores: [
-    { symbol: "TRAN", nombre: "Transener", precio: 3740.0, pct: 1.9 },
-    { symbol: "MIRG", nombre: "Mirgor", precio: 1780.0, pct: 1.13 },
-    { symbol: "TXAR", nombre: "Ternium Argentina", precio: 697.0, pct: 0.72 }
+    { symbol: "MIRG", nombre: "Mirgor", precio: 1815.0, pct: 3.12 },
+    { symbol: "TRAN", nombre: "Transener", precio: 3742.5, pct: 1.97 },
+    { symbol: "CRES", nombre: "Cresud", precio: 1818.0, pct: 1.5 }
   ],
   peores: [
-    { symbol: "SUPV", nombre: "Grupo Supervielle", precio: 2725.0, pct: -3.62 },
-    { symbol: "BBAR", nombre: "Banco Francés", precio: 7760.0, pct: -2.81 },
-    { symbol: "TECO2", nombre: "Telecom", precio: 4177.5, pct: -2.5 }
+    { symbol: "TECO2", nombre: "Telecom", precio: 4180.0, pct: -2.45 },
+    { symbol: "SUPV", nombre: "Grupo Supervielle", precio: 2765.0, pct: -2.21 },
+    { symbol: "BBAR", nombre: "Banco Francés", precio: 7820.0, pct: -2.06 }
   ],
   panel: 23,
   fuente: "Panel líder · BYMA vía data912",
-  updated: "2026-08-27T12:02:39"
+  updated: "2026-08-27T13:00:07"
 };
