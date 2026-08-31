@@ -7,6 +7,8 @@
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.ICC_CBA_CACHE = {
+  chequeado: "2026-08-31T09:30:27",
+  aviso: null,
   updated: "2026-08-31T09:30:27",
   source: "Direccion General de Estadistica y Censos de Cordoba",
   hasta: "2026-07",

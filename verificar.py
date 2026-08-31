@@ -48,6 +48,24 @@ HTML = os.path.join(BASE_DIR, "tablero_elyon.html")
 #   · el ICC y el CAC salen a mitad del mes siguiente -> el dato vive ~45 dias
 #   · el ISAC y el Registro General tienen mas rezago -> ~50 dias
 #   · las escalas de UOCRA se cargan a mano 2 a 4 veces por año
+# COMO SE ELIGE EL LIMITE DE DIAS DEL DATO
+# ----------------------------------------
+# El control mide la edad del dato mas nuevo del cache, y los datos mensuales
+# llevan fecha del dia 1 del mes que miden. Entonces el limite NO es el rezago
+# de publicacion: es cuanto envejece el ultimo dato ANTES de que salga el
+# siguiente, que es bastante mas.
+#
+#   Si el mes M se publica el dia D del mes M+k, la vispera de esa publicacion
+#   el dato mas nuevo todavia es el mes M-1. Su edad es la suma de los dias de
+#   los meses M-1 .. M+k-1, mas D, menos 1.
+#
+#   k=1 (sale al mes siguiente):   peor caso ~ 61 + D
+#   k=2 (sale a los dos meses):    peor caso ~ 91 + D
+#
+# El limite va con unos 7 dias de margen sobre ese peor caso, por si el
+# organismo se atrasa. Poner menos NO detecta antes que algo se rompio:
+# garantiza cartel rojo todos los meses, y un aviso que suena siempre deja
+# de mirarse.
 FRESCURA = {
     "bcra_cache.js":      ("diaria",  6,   6),
     "uva_cache.js":       ("diaria",  6,   6),
@@ -60,22 +78,30 @@ FRESCURA = {
     "cac_cache.js":       ("mensual", 85,  6),
     "icc_cba_cache.js":   ("mensual", 85,  6),
     "icc_indec_cache.js": ("mensual", 85,  6),
-    "isac_cache.js":      ("mensual", 80,  6),
-    "rgp_cba_cache.js":   ("mensual", 80,  6),
-    # El IERIC publica con ~2 meses de rezago y marca el ultimo mes como
-    # provisorio. Empresas en actividad va un mes mas adelantada que puestos
-    # y salario, y el control mira la fecha mas nueva del cache, asi que 80
-    # dias alcanza para las tres sin dar falsos avisos.
-    "ieric_cba_cache.js": ("mensual", 80,  6),
+    # ISAC: sale a los dos meses, alrededor del dia 8 (el de julio 2026 salio
+    # el 08/09/2026). Peor caso 98 dias. Con 80 daba cartel 18 dias por mes.
+    "isac_cache.js":      ("mensual", 105, 6),
+    # Registro General: sale al mes siguiente, ~dia 23. Peor caso 83 dias.
+    "rgp_cba_cache.js":   ("mensual", 90,  6),
+    # IERIC: sale a los dos meses. El control mira la fecha mas nueva del
+    # cache, que es la de empresas en actividad (va un mes adelante de
+    # puestos y salario). Peor caso 103 dias.
+    # OJO: como se mira el maximo, si puestos o salario se congelan pero
+    # empresas sigue, esto no lo detecta. Es una limitacion del control
+    # generico, no algo que este mal configurado aca.
+    "ieric_cba_cache.js": ("mensual", 110, 6),
     # El Indice Construya sale alrededor del dia 10 del mes siguiente, mas
-    # rapido que cualquier fuente oficial. Si el ultimo dato pasa los 55 dias
-    # es que la camara cambio la pagina y el parseo dejo de encontrar la tabla.
-    "construya_cache.js": ("mensual", 55,  6),
+    # rapido que cualquier fuente oficial. Aun asi el peor caso son 70 dias:
+    # la vispera de que salga el mes M, el dato mas nuevo es M-1 y ya tiene
+    # dos meses y diez dias encima. Con 55 el cartel salia 15 dias por mes.
+    "construya_cache.js": ("mensual", 80,  6),
     # APYMECO publica con un rezago parecido al del CAC. Es la unica fuente
     # que ACUMULA historico (la pagina solo muestra 13 meses), asi que un
     # cache viejo no es solo un dato desactualizado: son meses que se pierden
     # para siempre si el script queda roto mucho tiempo.
-    "apymeco_cache.js":   ("mensual", 85,  6),
+    # El dia de publicacion de APYMECO no esta confirmado; 95 cubre hasta el
+    # dia 27 del mes siguiente. Si alguna vez se sabe la fecha exacta, ajustar.
+    "apymeco_cache.js":   ("mensual", 95,  6),
     # CEDUC se carga desde un .txt que se arma a mano con el PDF del informe,
     # y la camara publica de forma irregular. Por eso no se controla cuando
     # corrio el script y el limite del dato es holgado: 150 dias.

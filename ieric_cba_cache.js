@@ -1,6 +1,6 @@
 /* ═══════════════════════════
    ieric_cba_cache.js  -  Grupo Elyon
-   Generado por update_ieric_cba_cache.py el 28/08/2026 11:04
+   Generado por update_ieric_cba_cache.py el 31/08/2026 09:30
    Fuente: IERIC - series estadisticas de la provincia de Cordoba
    https://www.ieric.org.ar/series_estadisticas/cordoba/
 
@@ -14,16 +14,16 @@
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.IERIC_CBA_CACHE = {
-  updated: "2026-08-28T11:04:10",
+  updated: "2026-08-31T09:30:34",
   source: "IERIC - Instituto de Estadistica y Registro de la Industria de la Construccion",
   pagina: "https://www.ieric.org.ar/series_estadisticas/cordoba/",
   puestos: {
     titulo: "Construcción. Puestos de trabajo registrados. Provincia de Córdoba. Desde Junio de 2007 en adelante (en cantidad de puestos y var. %)",
     unidad: "puestos",
-    hasta: "2026-05",
+    hasta: "2026-06",
     provisorio: true,
     fuente: "Elaboración IERIC en base a datos de OSPECON y Seguro de Vida Obligatorio",
-    archivo: "https://www.ieric.org.ar/wp-content/uploads/2026/07/Puestos-de-trabajo-Cordoba-SC.xls",
+    archivo: "https://www.ieric.org.ar/wp-content/uploads/2026/08/Puestos-de-trabajo-Cordoba-SC.xls",
     notas: ["el dato del último mes es provisorio"],
     serie: [
       ["2007-06-01",30688,419957,null,null,null,null,null,null],
@@ -253,16 +253,17 @@ window.IERIC_CBA_CACHE = {
       ["2026-02-01",27547,356174,0.6614,10.5772,0.225,0.7798,0.7171,0.4399],
       ["2026-03-01",28158,362582,2.218,12.0716,0.9872,1.7991,2.1326,0.553],
       ["2026-04-01",27954,358754,-0.7245,10.1505,1.5464,-1.0558,0.9324,0.5768],
-      ["2026-05-01",28254.7127,355962.1801,1.0757,10.9987,2.0917,-0.7782,-0.0533,0.5396]
+      ["2026-05-01",28227,356566,0.9766,10.8898,2.0854,-0.6099,0.1162,0.5496],
+      ["2026-06-01",28403.1258,355568.8873,0.624,10.7593,2.5617,-0.2796,0.4006,0.5413]
     ]
   },
   salario: {
     titulo: "Construcción. Salario promedio mensual de los trabajadores registrados. Provincia de Córdoba . Desde Enero de 2005 en adelante (en pesos y % de var)",
     unidad: "pesos por mes",
-    hasta: "2026-05",
+    hasta: "2026-06",
     provisorio: true,
     fuente: "Elaboración IERIC en base a datos de OSPECON y Seguro de Vida Obligatorio",
-    archivo: "https://www.ieric.org.ar/wp-content/uploads/2026/07/Salario-Promedio-Cordoba-SC.xls",
+    archivo: "https://www.ieric.org.ar/wp-content/uploads/2026/08/Salario-Promedio-Cordoba-SC.xls",
     notas: ["el dato del último mes es provisorio"],
     serie: [
       ["2007-06-01",1639.5569,1948.4673,null,null,null,null,null,null],
@@ -492,7 +493,8 @@ window.IERIC_CBA_CACHE = {
       ["2026-02-01",1011854.48,1213519.59,-1.3998,27.6611,45.3448,-1.1825,27.6097,42.8955],
       ["2026-03-01",1073635.52,1271691.72,6.1057,29.658,44.0775,4.7937,26.2667,41.5418],
       ["2026-04-01",1170722.65,1424116.07,9.0428,34.5769,43.3343,11.986,38.1543,41.2812],
-      ["2026-05-01",1185410.4234,1422254.5675,1.2546,32.7471,42.5473,-0.1307,35.891,40.8908]
+      ["2026-05-01",1176357.64,1389418.69,0.4813,31.7333,42.4719,-2.4364,32.7537,40.6635],
+      ["2026-06-01",1751696.9066,2090008.589,48.9085,38.2443,42.0686,50.4232,39.6313,40.5666]
     ]
   },
   empresas: {
