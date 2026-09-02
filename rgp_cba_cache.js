@@ -1,12 +1,12 @@
 /* ═══════════════════════════
    rgp_cba_cache.js  -  Grupo Elyon
-   Generado por update_rgp_cba_cache.py el 02/09/2026 11:01
+   Generado por update_rgp_cba_cache.py el 02/09/2026 11:03
    Fuente: Registro General de la Provincia de Cordoba (via datos abiertos de Cordoba)
    Documentos INGRESADOS al Registro, no escrituras firmadas.
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.RGP_CBA_CACHE = {
-  updated: "2026-09-02T11:01:08",
+  updated: "2026-09-02T11:03:57",
   source: "Registro General de la Provincia de Cordoba",
   hasta: "2026-07",
   transferencias: [
