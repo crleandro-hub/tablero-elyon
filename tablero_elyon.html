@@ -5994,26 +5994,58 @@ function renderCompCostos() {
    peor caso ronda 61+D días; para k=2, 91+D. El límite va con ~7 días de
    margen sobre eso. La tabla equivalente está en verificar.py: si se cambia
    uno hay que cambiar el otro. */
+/* ═══ CUANDO UNA FUENTE ESTA ATRASADA ═══
+   En las MENSUALES la antiguedad se mide desde que CERRO EL MES del dato, no
+   desde el dia 1. Medirlo desde el dia 1 regalaba un mes entero de error: el
+   3 de septiembre, con el REM de julio -relevado del 29 al 31 de julio y
+   publicado el 6 de agosto- el tablero avisaba "sin datos nuevos hace 64
+   dias". El dato tenia menos de un mes y el de agosto todavia no habia salido.
+
+   El limite de cada fuente es entonces "cuantos dias despues del cierre del
+   mes puede tardar en aparecer el mes siguiente", con un margen. Sale del
+   calendario real de cada organismo:
+     REM        el BCRA lo publica ~5 dias despues del cierre -> el siguiente a los ~35
+     Construya  la camara ~el dia 10 del mes siguiente        -> ~40
+     ICC INDEC  ~el dia 20                                    -> ~50
+     APYMECO    ~mediados del mes siguiente                   -> ~45
+     CAC        ~el dia 25                                    -> ~55
+     ICC Cba    fin del mes siguiente                         -> ~60
+     RGP Cba    fin del mes siguiente                         -> ~60
+     ISAC       INDEC ~el dia 18, pero se atrasa seguido      -> ~48
+     IERIC      publica con dos meses de rezago               -> ~90
+   Las DIARIAS se siguen midiendo desde su propia fecha.
+
+   clave del cache, nombre, díasDato, díasScript, esMensual */
 const FUENTES = [
-  // clave del cache,        nombre,                    díasDato, díasScript
-  ['BCRA_CACHE',      'BADLAR / TAMAR (BCRA)',              6,   6],
-  ['UVA_CACHE',       'UVA (BCRA)',                         6,   6],
-  ['MERVAL_CACHE',    'MERVAL',                             6,   6],
-  ['RIESGO_CACHE',    'Riesgo país',                        6,   6],
-  ['REM_CACHE',       'REM (BCRA)',                        60,   6],
-  ['CAC_CACHE',       'Índice CAC',                        85,   6],
-  ['ICC_CBA_CACHE',   'ICC Córdoba',                       85,   6],
-  ['ICC_INDEC_CACHE', 'ICC INDEC',                         85,   6],
-  ['APYMECO_CACHE',   'APYMECO · costo del m²',            95,   6],
-  ['ISAC_CACHE',      'ISAC (actividad)',                 105,   6],
-  ['CONSTRUYA_CACHE', 'Índice Construya',                  80,   6],
-  ['RGP_CBA_CACHE',   'Registro General de Córdoba',       90,   6],
-  // El IERIC publica con ~2 meses de rezago y el ultimo mes es provisorio.
-  ['IERIC_CBA_CACHE', 'IERIC · empleo y empresas de Córdoba', 110, 6],
-  ['SALARIOS_CACHE',  'Escalas UOCRA / UECARA',           240, null],  // carga manual
+  ['BCRA_CACHE',      'BADLAR / TAMAR (BCRA)',              6,   6, false],
+  ['UVA_CACHE',       'UVA (BCRA)',                         6,   6, false],
+  ['MERVAL_CACHE',    'MERVAL',                             6,   6, false],
+  ['RIESGO_CACHE',    'Riesgo país',                        6,   6, false],
+  ['REM_CACHE',       'REM (BCRA)',                        45,   6, true],
+  ['CAC_CACHE',       'Índice CAC',                        65,   6, true],
+  ['ICC_CBA_CACHE',   'ICC Córdoba',                       70,   6, true],
+  ['ICC_INDEC_CACHE', 'ICC INDEC',                         60,   6, true],
+  ['APYMECO_CACHE',   'APYMECO · costo del m²',            60,   6, true],
+  ['ISAC_CACHE',      'ISAC (actividad)',                  70,   6, true],
+  ['CONSTRUYA_CACHE', 'Índice Construya',                  50,   6, true],
+  ['RGP_CBA_CACHE',   'Registro General de Córdoba',       70,   6, true],
+  ['IERIC_CBA_CACHE', 'IERIC · empleo y empresas de Córdoba', 100, 6, true],
+  ['SALARIOS_CACHE',  'Escalas UOCRA / UECARA',           240, null, true],  // carga manual
 ];
 
 const DIA_MS = 86400000;
+
+/* Dias desde que termino el mes del dato. Para una serie mensual es lo unico
+   que tiene sentido: el indice de julio cubre hasta el 31/07, asi que el 3 de
+   septiembre tiene 34 dias de antiguedad, no 64. */
+function _diasDesdeCierreDeMes(iso) {
+  if (!iso) return null;
+  const a = +String(iso).slice(0, 4), m = +String(iso).slice(5, 7);
+  if (!a || !m) return null;
+  const fin = new Date(a, m, 0);       // dia 0 del mes siguiente = ultimo del mes
+  fin.setHours(0, 0, 0, 0);
+  return Math.floor((Date.now() - fin.getTime()) / DIA_MS);
+}
 
 function _diasDesde(iso) {
   if (!iso) return null;
@@ -6048,7 +6080,7 @@ function revisarFuentes() {
   if (!cont) return;
 
   const problemas = [];
-  FUENTES.forEach(([clave, nombre, diasDato, diasScript]) => {
+  FUENTES.forEach(([clave, nombre, diasDato, diasScript, mensual]) => {
     const c = window[clave];
     if (!c) { problemas.push([nombre, 'falta el archivo de datos']); return; }
 
@@ -6069,10 +6101,12 @@ function revisarFuentes() {
     if (c.aviso) { problemas.push([nombre, c.aviso]); return; }
 
     const ult = _ultimaFechaCache(c);
-    const edadDato = _diasDesde(ult);
+    const edadDato = mensual ? _diasDesdeCierreDeMes(ult) : _diasDesde(ult);
     if (edadDato != null && edadDato > diasDato) {
-      problemas.push([nombre, 'sin datos nuevos hace ' + edadDato + ' días (último: ' +
-                              isacMesLargo(ult) + ')']);
+      problemas.push([nombre, mensual
+        ? 'sigue en ' + isacMesLargo(ult) + ' y ya deberían haber publicado el mes '
+          + 'siguiente (' + edadDato + ' días desde que cerró)'
+        : 'sin datos nuevos hace ' + edadDato + ' días (último: ' + isacMesLargo(ult) + ')']);
     }
   });
 

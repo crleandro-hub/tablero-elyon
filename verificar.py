@@ -36,7 +36,7 @@ Uso:
 import os
 import re
 import sys
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 HTML = os.path.join(BASE_DIR, "tablero_elyon.html")
@@ -75,43 +75,43 @@ FRESCURA = {
     "rofex_cache.js":     ("diaria",  6,   6),
     "acciones_cache.js":  ("diaria",  6,   6),
     "dolar_cache.js":     ("diaria",  6,   6),
-    "cac_cache.js":       ("mensual", 85,  6),
-    "icc_cba_cache.js":   ("mensual", 85,  6),
-    "icc_indec_cache.js": ("mensual", 85,  6),
+    "cac_cache.js":       ("mensual", 65,  6),
+    "icc_cba_cache.js":   ("mensual", 70,  6),
+    "icc_indec_cache.js": ("mensual", 60,  6),
     # ISAC: sale a los dos meses, alrededor del dia 8 (el de julio 2026 salio
     # el 08/09/2026). Peor caso 98 dias. Con 80 daba cartel 18 dias por mes.
-    "isac_cache.js":      ("mensual", 105, 6),
+    "isac_cache.js":      ("mensual", 70, 6),
     # Registro General: sale al mes siguiente, ~dia 23. Peor caso 83 dias.
-    "rgp_cba_cache.js":   ("mensual", 90,  6),
+    "rgp_cba_cache.js":   ("mensual", 70,  6),
     # IERIC: sale a los dos meses. El control mira la fecha mas nueva del
     # cache, que es la de empresas en actividad (va un mes adelante de
     # puestos y salario). Peor caso 103 dias.
     # OJO: como se mira el maximo, si puestos o salario se congelan pero
     # empresas sigue, esto no lo detecta. Es una limitacion del control
     # generico, no algo que este mal configurado aca.
-    "ieric_cba_cache.js": ("mensual", 110, 6),
+    "ieric_cba_cache.js": ("mensual", 100, 6),
     # El Indice Construya sale alrededor del dia 10 del mes siguiente, mas
     # rapido que cualquier fuente oficial. Aun asi el peor caso son 70 dias:
     # la vispera de que salga el mes M, el dato mas nuevo es M-1 y ya tiene
     # dos meses y diez dias encima. Con 55 el cartel salia 15 dias por mes.
-    "construya_cache.js": ("mensual", 80,  6),
+    "construya_cache.js": ("mensual", 50,  6),
     # APYMECO publica con un rezago parecido al del CAC. Es la unica fuente
     # que ACUMULA historico (la pagina solo muestra 13 meses), asi que un
     # cache viejo no es solo un dato desactualizado: son meses que se pierden
     # para siempre si el script queda roto mucho tiempo.
     # El dia de publicacion de APYMECO no esta confirmado; 95 cubre hasta el
     # dia 27 del mes siguiente. Si alguna vez se sabe la fecha exacta, ajustar.
-    "apymeco_cache.js":   ("mensual", 95,  6),
+    "apymeco_cache.js":   ("mensual", 60,  6),
     # CEDUC se carga desde un .txt que se arma a mano con el PDF del informe,
     # y la camara publica de forma irregular. Por eso no se controla cuando
     # corrio el script y el limite del dato es holgado: 150 dias.
-    "ceduc_cache.js":     ("mensual", 150, None),
+    "ceduc_cache.js":     ("mensual", 120, None),
     # El REM se publica una vez por mes (el relevamiento de un mes sale a
     # principios del siguiente), asi que el archivo pasa semanas sin cambiar.
     # Lo que se controla es "chequeado", que update_rem_cache.py reescribe en
     # CADA corrida aunque no haya nada nuevo: 8 dias sin chequear si es que el
     # script dejo de correr.
-    "rem_cache.js":       ("mensual", 75,  8),
+    "rem_cache.js":       ("mensual", 45,  8),
     "salarios_cache.js":  ("manual",  240, None),   # se edita a mano
 }
 
@@ -326,8 +326,19 @@ def revisar_cache(archivo):
     if ult is None:
         avi("%s: no se encontro ninguna serie con fechas" % archivo)
     else:
-        edad = (hoy - ult).days
-        etiqueta = "ultimo dato %s (%d dias)" % (ult, edad)
+        # En las mensuales la antiguedad se cuenta desde que CERRO el mes del
+        # dato: el indice de julio cubre hasta el 31/07, asi que el 3 de
+        # septiembre tiene 34 dias, no 64. Medirlo desde el dia 1 regalaba un
+        # mes entero de error y disparaba avisos antes de que la fuente
+        # siquiera pudiera haber publicado el mes siguiente.
+        if frecuencia == "mensual":
+            fin_mes = date(ult.year + (ult.month // 12), (ult.month % 12) + 1, 1) \
+                      - timedelta(days=1)
+            edad = (hoy - fin_mes).days
+            etiqueta = ("ultimo dato %s, cerrado hace %d dias" % (str(ult)[:7], edad))
+        else:
+            edad = (hoy - ult).days
+            etiqueta = "ultimo dato %s (%d dias)" % (ult, edad)
         if dias_dato and edad > dias_dato:
             # AVISO y no ERROR a proposito. Que una fuente tarde en publicar no
             # es un problema del tablero: el INDEC saca el ISAC a mitad del mes
