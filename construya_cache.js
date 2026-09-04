@@ -1,6 +1,6 @@
 /* ═══════════════════════════
    construya_cache.js  -  Grupo Elyon
-   Generado por update_construya_cache.py el 04/09/2026 11:00
+   Generado por update_construya_cache.py el 04/09/2026 11:01
    Fuente: Grupo Construya (indice_construya)
    Columnas: fecha, indice con estacionalidad, indice desestacionalizado,
              var. interanual, var. acumulada del año y var. mensual
@@ -8,7 +8,7 @@
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.CONSTRUYA_CACHE = {
-  updated: "2026-09-04T11:00:45",
+  updated: "2026-09-04T11:01:01",
   source: "Grupo Construya (indice_construya)",
   hasta: "2026-07",
   informe: "Buenos Aires, 10 de agosto de 2026.- En julio el Índice Construya (IC), que mide la evolución de las cantidades vendidas al sector privado de los productos para la construcción que fabrican las empresas que lo conforman, exhibió un descenso de 0,81% mensual desestacionalizado y una baja de 6,5% interanual.",
