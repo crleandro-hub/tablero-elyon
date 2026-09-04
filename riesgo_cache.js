@@ -1,15 +1,15 @@
 /* ═══════════════════════════════════════════════════
    riesgo_cache.js  -  Grupo Elyon
-   Generado por update_riesgo_cache.py el 04/09/2026 16:00
+   Generado por update_riesgo_cache.py el 04/09/2026 17:00
    Fuente: Rava Bursátil
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════════════════════════════ */
 window.RIESGO_CACHE = {
-  updated: "2026-09-04T16:00:26",
+  updated: "2026-09-04T17:00:28",
   source: "Rava Bursátil",
   fecha: "2026-09-04",
-  valor: 491,
-  varDia: -0.61,
+  valor: 490,
+  varDia: -0.81,
   serie: [
     ["2025-09-04", 893],
     ["2025-09-05", 901],
@@ -272,6 +272,6 @@ window.RIESGO_CACHE = {
     ["2026-09-01", 501],
     ["2026-09-02", 500],
     ["2026-09-03", 494],
-    ["2026-09-04", 491]
+    ["2026-09-04", 490]
   ]
 };
