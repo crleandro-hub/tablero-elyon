@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------
    acciones_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-09-09T17:00:09
+   Generado: 2026-09-09T17:02:43
    Las 3 mayores subas y las 3 mayores bajas del PANEL LIDER del
    Merval en la rueda. Fuente: data912 (panel de BYMA).
    pct = variacion % contra el cierre anterior
@@ -8,8 +8,8 @@
 ----------------------------------------------------------------- */
 window.ACCIONES_CACHE = {
   mejores: [
-    { symbol: "ALUA", nombre: "Aluar", precio: 888.0, pct: 3.73 },
-    { symbol: "YPFD", nombre: "YPF", precio: 8725.0, pct: 3.07 },
+    { symbol: "ALUA", nombre: "Aluar", precio: 889.0, pct: 3.85 },
+    { symbol: "YPFD", nombre: "YPF", precio: 8735.0, pct: 3.18 },
     { symbol: "MIRG", nombre: "Mirgor", precio: 1925.0, pct: 2.66 }
   ],
   peores: [
@@ -19,5 +19,5 @@ window.ACCIONES_CACHE = {
   ],
   panel: 23,
   fuente: "Panel líder · BYMA vía data912",
-  updated: "2026-09-09T17:00:09"
+  updated: "2026-09-09T17:02:43"
 };
