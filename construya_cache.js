@@ -8,7 +8,7 @@
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.CONSTRUYA_CACHE = {
-  updated: "2026-09-10T11:01:07",
+  updated: "2026-09-10T11:01:22",
   source: "Grupo Construya (indice_construya)",
   hasta: "2026-08",
   informe: "Buenos Aires, 8 de septiembre de 2026.- En agosto el Índice Construya (IC), que mide la evolución de las cantidades vendidas al sector privado de los productos para la construcción que fabrican las empresas que lo conforman, exhibió un descenso de 3,46% mensual desestacionalizado y una baja de 5,3% interanual.",
