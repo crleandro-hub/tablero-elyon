@@ -1,6 +1,6 @@
 /* ═══════════════════════════
    apymeco_cache.js  -  Grupo Elyon
-   Generado por update_apymeco_cache.py el 11/09/2026 11:04
+   Generado por update_apymeco_cache.py el 14/09/2026 11:00
    Fuente: APYMECO - Indice general de la construccion (La Plata / Buenos Aires)
    Columnas: fecha, precio del m2 en pesos, indice general,
              variacion mensual tal como la publica APYMECO.
@@ -10,7 +10,7 @@
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.APYMECO_CACHE = {
-  updated: "2026-09-11T11:04:10",
+  updated: "2026-09-14T11:00:32",
   source: "APYMECO - Indice general de la construccion",
   hasta: "2026-08",
   ratio: 151.374,
