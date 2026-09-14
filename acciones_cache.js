@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------
    acciones_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-09-14T16:02:40
+   Generado: 2026-09-14T17:01:30
    Las 3 mayores subas y las 3 mayores bajas del PANEL LIDER del
    Merval en la rueda. Fuente: data912 (panel de BYMA).
    pct = variacion % contra el cierre anterior
@@ -8,16 +8,16 @@
 ----------------------------------------------------------------- */
 window.ACCIONES_CACHE = {
   mejores: [
-    { symbol: "TECO2", nombre: "Telecom", precio: 4395.0, pct: 3.71 },
-    { symbol: "COME", nombre: "Sociedad Comercial del Plata", precio: 41.8, pct: 2.25 },
-    { symbol: "CVH", nombre: "Cablevisión Holding", precio: 9430.0, pct: 0.74 }
+    { symbol: "TECO2", nombre: "Telecom", precio: 4410.0, pct: 4.07 },
+    { symbol: "COME", nombre: "Sociedad Comercial del Plata", precio: 41.59, pct: 1.73 },
+    { symbol: "YPFD", nombre: "YPF", precio: 8980.0, pct: 1.64 }
   ],
   peores: [
-    { symbol: "MIRG", nombre: "Mirgor", precio: 1890.0, pct: -3.32 },
-    { symbol: "LOMA", nombre: "Loma Negra", precio: 3035.0, pct: -2.72 },
-    { symbol: "GGAL", nombre: "Grupo Galicia", precio: 6830.0, pct: -2.42 }
+    { symbol: "MIRG", nombre: "Mirgor", precio: 1905.0, pct: -2.55 },
+    { symbol: "VALO", nombre: "Grupo Financiero Valores", precio: 522.0, pct: -2.52 },
+    { symbol: "GGAL", nombre: "Grupo Galicia", precio: 6865.0, pct: -1.92 }
   ],
   panel: 23,
   fuente: "Panel líder · BYMA vía data912",
-  updated: "2026-09-14T16:02:40"
+  updated: "2026-09-14T17:01:30"
 };
