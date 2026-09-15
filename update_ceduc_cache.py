@@ -70,9 +70,9 @@ MESES = {"jan": 1, "ene": 1, "feb": 2, "mar": 3, "apr": 4, "abr": 4,
          "may": 5, "jun": 6, "jul": 7, "aug": 8, "ago": 8,
          "sep": 9, "set": 9, "oct": 10, "nov": 11, "dec": 12, "dic": 12}
 
-# Control: lo que dice el cuadro de sintesis del informe de junio 2026.
+# Control: lo que dice el cuadro de sintesis del informe de julio 2026.
 # Si el parseo no lo reproduce, algo se rompio y no se pisa el cache.
-CONTROL = {"mes": "2026-06", "indice_total_original": 17.24, "ia_total": -39.1}
+CONTROL = {"mes": "2026-07", "indice_total_original": 9.25, "ia_total": -77.2}
 
 # Una fila de datos: mes en ingles abreviado, guion, año de dos digitos,
 # y despues hasta doce numeros o guiones (los primeros años no tienen
@@ -109,10 +109,10 @@ def parsear(texto):
     for linea in texto.splitlines():
         bajo = linea.lower()
 
-        if "series originales" in bajo:
+        if bajo.startswith("series originales"):
             actual = "original"
             continue
-        if "series desestacionalizadas" in bajo:
+        if bajo.startswith("series desestacionalizadas"):
             actual = "desest"
             continue
         if actual is None:
@@ -190,15 +190,15 @@ def main():
         idx = ctrl[12]                      # ultima columna = indice total
         esperado = CONTROL["indice_total_original"]
         if idx is None or abs(idx - esperado) > 0.05:
-            print("\n[ERROR] Control fallado: junio 2026 deberia dar un indice total de "
-                  "%.2f y dio %s." % (esperado, idx))
+            print("\n[ERROR] Control fallado: %s deberia dar un indice total de "
+                  "%.2f y dio %s." % (CONTROL["mes"], esperado, idx))
             print("        Revisa que el pegado tenga las columnas completas.")
             raise SystemExit("Se conserva el ceduc_cache.js anterior.")
-        prev = mapa.get("2025-06")
+        prev = mapa.get("%04d-%s" % (int(CONTROL["mes"][:4]) - 1, CONTROL["mes"][5:]))
         if prev and prev[12]:
             ia = (idx / prev[12] - 1) * 100
-            print("   Control: jun-2026 indice %.2f, %+.1f%% i.a. (informe: %+.1f%%) -> %s"
-                  % (idx, ia, CONTROL["ia_total"],
+            print("   Control: %s indice %.2f, %+.1f%% i.a. (informe: %+.1f%%) -> %s"
+                  % (CONTROL["mes"], idx, ia, CONTROL["ia_total"],
                      "OK" if abs(ia - CONTROL["ia_total"]) <= 0.2 else "NO COINCIDE"))
     else:
         print("   [AVISO] El mes de control no esta en la serie; se publica sin verificar.")
