@@ -1,14 +1,14 @@
 /* ═══════════════════════════
    rgp_cba_cache.js  -  Grupo Elyon
-   Generado por update_rgp_cba_cache.py el 16/09/2026 11:07
+   Generado por update_rgp_cba_cache.py el 17/09/2026 11:00
    Fuente: Registro General de la Provincia de Cordoba (via datos abiertos de Cordoba)
    Documentos INGRESADOS al Registro, no escrituras firmadas.
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.RGP_CBA_CACHE = {
-  updated: "2026-09-16T11:07:09",
+  updated: "2026-09-17T11:00:46",
   source: "Registro General de la Provincia de Cordoba",
-  hasta: "2026-07",
+  hasta: "2026-08",
   transferencias: [
     ["2017-01-01",6688],
     ["2017-02-01",1974],
@@ -124,7 +124,8 @@ window.RGP_CBA_CACHE = {
     ["2026-04-01",5494],
     ["2026-05-01",5187],
     ["2026-06-01",5878],
-    ["2026-07-01",5887]
+    ["2026-07-01",5887],
+    ["2026-08-01",5716]
   ],
   hipotecas: [
     ["2017-01-01",451],
@@ -241,6 +242,7 @@ window.RGP_CBA_CACHE = {
     ["2026-04-01",320],
     ["2026-05-01",288],
     ["2026-06-01",360],
-    ["2026-07-01",342]
+    ["2026-07-01",342],
+    ["2026-08-01",361]
   ]
 };
