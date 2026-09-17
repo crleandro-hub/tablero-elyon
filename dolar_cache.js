@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------
    dolar_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-09-17T16:02:47
+   Generado: 2026-09-17T17:00:11
    Respaldo del tipo de cambio. El tablero pide los valores EN VIVO a
    dolarapi.com en cada carga; esto se usa solo si esa consulta falla,
    para no dejar las tarjetas en N/D.
@@ -16,5 +16,5 @@ window.DOLAR_CACHE = {
   mep: { compra: 1531.5, venta: 1535.4, fecha: "2026-09-17" },
   oficial: { compra: 1485.0, venta: 1535.0, fecha: "2026-09-17" },
   fuente: "dolarapi.com · bluelytics",
-  updated: "2026-09-17T16:02:47"
+  updated: "2026-09-17T17:00:11"
 };
