@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------
    bcra_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-09-17T18:00:16   Fuente: API BCRA Estadisticas Monetarias v4.0
+   Generado: 2026-09-18T11:00:58   Fuente: API BCRA Estadisticas Monetarias v4.0
    tamar = serie 44 (TNA, bancos privados)
    badlar = serie 7 (TNA, bancos privados)
    pasiva = serie 12 (TNA, depositos a 30 dias)
@@ -13,7 +13,7 @@ window.BCRA_CACHE = {
   badlar: { valor: 22.75, fecha: "2026-09-16" },
   pasiva: { valor: 21.4, fecha: "2026-09-16" },
   personales: { valor: 61.4, fecha: "2026-09-16" },
-  uva: { valor: 2122.91, fecha: "2026-09-17" },
+  uva: { valor: 2124.1, fecha: "2026-09-18" },
   reservas: { valor: 49954, fecha: "2026-09-15", var30: 0.91 },
-  updated: "2026-09-17T18:00:16"
+  updated: "2026-09-18T11:00:58"
 };
