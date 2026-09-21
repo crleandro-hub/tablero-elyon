@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------
    acciones_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-09-21T17:00:06
+   Generado: 2026-09-21T18:00:07
    Las 3 mayores subas y las 3 mayores bajas del PANEL LIDER del
    Merval en la rueda. Fuente: data912 (panel de BYMA).
    pct = variacion % contra el cierre anterior
@@ -15,9 +15,9 @@ window.ACCIONES_CACHE = {
   peores: [
     { symbol: "YPFD", nombre: "YPF", precio: 8500.0, pct: -2.96 },
     { symbol: "CEPU", nombre: "Central Puerto", precio: 2030.0, pct: -2.3 },
-    { symbol: "TGSU2", nombre: "Transportadora Gas del Sur", precio: 8900.0, pct: -1.71 }
+    { symbol: "TGSU2", nombre: "Transportadora Gas del Sur", precio: 8895.0, pct: -1.76 }
   ],
   panel: 23,
   fuente: "Panel líder · BYMA vía data912",
-  updated: "2026-09-21T17:00:06"
+  updated: "2026-09-21T18:00:07"
 };
