@@ -91,6 +91,13 @@ def fetch_serie_completa():
                 serie[f] = v
             print(f"     {anio}: {len(tramo):4d} registros")
         except Exception as e:
+            # Un año que todavia no empezo no es una falla: el BCRA publica la
+            # UVA con anticipacion, pero rechaza (HTTP 400) un pedido cuyo
+            # "desde" esta en el futuro. Pasa todos los años de septiembre a
+            # diciembre, cuando DIAS_ADELANTE ya cruza al año siguiente.
+            if desde > datetime.now().date().isoformat():
+                print(f"     {anio}: sin datos todavia (el año no empezo)")
+                continue
             fallos += 1
             print(f"     {anio}: [ERROR] {e}")
     return serie, fallos
