@@ -1,4 +1,4 @@
-<!-- Version autocontenida generada por build_publicar.py el 23/09/2026 16:02 - datos embebidos, no depende de archivos externos -->
+<!-- Version autocontenida generada por build_publicar.py el 23/09/2026 19:45 - datos embebidos, no depende de archivos externos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -726,6 +726,17 @@ body {
 
       <!-- Resumen: último dato de cada índice seleccionado -->
       <div id="comp-resumen" style="margin-top:14px;"></div>
+
+      <!-- Variación del último mes: es la que se aplica para indexar saldos -->
+      <div id="comp-mes-bloque" style="margin-top:24px;">
+        <div class="sub-title" style="margin-bottom:3px;">Variación mensual, índice por índice</div>
+        <div id="comp-mes-sub" style="font-size:10.5px;color:var(--gris-txt);margin-bottom:10px;"></div>
+        <div class="chart-wrap" style="height:290px;">
+          <canvas id="chart-comp-mes" role="img"
+                  aria-label="Variación mensual comparada de los índices seleccionados"></canvas>
+        </div>
+        <div id="comp-mes-pie" style="font-size:10.5px;color:var(--gris-txt);margin-top:10px;line-height:1.65;"></div>
+      </div>
     </div>
 
     <!-- ─── CALCULADORA DE CONTRATOS Y PRESUPUESTOS · vive en la pantalla Herramientas ─── -->
@@ -7965,9 +7976,9 @@ const COMP_SERIES = {
   blue:      { label: 'Dólar blue',         color: '#22c55e', get: () => compUsd('blue') },
   bolsa:     { label: 'Dólar MEP',          color: '#14b8a6', get: () => compUsd('bolsa') },
   contadoconliqui: { label: 'Dólar CCL',    color: '#f97316', get: () => compUsd('contadoconliqui') },
-  merval:    { label: 'MERVAL (pesos)',     color: '#38bdf8', get: () => compMerval() },
-  isac:      { label: 'ISAC (actividad)',   color: '#94a3b8', get: () => compIsac() },
-  construya: { label: 'Construya (actividad)', color: '#eab308', get: () => compConstruya() },
+  merval:    { label: 'MERVAL (pesos)',     color: '#38bdf8', act: true, get: () => compMerval() },
+  isac:      { label: 'ISAC (actividad)',   color: '#94a3b8', act: true, get: () => compIsac() },
+  construya: { label: 'Construya (actividad)', color: '#eab308', act: true, get: () => compConstruya() },
 };
 
 /* Los que mas se miran juntos en obra: costo nacional, costo local,
@@ -8094,6 +8105,20 @@ function compVarIA(niveles) {
   return out;
 }
 
+/* ── Nivel -> variacion respecto del mes anterior ── */
+function compVarMes(niveles) {
+  const out = new Map();
+  if (!niveles) return out;
+  niveles.forEach((v, ym) => {
+    const a = +ym.slice(0, 4), m = +ym.slice(5, 7);
+    const ant = m === 1 ? (a - 1) + '-12'
+                        : a + '-' + String(m - 1).padStart(2, '0');
+    const prev = niveles.get(ant);
+    if (prev && v != null && prev !== 0) out.set(ym, (v / prev - 1) * 100);
+  });
+  return out;
+}
+
 /* ── Descarga de lo que falte ── */
 async function loadIpcSerie() {
   if (ipcSerie.length) return ipcSerie;
@@ -8180,9 +8205,15 @@ function renderCompChart() {
   const rangeEl = document.getElementById('comp-range');
   const rango   = rangeEl ? rangeEl.value : '36';
 
-  // Cada serie ya convertida a variacion interanual
-  const series = sel.map(k => ({ k, cfg: COMP_SERIES[k], ia: compVarIA(COMP_SERIES[k].get()) }))
-                    .filter(s => s.ia.size);
+  // Se guarda tambien el nivel: el grafico mensual lo necesita, y una serie
+  // con menos de 13 meses todavia no tiene interanual pero si mensual.
+  const todas = sel.map(k => {
+    const niv = COMP_SERIES[k].get();
+    return { k, cfg: COMP_SERIES[k], niv, ia: compVarIA(niv) };
+  });
+  const series = todas.filter(s => s.ia.size);
+
+  renderCompMes(todas.filter(s => s.niv && s.niv.size));
 
   // Eje X: union de meses, recortada al rango elegido
   const todos = new Set();
@@ -8241,6 +8272,155 @@ function renderCompChart() {
   });
 
   renderCompResumen(series);
+}
+
+/* ══════════════════════════════════════════
+   VARIACION DEL ULTIMO MES, INDICE POR INDICE
+   ══════════════════════════════════════════
+   Por que esta separado de la interanual: la interanual alisa doce meses y
+   sirve para leer tendencia, pero lo que se aplica para ajustar un saldo es
+   la del mes. Ahi aparece la dispersion, que es el punto: en agosto de 2026
+   el mismo mes dio entre 1,4% y 4,5% segun el indice. Sobre un saldo grande
+   eso no es un matiz.
+
+   Las barras comparan SIEMPRE el mismo mes. Mezclar el ultimo dato de cada
+   indice seria comodo pero enganoso: el APYMECO publica a los diez dias y el
+   ISAC a los cuarenta, asi que se estarian comparando meses distintos. */
+let compMesChart = null;
+
+function renderCompMes(series) {
+  const ctx = document.getElementById('chart-comp-mes');
+  const sub = document.getElementById('comp-mes-sub');
+  const pie = document.getElementById('comp-mes-pie');
+  const bloque = document.getElementById('comp-mes-bloque');
+  if (!ctx || !bloque) return;
+
+  const limpiar = () => {
+    if (compMesChart) { compMesChart.destroy(); compMesChart = null; }
+    bloque.style.display = 'none';
+  };
+
+  const conVar = series.map(s => ({ cfg: s.cfg, mes: compVarMes(s.niv) }))
+                       .filter(s => s.mes.size);
+  if (!conVar.length) { limpiar(); return; }
+
+  // Mes de referencia: el MAS RECIENTE que tenga cobertura suficiente, no el
+  // de mayor cobertura. Con el criterio de "el que mas indices publicaron" un
+  // solo indice lento (el ISAC sale a los 40 dias) arrastraba todo el grafico
+  // un mes para atras y tapaba el dato nuevo. El piso del 60% evita el otro
+  // extremo: un mes con dos barras sueltas que no compara nada.
+  const conteo = new Map();
+  conVar.forEach(s => s.mes.forEach((_, ym) => conteo.set(ym, (conteo.get(ym) || 0) + 1)));
+  const tope  = Math.max(...conteo.values());
+  const minimo = Math.max(2, Math.ceil(tope * 0.6));
+  const mesRef = [...conteo.keys()].sort()
+                   .filter(ym => conteo.get(ym) >= minimo).pop();
+  if (!mesRef) { limpiar(); return; }
+
+  const filas = conVar.filter(s => s.mes.has(mesRef))
+                      .map(s => ({ label: s.cfg.label, color: s.cfg.color,
+                                   act: !!s.cfg.act, v: s.mes.get(mesRef) }))
+                      .sort((a, b) => b.v - a.v);
+  if (!filas.length) { limpiar(); return; }
+
+  const faltan = conVar.filter(s => !s.mes.has(mesRef)).map(s => s.cfg.label);
+  bloque.style.display = '';
+
+  if (sub) {
+    sub.innerHTML = '<strong style="color:#ccc;">' + isacMesLargo(mesRef + '-01')
+      + '</strong> contra el mes anterior · ' + filas.length
+      + (filas.length === 1 ? ' índice' : ' índices') + ' con dato publicado';
+  }
+
+  // Etiqueta de valor sobre cada barra. Sin esto hay que leer el eje y el
+  // grafico pierde la mitad de la gracia, que es comparar numeros concretos.
+  const etiquetas = {
+    id: 'compMesEtiquetas',
+    afterDatasetsDraw(ch) {
+      const g = ch.ctx;
+      g.save();
+      g.font = '700 10px system-ui, -apple-system, sans-serif';
+      g.textAlign = 'center';
+      ch.getDatasetMeta(0).data.forEach((barra, i) => {
+        const v = ch.data.datasets[0].data[i];
+        if (v == null) return;
+        const arriba = v >= 0;
+        g.fillStyle = filas[i].color;
+        g.textBaseline = arriba ? 'bottom' : 'top';
+        g.fillText(fmtN(v, 2) + '%', barra.x, barra.y + (arriba ? -5 : 5));
+      });
+      g.restore();
+    },
+  };
+
+  if (compMesChart) compMesChart.destroy();
+  compMesChart = new Chart(ctx.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: filas.map(f => f.label),
+      datasets: [{
+        data: filas.map(f => +f.v.toFixed(2)),
+        backgroundColor: filas.map(f => f.color + 'CC'),
+        borderColor: filas.map(f => f.color),
+        borderWidth: 1,
+        borderRadius: 4,
+        maxBarThickness: 64,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 18 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: { label: c => ' ' + fmtN(c.parsed.y, 2) + '% en el mes' },
+        },
+      },
+      scales: {
+        x: { ticks: { color: '#999', font: { size: 9 }, maxRotation: 55, minRotation: 0,
+                      autoSkip: false },
+             grid: { display: false } },
+        y: { ticks: { color: '#888', font: { size: 9 }, callback: v => fmtN(v, 1) + '%' },
+             grid: { color: 'rgba(255,255,255,.04)' } },
+      },
+    },
+    plugins: [etiquetas],
+  });
+
+  if (pie) {
+    const partes = [];
+    // El ISAC, el Construya y el MERVAL miden volumen o cotizacion, no precios:
+    // se grafican como contexto, pero nadie indexa un saldo con ellos y no
+    // tienen por que entrar en la cuenta de la brecha.
+    const idx = filas.filter(f => !f.act);
+    if (idx.length >= 2) {
+      const alto = idx[0], bajo = idx[idx.length - 1];
+      const brecha = alto.v - bajo.v;
+      // Referencia concreta: que significa elegir un indice u otro sobre un
+      // saldo de cien millones. Es la decision real cuando se indexa.
+      const REF = 100000000;
+      partes.push(
+        'Entre <strong style="color:' + alto.color + ';">' + alto.label + '</strong> ('
+        + fmtN(alto.v, 2) + '%) y <strong style="color:' + bajo.color + ';">' + bajo.label
+        + '</strong> (' + fmtN(bajo.v, 2) + '%) hay <strong style="color:#ccc;">'
+        + fmtN(brecha, 2) + ' puntos</strong> en un solo mes. Sobre un saldo de '
+        + fmtARS(REF) + ', elegir uno u otro cambia el ajuste del mes en '
+        + '<strong style="color:#ccc;">' + fmtARS(REF * brecha / 100) + '</strong>.');
+    }
+    const contexto = filas.filter(f => f.act).map(f => f.label);
+    if (contexto.length) {
+      partes.push(contexto.join(', ') + (contexto.length === 1 ? ' mide' : ' miden')
+                  + ' volumen o cotización, no precios: ' +
+                  (contexto.length === 1 ? 'va' : 'van')
+                  + ' como contexto y no entra' + (contexto.length === 1 ? '' : 'n')
+                  + ' en esa cuenta.');
+    }
+    if (faltan.length) {
+      partes.push('Todavía sin dato de ' + isacMesLargo(mesRef + '-01') + ': '
+                  + faltan.join(', ') + '.');
+    }
+    pie.innerHTML = partes.join('<br>');
+  }
 }
 
 /* Tabla chica con el último dato de cada índice, ordenada de mayor a menor */
