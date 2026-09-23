@@ -186,6 +186,55 @@ def _extension_real(path):
     return None
 
 
+def _serie(path):
+    """{'AAAA-MM': (general, materiales, mano de obra)} de un Excel del CAC."""
+    try:
+        registros, _, _ = parse_cac(read_raw(path))
+    except Exception:
+        return None
+    return {r["fecha"].strftime("%Y-%m"): (r["gen"], r["mat"], r["mo"])
+            for r in registros}
+
+
+def _control_cruzado(path_local, path_bajado):
+    """Compara los meses que estan en los dos archivos.
+
+    Sirve para el caso habitual: cifrasonline va un mes atras, asi que lo que
+    se bajo no reemplaza nada. Pero ese archivo es la fuente oficial, y el
+    local lo cargamos a mano: si un mes no coincide, el error esta de nuestro
+    lado y conviene enterarse ahora y no dentro de seis meses."""
+    a, b = _serie(path_local), _serie(path_bajado)
+    if not a or not b:
+        return
+    comunes = sorted(set(a) & set(b))
+    if not comunes:
+        return
+
+    etiquetas = ("general", "materiales", "mano de obra")
+    difs = []
+    for m in comunes:
+        for i, (x, y) in enumerate(zip(a[m], b[m])):
+            if x is None or y is None:
+                continue
+            # Tolerancia de un decimal: el Excel publica con un decimal y el
+            # redondeo puede diferir en la ultima cifra.
+            if abs(x - y) > 0.05:
+                difs.append("       %s %-12s vos %s / cifrasonline %s"
+                            % (m, etiquetas[i], x, y))
+
+    if difs:
+        print("     [OJO] %d valor(es) de tu Excel no coinciden con el de cifrasonline:"
+              % len(difs))
+        for d in difs[:12]:
+            print(d)
+        if len(difs) > 12:
+            print("       ...y %d mas." % (len(difs) - 12))
+        print("       Revisa esos meses en tu planilla: el de la camara manda.")
+    else:
+        print("     [OK] Los %d meses en comun coinciden con el archivo de la camara."
+              % len(comunes))
+
+
 def _nombre_visible(url):
     """Un nombre corto para el log. La URL de Google no termina en el archivo."""
     if "docs.google.com/spreadsheets" in url:
@@ -271,11 +320,13 @@ def intentar_descarga():
             print("     [AVISO] Lo bajado es PEOR que lo que ya tenes ("
                   + nuevo[1].strftime("%Y-%m") + " / " + str(nuevo[0]) + " meses, contra "
                   + viejo[1].strftime("%Y-%m") + " / " + str(viejo[0]) + "). Se descarta.")
+            _control_cruzado(actual, tmp)
             os.remove(tmp)
             return
         if nuevo[1] == viejo[1]:
             print("     [SIN NOVEDAD] cifrasonline sigue en " + nuevo[1].strftime("%Y-%m")
                   + ", igual que tu Excel. No se reemplaza nada.")
+            _control_cruzado(actual, tmp)
             os.remove(tmp)
             return
 
