@@ -34,3 +34,8 @@ __pycache__/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Temporales de la escritura atomica de los caches (se escribe x.js.tmp y se
+# renombra sobre x.js). En esta carpeta, con Dropbox de por medio, a veces
+# sobrevive el .tmp: es una copia, no una fuente, y no va al repo.
+*.js.tmp
