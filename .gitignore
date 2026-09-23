@@ -39,3 +39,8 @@ desktop.ini
 # renombra sobre x.js). En esta carpeta, con Dropbox de por medio, a veces
 # sobrevive el .tmp: es una copia, no una fuente, y no va al repo.
 *.js.tmp
+
+# Los informes de CEDUC en PDF. El script solo lee el .txt de esta carpeta;
+# los PDF son el original que manda la camara y no tienen por que estar en
+# un repositorio publico. Se quedan en la PC.
+ceduc/*.pdf
