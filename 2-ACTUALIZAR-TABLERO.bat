@@ -60,7 +60,7 @@ rem  avisa despues si algo quedo atrasado.
 rem =====================================================
 call :paso  1 "BCRA (TAMAR / BADLAR / UVA)"          update_bcra_cache.py
 call :paso  2 "Serie historica UVA"                  update_uva_cache.py
-call :paso  3 "Indice CAC"                           update_cac_cache.py
+call :paso  3 "Indice CAC"                           "update_cac_cache.py --descargar"
 call :paso  4 "MERVAL (pesos y dolares)"             update_merval_cache.py
 call :paso  5 "REM del BCRA (inflacion esperada)"    update_rem_cache.py
 call :paso  6 "Riesgo pais (Rava Bursatil)"          update_riesgo_cache.py

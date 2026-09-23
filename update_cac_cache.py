@@ -10,26 +10,34 @@ arrastrar-y-soltar manual ni de datos embebidos desactualizados.
 
 DE DONDE SALE EL DATO
 ---------------------
-EL EXCEL SE BAJA A MANO. La CAC no publica API ni un link fijo con la serie
-al dia: el unico Excel que ofrece la pagina de CIFRAS ON LINE esta rotulado
-"Años anteriores" y corta en diciembre de 2024; lo que suben cada mes es un
-PDF de la revista, no una planilla. Asi que la descarga automatica quedo
-DESACTIVADA a proposito, para no ensuciar el log intentando bajar un archivo
-que esta mas viejo que el que ya tenemos.
+De la pagina del indice CAC de CIFRAS ON LINE. La CAC no publica API.
+Lo que hay en esa pagina, a septiembre de 2026, es:
 
-El circuito es entonces:
+  - el informe del mes, como revista de issuu y como PDF en Drive: sirve
+    para leerlo, no para automatizar;
+  - el boton "Años anteriores", que apunta a una planilla de Google con la
+    serie historica. Google la entrega en xlsx por una URL de exportacion,
+    sin login, mientras siga compartida por link.
 
-  1. Cada mes se baja el Excel de la serie historica y se deja en esta
-     carpeta, pisando el anterior (o con otro nombre que tenga "CAC" o
-     "Indicador": el script agarra el mas reciente).
-  2. El script lo lee y regenera cac_cache.js. Eso corre solo en cada
-     actualizacion del tablero: no hay que hacer nada mas.
+El script intenta bajar esa planilla (--descargar, encendido en los .bat) y
+SOLO reemplaza el Excel local si lo que bajo parsea bien y llega mas lejos
+en el tiempo. Si trae lo mismo, o menos, lo descarta y sigue con el local.
+El Excel viejo nunca se pierde: queda en _cac_backup.
+
+Por eso el circuito manual sigue valiendo y es el plan B:
+
+  1. Se baja el Excel de la serie historica y se deja en esta carpeta,
+     pisando el anterior (o con otro nombre que tenga "CAC" o "Indicador":
+     el script agarra el mas reciente).
+  2. El script lo lee y regenera cac_cache.js.
 
 Si el Excel no cambio, el script lo dice y no toca nada. Si quedo atrasado,
 lo avisa al final con el mes y los dias de retraso.
 
-La maquinaria de descarga quedo escrita y probada por si algun dia aparece
-una fuente con la serie al dia: se enciende con --descargar.
+Ojo con una cosa: que la planilla de Google este publicada no garantiza que
+este al dia. Si mes a mes el log dice "[SIN NOVEDAD] cifrasonline sigue en
+<mes viejo>", quiere decir que alla no la actualizan y hay que seguir
+cargando el Excel a mano. El aviso de atraso al final del script avisa igual.
 
 COMO EJECUTAR
 -------------
@@ -38,8 +46,9 @@ COMO EJECUTAR
      (o el paso 3 de 2-ACTUALIZAR-TABLERO.bat, que lo llama solo)
   2. Refresca tablero_elyon.html en el navegador (Ctrl+F5).
 
-  Para probar la descarga automatica cuando haya una fuente que sirva:
-        python update_cac_cache.py --descargar
+  Para probar solo la descarga, sin tocar el tablero:
+        8-PROBAR-DESCARGA-CAC.bat
+     (es  python update_cac_cache.py --descargar)
 
 Que hace distinto de la carga manual anterior
 ----------------------------------------------
@@ -128,7 +137,7 @@ def buscar_links_excel():
             html = r.read().decode("utf-8", errors="ignore")
     except Exception as e:
         print("     [AVISO] No se pudo abrir " + CIFRAS_PAGINA + " (" + str(e) + ").")
-        return CIFRAS_FALLBACK
+        return [CIFRAS_FALLBACK]
 
     urls = re.findall(r'href=["\']([^"\']+\.xlsx?)["\']', html, re.I)
     # normalizar links relativos
@@ -145,11 +154,43 @@ def buscar_links_excel():
         return p
 
     urls = [u for u in dict.fromkeys(urls) if puntaje(u) > 0]
-    if not urls:
+    urls.sort(key=puntaje, reverse=True)
+
+    # Desde 2026 la pagina dejo de publicar el .xls directo. La serie quedo en
+    # una planilla de Google, en el boton "Años anteriores"; el informe del mes
+    # es una revista de issuu y un PDF en Drive, que no sirven para esto.
+    # Google entrega la planilla en xlsx por una URL de exportacion, sin login,
+    # mientras el archivo siga compartido por link.
+    hojas = re.findall(r"docs\.google\.com/spreadsheets/d/([A-Za-z0-9_-]{20,})", html)
+    hojas = ["https://docs.google.com/spreadsheets/d/" + h + "/export?format=xlsx"
+             for h in dict.fromkeys(hojas)]
+
+    candidatos = hojas + urls
+    if not candidatos:
         print("     [AVISO] La pagina no expuso ningun Excel reconocible; se usa el link conocido.")
         return [CIFRAS_FALLBACK]
-    urls.sort(key=puntaje, reverse=True)
-    return urls[:4]
+    return candidatos[:4]
+
+
+def _extension_real(path):
+    """.xls / .xlsx segun los primeros bytes, no segun la URL.
+
+    Hace falta porque la URL de exportacion de Google no termina en .xlsx, y
+    porque un link roto suele devolver un HTML de error con cara de Excel."""
+    with open(path, "rb") as f:
+        firma = f.read(8)
+    if firma[:4] == b"PK\x03\x04":
+        return ".xlsx"
+    if firma == b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1":
+        return ".xls"
+    return None
+
+
+def _nombre_visible(url):
+    """Un nombre corto para el log. La URL de Google no termina en el archivo."""
+    if "docs.google.com/spreadsheets" in url:
+        return "planilla de Google (Años anteriores)"
+    return url.rsplit("/", 1)[-1]
 
 
 def _resumen(path):
@@ -171,25 +212,37 @@ def intentar_descarga():
     en un aviso y se sigue con el Excel de siempre."""
     print("Buscando la serie historica del CAC en cifrasonline...")
 
-    mejor_tmp, nuevo = None, None
-    for url in buscar_links_excel():
-        print("     Probando: " + url.rsplit("/", 1)[-1])
-        ext = ".xlsx" if url.lower().rstrip("/").endswith(".xlsx") else ".xls"
-        tmp = os.path.join(BASE_DIR, "_cac_descarga" + ext)
+    mejor_tmp, mejor_ext, nuevo = None, None, None
+    # Un temporal por candidato. Compartir el nombre hacia que descartar uno
+    # borrara el archivo del que iba ganando.
+    for i, url in enumerate(buscar_links_excel()):
+        print("     Probando: " + _nombre_visible(url))
+        crudo = os.path.join(BASE_DIR, "_cac_descarga_%d.tmp" % i)
         try:
-            with _abrir(url) as r, open(tmp, "wb") as f:
+            with _abrir(url) as r, open(crudo, "wb") as f:
                 shutil.copyfileobj(r, f)
         except Exception as e:
             print("       no se pudo bajar: " + str(e))
-            if os.path.exists(tmp):
-                os.remove(tmp)
+            if os.path.exists(crudo):
+                os.remove(crudo)
             continue
 
-        tam = os.path.getsize(tmp)
+        tam = os.path.getsize(crudo)
         if tam < 10000:
             print("       pesa %d bytes: no parece el Excel." % tam)
-            os.remove(tmp)
+            os.remove(crudo)
             continue
+
+        ext = _extension_real(crudo)
+        if not ext:
+            print("       no es un Excel (puede ser un PDF o una pagina de error).")
+            os.remove(crudo)
+            continue
+
+        tmp = os.path.join(BASE_DIR, "_cac_descarga_%d%s" % (i, ext))
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        os.rename(crudo, tmp)
 
         r = _resumen(tmp)
         if not r:
@@ -201,14 +254,14 @@ def intentar_descarga():
         if nuevo is None or r[1] > nuevo[1]:
             if mejor_tmp and mejor_tmp != tmp and os.path.exists(mejor_tmp):
                 os.remove(mejor_tmp)
-            mejor_tmp, nuevo = tmp, r
+            mejor_tmp, mejor_ext, nuevo = tmp, ext, r
         elif tmp != mejor_tmp and os.path.exists(tmp):
             os.remove(tmp)
 
     if not nuevo:
         print("     [AVISO] Ningun Excel de la pagina sirvio. Se sigue con el local.")
         return
-    tmp = mejor_tmp
+    tmp, ext = mejor_tmp, mejor_ext
 
     actual = find_cac_excel()
     viejo = _resumen(actual) if actual else None

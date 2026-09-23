@@ -74,7 +74,7 @@ if errorlevel 1 call :log "[AVISO] Fallo update_uva_cache.py - se conserva la se
 
 if "%MENSUALES%"=="1" (
   call :log "[3/20] Indice CAC..."
-  %PY% update_cac_cache.py >> "%LOG%" 2>&1
+  %PY% update_cac_cache.py --descargar >> "%LOG%" 2>&1
   if errorlevel 1 call :log "[AVISO] Fallo update_cac_cache.py - se conservan los datos previos."
 ) else (
   call :log "[3/20] Indice CAC... omitido (mensual, ya corrio hoy)"
