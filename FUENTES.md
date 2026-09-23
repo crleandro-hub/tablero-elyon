@@ -178,6 +178,35 @@ Ojo con el portal: **`datosabiertos.cba.gov.ar` no existe** (no resuelve DNS). L
 
 ---
 
+### Los otros índices de costo del cuadro de De.DE (septiembre de 2026)
+
+Santiago Vitali (De.DE) publica todos los meses un gráfico de barras con la variación mensual
+de ocho índices de costo. Tres ya estaban en el tablero y reproducen exacto: APYMECO (4,27% en
+agosto), ICC INDEC (2,49%, él redondea a 2,5%) y CAC — con una diferencia que conviene tener
+presente: **él muestra 4% y la serie histórica de la cámara da 4,48%**. Las etiquetas
+redondeadas de su cuadro ("4%", "2,5%", "2,4%") conviven con otras de dos decimales, así que
+probablemente tome algunas del titular publicado y no del cálculo.
+
+Los otros cuatro se relevaron uno por uno y **ninguno es automatizable**:
+
+| Índice | Dónde está | Por qué no |
+|---|---|---|
+| **CIFRAS** | cifrasonline.com.ar/indice-cifras/ | Sólo una revista embebida de issuu y un PDF en Drive. Ni tabla HTML ni planilla. |
+| **Construcción en Acero** | cifrasonline.com.ar/indice-construccion-en-acero/ | Igual que el anterior: es del mismo editor y usa el mismo formato. |
+| **SISMAT** | sismat.com.ar | La home publica el $/m² total, materiales y mano de obra, con fecha de actualización. Pero `/costos/indices-de-costos` redirige a la suscripción paga. El índice mensual es para suscriptores. |
+| **Colegio de Arquitectos de Córdoba**, tradicional y SECO (steel frame) | colegio-arquitectos.com.ar | El valor del m² pasó a *autogestión*, exclusiva para matriculados. El espejo que publicaba el Colegio de Inmobiliarios (cpicordoba.org.ar) tiene los PDF mensuales de las dos variantes, pero **el último es de febrero de 2026**: dejaron de subirlos. |
+
+Lo único rescatable sería el $/m² público de SISMAT, que es HTML plano. No sirve para el
+gráfico todavía: no hay histórico, así que habría que empezar a guardarlo ahora y recién en dos
+o tres meses daría una variación mensual. Además su fecha de actualización no cae a fin de mes
+(el 10/09/2026, por ejemplo), así que no es un índice mensual comparable con los demás.
+
+Conclusión: el gráfico de barras del comparador se arma con lo que ya se baja solo. Contra el de
+De.DE pierde cuatro fuentes y gana el ICC de Córdoba oficial (Estadística y Censos), que él no
+tiene y que en agosto dio 4,37% — el segundo más alto de todos.
+
+---
+
 ## Seguridad: este tablero es público
 
 La pantalla de login es decorativa. La contraseña está en el JavaScript y el sitio se publica en GitHub Pages, que es público: cualquiera que abra el código fuente la ve, o directamente se saltea la pantalla. Los datos ya viajaron al navegador antes de que se ejecute la validación.
