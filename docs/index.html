@@ -1,4 +1,4 @@
-<!-- Version autocontenida generada por build_publicar.py el 23/09/2026 17:02 - datos embebidos, no depende de archivos externos -->
+<!-- Version autocontenida generada por build_publicar.py el 23/09/2026 20:14 - datos embebidos, no depende de archivos externos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -7981,9 +7981,19 @@ const COMP_SERIES = {
   construya: { label: 'Construya (actividad)', color: '#eab308', act: true, get: () => compConstruya() },
 };
 
-/* Los que mas se miran juntos en obra: costo nacional, costo local,
-   precios, indexacion y dolar. El resto se tilda a mano. */
-const COMP_DEFAULT = ['ipc', 'cac', 'iccCba', 'uva', 'blue'];
+/* Los tres indices de costo abiertos en general, materiales y mano de obra,
+   mas el jornal de paritaria, la UVA y el APYMECO. Es la seleccion con la que
+   se mira una obra: de donde viene el aumento (materiales o mano de obra),
+   contra que se indexan los saldos y cuanto pide el mercado pyme.
+
+   El jornal va en la version "paritaria", no en la del basico: el basico pega
+   saltos cuando se pasa una suma no remunerativa al valor hora, y eso no es
+   un aumento de costo real. El IPC y el dolar salen de la seleccion por
+   defecto pero siguen disponibles para tildar. */
+const COMP_DEFAULT = ['cac', 'cacMat', 'cacMo',
+                      'iccCba', 'iccCbaMat', 'iccCbaMo',
+                      'iccIndec', 'iccIndecMat', 'iccIndecMo',
+                      'uocraReal', 'uva', 'apymeco'];
 
 /* ── Normalizadores: cada uno devuelve Map 'aaaa-mm' -> nivel ── */
 

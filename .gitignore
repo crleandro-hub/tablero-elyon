@@ -44,3 +44,6 @@ desktop.ini
 # los PDF son el original que manda la camara y no tienen por que estar en
 # un repositorio publico. Se quedan en la PC.
 ceduc/*.pdf
+
+# PDFs que baja probar_cifras.py para inspeccionarlos. Son de consulta.
+_diagnostico_cifras/
