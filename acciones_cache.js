@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------
    acciones_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-09-25T18:02:23
+   Generado: 2026-09-28T11:03:28
    Las 3 mayores subas y las 3 mayores bajas del PANEL LIDER del
    Merval en la rueda. Fuente: data912 (panel de BYMA).
    pct = variacion % contra el cierre anterior
@@ -8,16 +8,16 @@
 ----------------------------------------------------------------- */
 window.ACCIONES_CACHE = {
   mejores: [
-    { symbol: "LOMA", nombre: "Loma Negra", precio: 3012.5, pct: 0.58 },
-    { symbol: "ALUA", nombre: "Aluar", precio: 844.0, pct: 0.3 },
-    { symbol: "CRES", nombre: "Cresud", precio: 2055.0, pct: 0.24 }
+    { symbol: "LOMA", nombre: "Loma Negra", precio: 2997.5, pct: -0.49 },
+    { symbol: "YPFD", nombre: "YPF", precio: 8395.0, pct: -0.53 },
+    { symbol: "ALUA", nombre: "Aluar", precio: 838.0, pct: -0.71 }
   ],
   peores: [
-    { symbol: "EDN", nombre: "Edenor", precio: 1736.0, pct: -3.18 },
-    { symbol: "BYMA", nombre: "BYMA", precio: 249.75, pct: -2.92 },
-    { symbol: "BMA", nombre: "Banco Macro", precio: 11110.0, pct: -2.88 }
+    { symbol: "BBAR", nombre: "Banco Francés", precio: 6845.0, pct: -3.92 },
+    { symbol: "GGAL", nombre: "Grupo Galicia", precio: 6045.0, pct: -3.89 },
+    { symbol: "SUPV", nombre: "Grupo Supervielle", precio: 2294.0, pct: -3.2 }
   ],
   panel: 23,
   fuente: "Panel líder · BYMA vía data912",
-  updated: "2026-09-25T18:02:23"
+  updated: "2026-09-28T11:03:28"
 };
