@@ -1,20 +1,20 @@
 /* -----------------------------------------------------------------
    merval_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-09-30T14:00:09
+   Generado: 2026-09-30T15:00:10
    ars = indice S&P Merval en pesos (cierre diario)
    usd = indice en pesos dividido el CCL de la misma rueda
    serie = [fecha, merval_ars, merval_usd] de los ultimos 5 años
 ----------------------------------------------------------------- */
 window.MERVAL_CACHE = {
   fecha: "2026-09-30",
-  ars: 2798288.5,
-  arsVar: 0.5652,
-  usd: 1730.12,
-  usdVar: 0.7023,
+  ars: 2810019.75,
+  arsVar: 0.9868,
+  usd: 1737.37,
+  usdVar: 1.1243,
   ccl: 1617.4,
   cclFecha: "2026-09-30",
   fuente: "S&P Merval · BYMA · merval_cache.js",
-  updated: "2026-09-30T14:00:09",
+  updated: "2026-09-30T15:00:10",
   serie: [
     ["2021-09-30",77364.0,441.78],
     ["2021-10-01",77626.0,442.14],
@@ -1235,6 +1235,6 @@ window.MERVAL_CACHE = {
     ["2026-09-25",2893751.0,1792.57],
     ["2026-09-28",2798925.0,1731.37],
     ["2026-09-29",2782561.0,1718.05],
-    ["2026-09-30",2798288.5,1730.12]
+    ["2026-09-30",2810019.75,1737.37]
   ]
 };
