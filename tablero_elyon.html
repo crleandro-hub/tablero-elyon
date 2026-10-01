@@ -3980,9 +3980,14 @@ const COMP_SERIES = {
 
    El jornal va en la version "paritaria", no en la del basico: el basico pega
    saltos cuando se pasa una suma no remunerativa al valor hora, y eso no es
-   un aumento de costo real. El IPC y el dolar salen de la seleccion por
-   defecto pero siguen disponibles para tildar. */
-const COMP_DEFAULT = ['cac', 'cacMat', 'cacMo',
+   un aumento de costo real. El dolar sale de la seleccion por
+   defecto pero sigue disponible para tildar.
+
+   El IPC va primero porque es contra lo que se lee todo lo demas: un indice
+   que sube 3% en un mes de 2% de inflacion subio 1% de verdad. En el grafico
+   de barras no aparece como barra sino como la linea punteada de referencia. */
+const COMP_DEFAULT = ['ipc',
+                      'cac', 'cacMat', 'cacMo',
                       'iccCba', 'iccCbaMat', 'iccCbaMo',
                       'iccIndec', 'iccIndecMat', 'iccIndecMo',
                       'uocraReal', 'uva', 'apymeco'];
@@ -4133,7 +4138,9 @@ async function loadIpcSerie() {
 
 async function compAsegurarDatos(sel) {
   const tareas = [];
-  if (sel.includes('ipc')) tareas.push(loadIpcSerie());
+  // El IPC se pide SIEMPRE, este tildado o no: el grafico de barras lo dibuja
+  // como linea de referencia. loadIpcSerie cachea, asi que no cuesta nada.
+  tareas.push(loadIpcSerie());
   ['oficial', 'blue', 'bolsa', 'contadoconliqui'].forEach(k => {
     if (sel.includes(k)) tareas.push(loadUsdSerie(k));
   });
@@ -4302,9 +4309,14 @@ function renderCompMes(series) {
     bloque.style.display = 'none';
   };
 
-  const conVar = series.map(s => ({ cfg: s.cfg, mes: compVarMes(s.niv) }))
-                       .filter(s => s.mes.size);
+  // El IPC no va como barra: es la linea contra la que se miden las barras.
+  const conVar = series.map(s => ({ k: s.k, cfg: s.cfg, mes: compVarMes(s.niv) }))
+                       .filter(s => s.mes.size && s.k !== 'ipc');
   if (!conVar.length) { limpiar(); return; }
+
+  // Se calcula aparte, no desde la seleccion: la referencia tiene que estar
+  // aunque el IPC no este tildado.
+  const ipcMes = compVarMes(compIpc());
 
   // Mes de referencia: el MAS RECIENTE que tenga cobertura suficiente, no el
   // de mayor cobertura. Con el criterio de "el que mas indices publicaron" un
@@ -4319,6 +4331,16 @@ function renderCompMes(series) {
                    .filter(ym => conteo.get(ym) >= minimo).pop();
   if (!mesRef) { limpiar(); return; }
 
+  const ipcRef = ipcMes.has(mesRef) ? ipcMes.get(mesRef) : null;
+
+  /* Cuanto subio de VERDAD un indice: descontarle la inflacion del mes.
+     No es restar los porcentajes, es dividir los indices. Con 2% de IPC, un
+     indice que sube 8% no subio 6% real sino 5,88%. A un mes la diferencia es
+     chica; sobre doce se nota. */
+  const real = v => ipcRef == null ? null : ((1 + v / 100) / (1 + ipcRef / 100) - 1) * 100;
+  const signo = v => (v >= 0 ? '+' : '') + fmtN(v, 2) + '%';
+
+
   const filas = conVar.filter(s => s.mes.has(mesRef))
                       .map(s => ({ label: s.cfg.label, color: s.cfg.color,
                                    act: !!s.cfg.act, v: s.mes.get(mesRef) }))
@@ -4331,7 +4353,10 @@ function renderCompMes(series) {
   if (sub) {
     sub.innerHTML = '<strong style="color:#ccc;">' + isacMesLargo(mesRef + '-01')
       + '</strong> contra el mes anterior · ' + filas.length
-      + (filas.length === 1 ? ' índice' : ' índices') + ' con dato publicado';
+      + (filas.length === 1 ? ' índice' : ' índices') + ' con dato publicado'
+      + (ipcRef == null ? ''
+         : ' · la punteada es el <span style="color:' + COMP_SERIES.ipc.color
+           + ';">IPC</span>, lo que queda arriba le gana a la inflación');
   }
 
   // Etiqueta de valor sobre cada barra. Sin esto hay que leer el eje y el
@@ -4351,6 +4376,34 @@ function renderCompMes(series) {
         g.textBaseline = arriba ? 'bottom' : 'top';
         g.fillText(fmtN(v, 2) + '%', barra.x, barra.y + (arriba ? -5 : 5));
       });
+      g.restore();
+    },
+  };
+
+  /* La linea del IPC. Es la idea que hace util al grafico: sin ella las
+     barras dicen cuanto subio cada indice, con ella dicen cuales le ganaron a
+     la inflacion y cuales no, que es la pregunta real cuando se indexa. */
+  const lineaIpc = {
+    id: 'compMesIpc',
+    afterDatasetsDraw(ch) {
+      if (ipcRef == null || !ch.scales.y) return;
+      const y = ch.scales.y.getPixelForValue(ipcRef);
+      const a = ch.chartArea;
+      if (y < a.top || y > a.bottom) return;
+      const g = ch.ctx;
+      g.save();
+      g.setLineDash([5, 4]);
+      g.lineWidth = 1.5;
+      g.strokeStyle = COMP_SERIES.ipc.color;
+      g.beginPath(); g.moveTo(a.left, y); g.lineTo(a.right, y); g.stroke();
+      g.setLineDash([]);
+      g.font = '700 10px system-ui, -apple-system, sans-serif';
+      g.fillStyle = COMP_SERIES.ipc.color;
+      g.textAlign = 'left';
+      // Si la linea esta muy arriba, la etiqueta va abajo para no cortarse.
+      const arriba = y - a.top > 14;
+      g.textBaseline = arriba ? 'bottom' : 'top';
+      g.fillText('IPC ' + fmtN(ipcRef, 2) + '%', a.left + 5, y + (arriba ? -3 : 3));
       g.restore();
     },
   };
@@ -4375,7 +4428,11 @@ function renderCompMes(series) {
       plugins: {
         legend: { display: false },
         tooltip: {
-          callbacks: { label: c => ' ' + fmtN(c.parsed.y, 2) + '% en el mes' },
+          callbacks: {
+            label: c => ' ' + fmtN(c.parsed.y, 2) + '% en el mes',
+            afterLabel: c => real(c.parsed.y) == null ? null
+              : ' ' + signo(real(c.parsed.y)) + ' descontando la inflación',
+          },
         },
       },
       scales: {
@@ -4383,10 +4440,13 @@ function renderCompMes(series) {
                       autoSkip: false },
              grid: { display: false } },
         y: { ticks: { color: '#888', font: { size: 9 }, callback: v => fmtN(v, 1) + '%' },
-             grid: { color: 'rgba(255,255,255,.04)' } },
+             grid: { color: 'rgba(255,255,255,.04)' },
+             // Que la escala no deje la linea del IPC fuera del cuadro.
+             suggestedMax: ipcRef == null ? undefined : ipcRef,
+             suggestedMin: ipcRef == null ? undefined : Math.min(0, ipcRef) },
       },
     },
-    plugins: [etiquetas],
+    plugins: [etiquetas, lineaIpc],
   });
 
   if (pie) {
@@ -4409,6 +4469,21 @@ function renderCompMes(series) {
         + fmtARS(REF) + ', elegir uno u otro cambia el ajuste del mes en '
         + '<strong style="color:#ccc;">' + fmtARS(REF * brecha / 100) + '</strong>.');
     }
+    // Lectura real: cuantos le ganaron a la inflacion del mes y por cuanto.
+    // Se mira solo sobre los indices de precios, por lo mismo de siempre.
+    if (ipcRef != null && idx.length >= 2) {
+      const conReal = idx.map(f => ({ ...f, r: real(f.v) })).sort((a, b) => b.r - a.r);
+      const ganan = conReal.filter(f => f.r > 0).length;
+      const mejor = conReal[0], peor = conReal[conReal.length - 1];
+      partes.push(
+        'Contra el IPC del mes (' + fmtN(ipcRef, 2) + '%), <strong style="color:#ccc;">'
+        + ganan + ' de ' + conReal.length + '</strong> le gana'
+        + (ganan === 1 ? '' : 'n') + '. El que más, <strong style="color:'
+        + mejor.color + ';">' + mejor.label + '</strong> con ' + signo(mejor.r)
+        + ' real; el que menos, <strong style="color:' + peor.color + ';">'
+        + peor.label + '</strong> con ' + signo(peor.r) + '.');
+    }
+
     const contexto = filas.filter(f => f.act).map(f => f.label);
     if (contexto.length) {
       partes.push(contexto.join(', ') + (contexto.length === 1 ? ' mide' : ' miden')
