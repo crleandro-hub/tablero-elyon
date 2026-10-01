@@ -33,7 +33,7 @@ window.SALARIOS_CACHE = {
     cct:     "CCT 76/75 y 577/10",
     zona:    "Zona A (incluye Cordoba)",
     unidad:  "hora",
-    fuente:  "Escalas homologadas - jorgevega.com.ar",
+    fuente:  "Anexo I del acuerdo homologado (RE-2026-92530721-APN-CGDTEYS#MCH)",
     /* Zona A: CABA, Bs. As., Sgo. del Estero, Santa Fe, Mendoza, San Juan,
        Catamarca, CORDOBA, Entre Rios, Salta, Tucuman, Chaco, San Luis,
        Corrientes, La Rioja, Formosa, Jujuy y Misiones. */
@@ -65,7 +65,7 @@ window.SALARIOS_CACHE = {
     pactado: {
       "2026-03": 2.0, "2026-04": 1.9, "2026-05": 1.8,
       "2026-06": 2.1, "2026-07": 2.0, "2026-08": 1.9,
-      "2026-09": 1.9
+      "2026-09": 1.9, "2026-10": 1.8, "2026-11": 1.7
     },
 
     /* ["aaaa-mm", oficialEsp, oficial, medioOficial, ayudante]  -  $/hora */
@@ -118,10 +118,15 @@ window.SALARIOS_CACHE = {
       ["2026-06", 6666, 5703, 5270, 4851],
       ["2026-07", 6800, 5817, 5375, 4948],
       ["2026-08", 7420, 6348, 5866, 5399],
-      /* Acuerdo de septiembre de 2026. Octubre y noviembre quedan PENDIENTES
-         de confirmar contra la escala homologada: los valores que publican
-         los sitios de divulgacion no coinciden con el acuerdo. */
-      ["2026-09", 7561, 6468, 5977, 5502]
+      /* Acuerdo de septiembre de 2026, tres tramos acumulativos de 1,9 / 1,8
+         y 1,7 por ciento. Valores tomados del ANEXO I del acuerdo homologado
+         (RE-2026-92530721-APN-CGDTEYS#MCH, pagina 4 de 7), tabla "Jornales de
+         salarios basicos", columna Salario Basico de la ZONA "A". Firmado por
+         Gerardo A. Martinez (UOCRA) y Gustavo Weiss (CAMARCO).
+         Cada tramo rige "a partir del 1 de" su mes. */
+      ["2026-09", 7561, 6468, 5977, 5502],
+      ["2026-10", 7697, 6585, 6085, 5601],
+      ["2026-11", 7828, 6697, 6188, 5696]
     ]
   },
 
