@@ -255,10 +255,23 @@ def main():
                                  else "sin datos") + ")")
     print("")
     def ultimo_salario(txt):
+        """La escala VIGENTE, no la ultima cargada.
+
+        Un acuerdo homologado trae los meses siguientes por adelantado (el de
+        septiembre de 2026 carga hasta noviembre), asi que la ultima fila del
+        cache suele estar en el futuro. El tablero muestra la del mes en curso
+        y este resumen tiene que decir lo mismo."""
         if not txt:
             return "sin datos"
         filas = re.findall(r'\["(\d{4}-\d{2})",\s*\d+', txt)
-        return "escala " + filas[-1] if filas else "sin datos"
+        if not filas:
+            return "sin datos"
+        hoy = datetime.now().strftime("%Y-%m")
+        vigentes = [f for f in filas if f <= hoy] or filas
+        txt_out = "escala " + vigentes[-1]
+        if filas[-1] > vigentes[-1]:
+            txt_out += " (acordada hasta " + filas[-1] + ")"
+        return txt_out
 
     print("       UOCRA : " + ultimo_salario(sal))
     print("       RIESGO: " + val_simple(riesgo, "valor", " pb")

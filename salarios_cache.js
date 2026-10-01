@@ -26,7 +26,7 @@
 ═══════════════════════════════════════════════════════════════════ */
 
 window.SALARIOS_CACHE = {
-  actualizado: "2026-08-07",
+  actualizado: "2026-10-01",
 
   uocra: {
     nombre:  "UOCRA",
@@ -64,7 +64,8 @@ window.SALARIOS_CACHE = {
          may-2026  1,8 %                          ago-2026  1,9 %  (absorbe la SNR de julio) */
     pactado: {
       "2026-03": 2.0, "2026-04": 1.9, "2026-05": 1.8,
-      "2026-06": 2.1, "2026-07": 2.0, "2026-08": 1.9
+      "2026-06": 2.1, "2026-07": 2.0, "2026-08": 1.9,
+      "2026-09": 1.9, "2026-10": 1.8, "2026-11": 1.7
     },
 
     /* ["aaaa-mm", oficialEsp, oficial, medioOficial, ayudante]  -  $/hora */
@@ -116,7 +117,14 @@ window.SALARIOS_CACHE = {
       ["2026-05", 6119, 5235, 4837, 4452],
       ["2026-06", 6666, 5703, 5270, 4851],
       ["2026-07", 6800, 5817, 5375, 4948],
-      ["2026-08", 7420, 6348, 5866, 5399]
+      ["2026-08", 7420, 6348, 5866, 5399],
+      /* Acuerdo de septiembre de 2026: tres tramos acumulativos de 1,9 / 1,8
+         y 1,7 por ciento, vigente hasta el 30/11/2026. Octubre y noviembre
+         ya estan homologados y se cargan por adelantado; el tablero no los
+         muestra hasta que el mes empieza. */
+      ["2026-09", 7561, 6468, 5977, 5502],
+      ["2026-10", 7697, 6585, 6085, 5601],
+      ["2026-11", 7828, 6697, 6188, 5696]
     ]
   },
 

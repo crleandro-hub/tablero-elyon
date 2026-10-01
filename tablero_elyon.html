@@ -4513,6 +4513,24 @@ function _signoPct(pct) {
   return (pct >= 0 ? '+' : '') + fmtN(pct, 2) + '%';
 }
 
+/* Mes en curso, 'aaaa-mm'. Las escalas se cargan por adelantado: un acuerdo
+   homologado trae dos o tres meses futuros, y mostrarlos como si fueran el
+   jornal de hoy seria decir que ya rige algo que todavia no rige. Es el mismo
+   problema que daba la UVA, que el BCRA publica con casi un mes de adelanto. */
+function salMesActual() {
+  const h = new Date();
+  return h.getFullYear() + '-' + String(h.getMonth() + 1).padStart(2, '0');
+}
+
+/* Filas de la escala que ya estan vigentes (hasta el mes en curso inclusive) */
+function salFilasVigentes(serie) {
+  const tope = salMesActual();
+  const v = (serie || []).filter(r => r[0] <= tope);
+  // Si la escala quedara entera en el futuro (no deberia pasar) se devuelve
+  // tal cual, antes que dejar la seccion vacia.
+  return v.length ? v : (serie || []);
+}
+
 /* Serie de UOCRA como Map 'aaaa-mm' -> $/hora de una categoria */
 function salSerieUocra(cat) {
   const u = window.SALARIOS_CACHE && window.SALARIOS_CACHE.uocra;
@@ -4520,7 +4538,7 @@ function salSerieUocra(cat) {
   const col = { oficialEsp: 1, oficial: 2, medioOficial: 3, ayudante: 4 }[cat];
   if (!col) return null;
   const m = new Map();
-  u.serie.forEach(r => { if (r[col] != null) m.set(r[0], Number(r[col])); });
+  salFilasVigentes(u.serie).forEach(r => { if (r[col] != null) m.set(r[0], Number(r[col])); });
   return m.size ? m : null;
 }
 
@@ -4615,11 +4633,12 @@ function _pintarSalKpis() {
   const cont = document.getElementById('sal-uocra-kpis');
   if (!cont || !u || !u.serie || !u.serie.length) return false;
 
-  const ultima = u.serie[u.serie.length - 1];
+  const vigentes = salFilasVigentes(u.serie);
+  const ultima = vigentes[vigentes.length - 1];
   const ym = ultima[0];
-  const prevMes = u.serie[u.serie.length - 2];
+  const prevMes = vigentes[vigentes.length - 2];
   const ymIA = (+ym.slice(0, 4) - 1) + ym.slice(4);
-  const filaIA = u.serie.filter(r => r[0] <= ymIA).pop();
+  const filaIA = vigentes.filter(r => r[0] <= ymIA).pop();
 
   const fe = document.getElementById('sal-uocra-fecha');
   if (fe) fe.textContent = '· ' + fmtMes(ym + '-01') + ' · ' + u.zona + ' · ' + u.cct;

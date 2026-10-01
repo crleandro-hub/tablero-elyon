@@ -263,6 +263,14 @@ def ultima_fecha(bloques, txt=""):
     if m:
         return a_date(m.group(1))
 
+    # Las escalas salariales tambien miran al futuro: un acuerdo homologado
+    # carga los meses que vienen. Lo que hay que controlar es cuando se edito
+    # el archivo, que es justo para lo que esta el sello `actualizado`.
+    if "SALARIOS_CACHE" in txt:
+        m = re.search(r'actualizado:\s*"(\d{4}-\d{2}-\d{2})', txt)
+        if m:
+            return a_date(m.group(1))
+
     ult = None
     # Hay caches que son una FOTO, no una serie: el ranking de acciones del dia
     # no tiene fechas adentro. Ahi el dato es tan viejo como la corrida que lo
