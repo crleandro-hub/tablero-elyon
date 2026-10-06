@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------
    rofex_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-10-06T17:02:26
+   Generado: 2026-10-06T18:02:22
    Curva de dolar futuro (contratos DLR) de Matba Rofex.
    precio = precio de ajuste (settlement) de la rueda
    varPct = variacion % contra el ajuste anterior
@@ -21,5 +21,5 @@ window.ROFEX_CACHE = {
     { periodo: "2027-07", etiqueta: "jul-27", precio: 1814.0, varPct: -0.22, tna: 23.69 }
   ],
   fuente: "Dólar futuro · Matba Rofex",
-  updated: "2026-10-06T17:02:26"
+  updated: "2026-10-06T18:02:22"
 };
