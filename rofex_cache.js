@@ -1,25 +1,25 @@
 /* -----------------------------------------------------------------
    rofex_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-10-05T18:02:23
+   Generado: 2026-10-06T11:02:41
    Curva de dolar futuro (contratos DLR) de Matba Rofex.
    precio = precio de ajuste (settlement) de la rueda
    varPct = variacion % contra el ajuste anterior
    tna    = tasa nominal anual implicita en el contrato
 ----------------------------------------------------------------- */
 window.ROFEX_CACHE = {
-  rueda: "2026-10-02",
+  rueda: "2026-10-05",
   curva: [
-    { periodo: "2026-10", etiqueta: "oct-26", precio: 1543.5, varPct: -0.29, tna: 20.15 },
-    { periodo: "2026-11", etiqueta: "nov-26", precio: 1571.5, varPct: -0.29, tna: 20.96 },
-    { periodo: "2026-12", etiqueta: "dic-26", precio: 1601.0, varPct: -0.28, tna: 21.85 },
-    { periodo: "2027-01", etiqueta: "ene-27", precio: 1631.0, varPct: -0.28, tna: 22.4 },
-    { periodo: "2027-02", etiqueta: "feb-27", precio: 1659.0, varPct: -0.3, tna: 22.71 },
-    { periodo: "2027-03", etiqueta: "mar-27", precio: 1692.5, varPct: -0.32, tna: 23.01 },
-    { periodo: "2027-04", etiqueta: "abr-27", precio: 1723.0, varPct: -0.32, tna: 23.21 },
-    { periodo: "2027-05", etiqueta: "may-27", precio: 1757.0, varPct: -0.34, tna: 23.61 },
-    { periodo: "2027-06", etiqueta: "jun-27", precio: 1788.0, varPct: -0.39, tna: 23.75 },
-    { periodo: "2027-07", etiqueta: "jul-27", precio: 1818.0, varPct: -0.41, tna: 23.77 }
+    { periodo: "2026-10", etiqueta: "oct-26", precio: 1540.0, varPct: -0.23, tna: 19.21 },
+    { periodo: "2026-11", etiqueta: "nov-26", precio: 1568.0, varPct: -0.22, tna: 20.58 },
+    { periodo: "2026-12", etiqueta: "dic-26", precio: 1597.0, varPct: -0.25, tna: 21.5 },
+    { periodo: "2027-01", etiqueta: "ene-27", precio: 1626.5, varPct: -0.28, tna: 22.05 },
+    { periodo: "2027-02", etiqueta: "feb-27", precio: 1655.0, varPct: -0.24, tna: 22.51 },
+    { periodo: "2027-03", etiqueta: "mar-27", precio: 1688.0, varPct: -0.27, tna: 22.79 },
+    { periodo: "2027-04", etiqueta: "abr-27", precio: 1718.0, varPct: -0.29, tna: 22.97 },
+    { periodo: "2027-05", etiqueta: "may-27", precio: 1752.0, varPct: -0.28, tna: 23.41 },
+    { periodo: "2027-06", etiqueta: "jun-27", precio: 1783.0, varPct: -0.28, tna: 23.57 },
+    { periodo: "2027-07", etiqueta: "jul-27", precio: 1814.0, varPct: -0.22, tna: 23.69 }
   ],
   fuente: "Dólar futuro · Matba Rofex",
-  updated: "2026-10-05T18:02:23"
+  updated: "2026-10-06T11:02:41"
 };
