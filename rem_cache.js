@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------
    rem_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-10-19T11:00:28
+   Generado: 2026-10-19T11:59:25
    Fuente: BCRA (planilla oficial)
    m12   = var. % i.a. esperada para los proximos 12 meses
    anual = var. % i.a. esperada a diciembre del año en curso
@@ -8,15 +8,15 @@
    tcnIa  = devaluacion % i.a. esperada a dic contra dic anterior
 ----------------------------------------------------------------- */
 window.REM_CACHE = {
-  chequeado: "2026-10-19T11:00:28",
+  chequeado: "2026-10-19T11:59:25",
   aviso: null,
-  m12: 21.0,
+  m12: 21.05,
   anual: 30.0,
-  mensual: 1.7172,
-  tcnDic: 1629.58,
+  mensual: 1.9,
+  tcnDic: 1614.32,
   tcnIa: null,
-  relev: "2026-08",
+  relev: "2026-09",
   anio: 2026,
   fuente: "BCRA (planilla oficial)",
-  updated: "2026-10-19T11:00:28"
+  updated: "2026-10-19T11:59:25"
 };
