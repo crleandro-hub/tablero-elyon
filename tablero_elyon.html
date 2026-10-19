@@ -2310,19 +2310,21 @@ async function loadInflacion() {
   // Traemos 26 meses: alcanza para mensual, interanual y acumulado del año
   // en curso (que se mide contra el indice de diciembre del año anterior).
   try {
-    const data = await fetchDG('148.3_INIVELNAL_DICI_M_26', 26);
+    const data = await ipcCompletar(await fetchDG('148.3_INIVELNAL_DICI_M_26', 26));
+    const viaOtra = data.length && ipcEstirado.has(String(data[0][0]).slice(0, 7));
+    const sello = viaOtra ? ' · INDEC (vía ArgentinaDatos)' : ' · INDEC';
     if (data.length >= 2) {
       const pctM = (data[0][1] / data[1][1] - 1) * 100;
       setMacro('val-inf-m', 'src-inf-m',
         fmtN(pctM, 1) + '%',
-        fmtMes(data[0][0]) + ' · INDEC',
+        fmtMes(data[0][0]) + sello,
         'var(--rojo-txt)');
     }
     if (data.length >= 13) {
       const pctIA = (data[0][1] / data[12][1] - 1) * 100;
       setMacro('val-inf-ia', 'src-inf-ia',
         fmtN(pctIA, 2) + '%',
-        'Interanual a ' + fmtMes(data[0][0]) + ' · INDEC',
+        'Interanual a ' + fmtMes(data[0][0]) + sello,
         'var(--rojo-txt)');
     }
 
@@ -2336,7 +2338,7 @@ async function loadInflacion() {
       const meses   = +String(data[0][0]).slice(5, 7);
       setMacro('val-inf-acum', 'src-inf-acum',
         fmtN(pctAcum, 2) + '%',
-        `${meses} ${meses === 1 ? 'mes' : 'meses'} a ${fmtMes(data[0][0])} · INDEC`,
+        `${meses} ${meses === 1 ? 'mes' : 'meses'} a ${fmtMes(data[0][0])}${sello}`,
         'var(--rojo-txt)');
     } else {
       setMacro('val-inf-acum', 'src-inf-acum', 'N/D', 'Sin base de diciembre', '');
@@ -4127,11 +4129,56 @@ function compVarMes(niveles) {
 }
 
 /* ── Descarga de lo que falte ── */
+/* Meses de IPC que se agregaron por el camino de abajo, no por la serie
+   oficial. Sirve para aclararlo en la tarjeta. */
+let ipcEstirado = new Set();
+
+/* ═══ EL IPC QUE FALTA ═══
+   El INDEC publica el IPC a mitad del mes siguiente, pero la serie de
+   apis.datos.gob.ar tarda varias semanas mas en incorporarlo: el 19/10/2026
+   seguia terminando en agosto con septiembre (1,9%) publicado hacia cinco
+   dias. Como el IPC es la referencia de todo el comparador, quedarse sin el
+   ultimo mes desalinea las comparaciones.
+
+   ArgentinaDatos republica la variacion mensual del INDEC casi el mismo dia.
+   Es la MISMA cifra oficial, solo que llega antes; se controlo mes a mes
+   contra la serie de datos.gob.ar y coincide.
+
+   Lo que se hace: los meses que la serie oficial todavia no tiene se agregan
+   encadenando el porcentaje sobre el ultimo nivel conocido. Los meses que ya
+   estan NO se tocan: manda siempre la serie oficial. Cuando datos.gob.ar se
+   pone al dia, esto deja de agregar nada solo. */
+async function ipcCompletar(serie) {
+  if (!serie || !serie.length) return serie || [];
+  let pcts;
+  try {
+    const r = await fetch('https://api.argentinadatos.com/v1/finanzas/indices/inflacion');
+    pcts = await r.json();
+  } catch (_) { return serie; }
+  if (!Array.isArray(pcts) || !pcts.length) return serie;
+
+  const ultimoOficial = String(serie[0][0]).slice(0, 7);   // la serie viene descendente
+  const faltan = pcts
+    .map(r => [String(r.fecha || '').slice(0, 7), Number(r.valor)])
+    .filter(([ym, v]) => ym > ultimoOficial && ym.length === 7 && isFinite(v))
+    .sort((a, b) => (a[0] < b[0] ? -1 : 1));
+  if (!faltan.length) return serie;
+
+  let nivel = Number(serie[0][1]);
+  const sumados = [];
+  faltan.forEach(([ym, pct]) => {
+    nivel *= (1 + pct / 100);
+    sumados.push([ym + '-01', +nivel.toFixed(4)]);
+    ipcEstirado.add(ym);
+  });
+  return sumados.reverse().concat(serie);   // los nuevos primero, como el resto
+}
+
 async function loadIpcSerie() {
   if (ipcSerie.length) return ipcSerie;
   try {
     // 1000 = toda la serie disponible (arranca en dic-2016)
-    ipcSerie = await fetchDG('148.3_INIVELNAL_DICI_M_26', 1000);
+    ipcSerie = await ipcCompletar(await fetchDG('148.3_INIVELNAL_DICI_M_26', 1000));
   } catch (_) { ipcSerie = []; }
   return ipcSerie;
 }

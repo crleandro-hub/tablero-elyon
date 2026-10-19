@@ -8,7 +8,8 @@ Expectativas de Mercado) que publica el BCRA todos los meses.
 
 Fuente principal: la planilla oficial del BCRA
     https://www.bcra.gob.ar/archivos/Pdfs/PublicacionesEstadisticas/informes/
-    tablas-relevamiento-expectativas-mercado-<mes>-<anio>.xlsx
+    relevamiento-expectativas-mercado-tablas-<anio>-<mm>.xlsx
+    (hasta sep-2026 se llamaba tablas-relevamiento-...-<mes>-<anio>.xlsx)
 Se prueba el mes corriente y se va hacia atras hasta encontrar la ultima
 publicada (el REM de un mes sale a principios del mes siguiente).
 
@@ -44,8 +45,17 @@ from xlsx_lite import leer_hoja  # noqa: E402
 CACHE_PATH = os.path.join(BASE_DIR, "rem_cache.js")
 
 BCRA_PORTADA = "https://www.bcra.gob.ar/relevamiento-expectativas-mercado-rem/"
-BCRA_URL = ("https://www.bcra.gob.ar/archivos/Pdfs/PublicacionesEstadisticas/"
-            "informes/tablas-relevamiento-expectativas-mercado-{mes}-{anio}.xlsx")
+_BCRA_DIR = ("https://www.bcra.gob.ar/archivos/Pdfs/PublicacionesEstadisticas/"
+             "informes/")
+# En octubre de 2026 el BCRA renombro la planilla: antes era
+#   tablas-relevamiento-expectativas-mercado-sep-2026.xlsx
+# y paso a ser
+#   relevamiento-expectativas-mercado-tablas-2026-09.xlsx
+# Se prueban las dos, la nueva primero. El camino bueno sigue siendo leer el
+# link de la portada; esto es el respaldo para cuando la pagina no se pueda
+# abrir o cambie de maquetado.
+BCRA_URL      = _BCRA_DIR + "relevamiento-expectativas-mercado-tablas-{anio}-{mm:02d}.xlsx"
+BCRA_URL_VIEJA = _BCRA_DIR + "tablas-relevamiento-expectativas-mercado-{mes}-{anio}.xlsx"
 MESES = ["ene", "feb", "mar", "abr", "may", "jun",
          "jul", "ago", "sep", "oct", "nov", "dic"]
 MESES_ALT = {"sep": "set"}          # el BCRA alterno esta abreviatura alguna vez
@@ -317,7 +327,11 @@ def parsear_xlsx(contenido, anio):
 
 
 def _mes_de_url(url):
-    """'...-jul-2026.xlsx' -> '2026-07'."""
+    """'...-jul-2026.xlsx' o '...-2026-07.xlsx' -> '2026-07'."""
+    m = re.search(r"-(\d{4})-(\d{2})\.xlsx", url, re.I)
+    if m:
+        mm = int(m.group(2))
+        return "%s-%02d" % (m.group(1), mm) if 1 <= mm <= 12 else None
     m = re.search(r"-([a-z]{3})-(\d{4})\.xlsx", url, re.I)
     if not m:
         return None
@@ -363,9 +377,13 @@ def desde_portada():
         print("   [portada] no se pudo abrir la pagina del REM: %s" % e)
         return None
 
-    links = re.findall(
-        r'href="([^"]*tablas-relevamiento-expectativas-mercado[^"]*\.xlsx)"',
-        html, re.I)
+    # No se fija en el orden de las palabras del nombre, que ya cambio una vez.
+    # Si pide "tablas" en algun lado para no agarrar las otras dos planillas de
+    # la pagina, que son el ranking de pronosticadores y el historico completo.
+    links = [h for h in re.findall(
+        r'href="([^"]*relevamiento-expectativas-mercado[^"]*\.xlsx)"', html, re.I)
+        if "tablas" in h.lower()
+        and "ranking" not in h.lower() and "historico" not in h.lower()]
     if not links:
         print("   [portada] la pagina no lista ninguna planilla .xlsx")
         return None
@@ -403,13 +421,17 @@ def desde_bcra():
         if MESES[mes - 1] in MESES_ALT:
             abrevs.append(MESES_ALT[MESES[mes - 1]])
 
+        intentos = [(BCRA_URL.format(anio=anio, mm=mes), "%04d-%02d" % (anio, mes))]
         for ab in abrevs:
-            url = BCRA_URL.format(mes=ab, anio=anio)
-            res = _intentar_xlsx(url, "%s-%s" % (ab, anio))
+            intentos.append((BCRA_URL_VIEJA.format(mes=ab, anio=anio),
+                             "%s-%s" % (ab, anio)))
+
+        for url, etiqueta in intentos:
+            res = _intentar_xlsx(url, etiqueta)
             if res:
                 res["relev"] = "%04d-%02d" % (anio, mes)
                 res["fuente"] = "BCRA (planilla oficial)"
-                print("[OK] REM %s-%s desde la planilla del BCRA" % (ab, anio))
+                print("[OK] REM %04d-%02d desde la planilla del BCRA" % (anio, mes))
                 return res
     return None
 
