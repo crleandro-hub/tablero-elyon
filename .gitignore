@@ -40,10 +40,12 @@ desktop.ini
 # sobrevive el .tmp: es una copia, no una fuente, y no va al repo.
 *.js.tmp
 
-# Los informes de CEDUC en PDF. El script solo lee el .txt de esta carpeta;
-# los PDF son el original que manda la camara y no tienen por que estar en
-# un repositorio publico. Se quedan en la PC.
+# Los informes de CEDUC. El PDF y el Excel son el original que manda la
+# camara: no tienen por que estar en un repositorio publico. Se quedan en la
+# PC. Lo que si se publica es ceduc_cache.js, que es la serie que usa el
+# tablero.
 ceduc/*.pdf
+ceduc/*.xlsx
 
 # PDFs que baja probar_cifras.py para inspeccionarlos. Son de consulta.
 _diagnostico_cifras/
