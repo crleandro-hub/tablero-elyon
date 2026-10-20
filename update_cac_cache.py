@@ -223,13 +223,17 @@ def _control_cruzado(path_local, path_bajado):
                             % (m, etiquetas[i], x, y))
 
     if difs:
-        print("     [OJO] %d valor(es) de tu Excel no coinciden con el de cifrasonline:"
+        print("     [OJO] %d valor(es) no coinciden entre tu Excel y el de cifrasonline:"
               % len(difs))
         for d in difs[:12]:
             print(d)
         if len(difs) > 12:
             print("       ...y %d mas." % (len(difs) - 12))
-        print("       Revisa esos meses en tu planilla: el de la camara manda.")
+        print("       Uno de los dos esta mal. No siempre es el tuyo: el 20/10/2026")
+        print("       la planilla de cifrasonline traia 7423,2 de mano de obra en")
+        print("       mayo cuando la serie encadenada da 17423,2, un 1 que se les")
+        print("       perdio. Mira la variacion del mes contra los meses vecinos:")
+        print("       el valor bueno es el que no rompe la serie.")
     else:
         print("     [OK] Los %d meses en comun coinciden con el archivo de la camara."
               % len(comunes))
