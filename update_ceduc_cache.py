@@ -261,12 +261,36 @@ def leer_txt(ruta):
     return tablas
 
 
+def _utiles(patron):
+    """Los archivos de la carpeta que son informes de verdad.
+
+    Se saltean dos cosas que aparecen solas y envenenarian la eleccion:
+      - "~$nombre.xlsx": el archivo de bloqueo que deja Excel mientras la
+        planilla esta ABIERTA. Como la ~ ordena despues de las letras, era
+        justo el que ganaba el sorted() y el script se caia tratando de
+        parsear 165 bytes. Pasa cada vez que se corre la tarea con el Excel
+        abierto en pantalla, que es lo mas probable el dia que lo cargas.
+      - las copias en conflicto de Dropbox, que son un duplicado viejo o
+        vacio con el mismo contenido a medias."""
+    salida = []
+    for ruta in glob.glob(os.path.join(CARPETA, patron)):
+        nombre = os.path.basename(ruta).lower()
+        if nombre.startswith("~$"):
+            continue
+        if "conflicto" in nombre or "conflicted copy" in nombre:
+            continue
+        if os.path.getsize(ruta) < 1024:
+            continue
+        salida.append(ruta)
+    return sorted(salida)
+
+
 def ultimo_informe():
     """El archivo mas reciente de la carpeta. El Excel manda sobre el .txt."""
-    xlsx = sorted(glob.glob(os.path.join(CARPETA, "*.xlsx")))
+    xlsx = _utiles("*.xlsx")
     if xlsx:
         return xlsx[-1], "xlsx"
-    txt = sorted(glob.glob(os.path.join(CARPETA, "*.txt")))
+    txt = _utiles("*.txt")
     if txt:
         return txt[-1], "txt"
     raise SystemExit(
