@@ -19,20 +19,20 @@ casas, cocheras y lotes.
 
 De donde sale
 -------------
-Del informe mensual en PDF. La pagina publica de CEDUC va un año atrasada
-(al 8/8/2026 el ultimo publicado era agosto 2025), asi que los informes
-recientes se consiguen por la camara.
+Del EXCEL que manda la camara junto al informe:
+    "CEDUC - Indice de ventas de inmuebles AAAA MM version CEDUC.xlsx"
+Se deja en la carpeta ceduc y el script toma el mas reciente.
 
-Como el PDF no se puede automatizar desde aca, el circuito es:
+Hasta octubre de 2026 esto se hacia a mano: el PDF del informe viene
+escaneado, sin capa de texto, asi que las tablas se transcribian leyendo las
+imagenes. El Excel tiene exactamente los mismos numeros (se comparo mes a mes:
+las 195 filas de la serie original coinciden sin una sola diferencia) y ademas
+trae la serie desestacionalizada reestimada, que en el PDF obligaba a congelar
+la historia vieja porque transcribir 180 filas a ojo metia mas error del que
+corregia.
 
-    1. Abrir el PDF, Ctrl+A, Ctrl+C
-    2. Pegarlo en el Bloc de notas
-    3. Guardarlo en la carpeta ceduc como  ceduc-AAAA-MM.txt
-    4. Correr este script
-
-El script toma SIEMPRE el archivo mas reciente de la carpeta. Como cada
-informe trae la serie completa desde 2010, con el ultimo alcanza: no hace
-falta conservar los anteriores, aunque tampoco molestan.
+Si en la carpeta solo hay un .txt (el formato viejo, pegado del PDF), el
+script lo lee igual. El Excel manda si estan los dos.
 
 Un detalle que importa
 ----------------------
@@ -41,6 +41,14 @@ encabezado, pero el interanual esta calculado sobre la serie ORIGINAL. Solo
 la comparacion de los ultimos 3 meses contra los 3 previos usa la ajustada.
 Por eso el cache guarda las dos series y el tablero calcula cada variacion
 con la que corresponde.
+
+El control
+----------
+El Excel trae al pie una fila "% a/a" con la variacion interanual de cada
+columna, calculada por Economic Trends. El script la usa para controlarse:
+recalcula el interanual del ultimo mes sobre lo que acaba de leer y lo compara
+contra esa fila. Si no coincide, no pisa el cache. Es un control que no hay
+que mantener: viaja dentro del archivo.
 
 Salida: ceduc_cache.js
     window.CEDUC_CACHE = {
@@ -66,30 +74,148 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CARPETA = os.path.join(BASE_DIR, "ceduc")
 CACHE_PATH = os.path.join(BASE_DIR, "ceduc_cache.js")
 
+sys.path.insert(0, BASE_DIR)
+from xlsx_lite import leer_hoja           # noqa: E402
+
 MESES = {"jan": 1, "ene": 1, "feb": 2, "mar": 3, "apr": 4, "abr": 4,
          "may": 5, "jun": 6, "jul": 7, "aug": 8, "ago": 8,
-         "sep": 9, "set": 9, "oct": 10, "nov": 11, "dec": 12, "dic": 12}
+         "sep": 9, "set": 9, "oct": 10, "nov": 11, "dic": 12, "dec": 12}
 
-# Control: lo que dice el cuadro de sintesis del informe de julio 2026.
-# Si el parseo no lo reproduce, algo se rompio y no se pisa el cache.
-CONTROL = {"mes": "2026-07", "indice_total_original": 9.25, "ia_total": -77.2}
-
-# Una fila de datos: mes en ingles abreviado, guion, año de dos digitos,
-# y despues hasta doce numeros o guiones (los primeros años no tienen
-# apertura por tipologia y el informe los deja en blanco con un "-").
-FILA = re.compile(r"^\s*([A-Za-z]{3})-(\d{2})\s+(.+?)\s*$")
+COLUMNAS = 12                 # las tres aperturas por tres tipologias + indice
+TOLERANCIA_AA = 0.2           # puntos porcentuales
 
 
 def a_fecha(mes_txt, anio_txt):
     m = MESES.get(mes_txt.lower())
     if not m:
         return None
-    a = int(anio_txt)
-    # La serie arranca en 2010: dos digitos siempre son 20xx
-    return "%04d-%02d-01" % (2000 + a, m)
+    return "%04d-%02d-01" % (2000 + int(anio_txt), m)
 
 
-def a_num(tok):
+# ─────────────────────────────────────────────────────────────
+#  Lectura del Excel
+# ─────────────────────────────────────────────────────────────
+def _celda(fila, i):
+    return fila[i] if i < len(fila) else None
+
+
+def _ubicar_bloques(filas):
+    """{'original': (col_mes, col_primera), 'desest': (...)}.
+
+    Las columnas no se clavan a mano: se buscan por el titulo del bloque, que
+    esta en la segunda fila de la planilla, y la columna "Mes" es la anterior.
+    Asi un bloque nuevo intercalado no corre todo lo demas."""
+    bloques = {}
+    for fila in filas[:6]:
+        for i, celda in enumerate(fila):
+            if not isinstance(celda, str):
+                continue
+            txt = celda.strip().lower()
+            if txt.startswith("series originales"):
+                bloques["original"] = (i - 1, i)
+            elif txt.startswith("series desestacionalizadas"):
+                bloques["desest"] = (i - 1, i)
+    return bloques
+
+
+FILA_MES = re.compile(r"^([A-Za-z]{3})-(\d{2})$")
+
+
+def _tabla(filas, col_mes, col0):
+    """[[fecha, v1..v12], ...] de un bloque, ordenada por fecha."""
+    out = []
+    for fila in filas:
+        etiqueta = _celda(fila, col_mes)
+        if not isinstance(etiqueta, str):
+            continue
+        m = FILA_MES.match(etiqueta.strip())
+        if not m:
+            continue
+        fecha = a_fecha(m.group(1), m.group(2))
+        if not fecha:
+            continue
+        vals = []
+        for i in range(col0, col0 + COLUMNAS):
+            v = _celda(fila, i)
+            vals.append(round(float(v), 2) if isinstance(v, (int, float)) else None)
+        if all(v is None for v in vals):
+            continue
+        out.append([fecha] + vals)
+    out.sort(key=lambda r: r[0])
+    return out
+
+
+def _fila_aa(filas, col_mes, col0):
+    """La fila '% a/a' que el propio informe trae al pie del bloque."""
+    for fila in filas:
+        etiqueta = _celda(fila, col_mes)
+        if isinstance(etiqueta, str) and "a/a" in etiqueta.lower():
+            return [float(_celda(fila, i)) if isinstance(_celda(fila, i), (int, float))
+                    else None for i in range(col0, col0 + COLUMNAS)]
+    return None
+
+
+def _controlar(tabla, aa):
+    """Recalcula el interanual del ultimo mes y lo compara con la fila '% a/a'.
+
+    Devuelve (cuantas columnas se controlaron, lista de fallas)."""
+    if not aa or len(tabla) < 13:
+        return 0, []
+    ult = tabla[-1]
+    a, m = int(ult[0][:4]), int(ult[0][5:7])
+    previo = next((r for r in tabla if r[0][:7] == "%04d-%02d" % (a - 1, m)), None)
+    if not previo:
+        return 0, []
+
+    controladas, fallas = 0, []
+    for i in range(COLUMNAS):
+        ahora, antes, esperado = ult[i + 1], previo[i + 1], aa[i]
+        if ahora is None or not antes or esperado is None:
+            continue
+        calculado = (ahora / antes - 1) * 100
+        controladas += 1
+        if abs(calculado - esperado) > TOLERANCIA_AA:
+            fallas.append("columna %d: calculado %+.1f%%, el informe dice %+.1f%%"
+                          % (i + 1, calculado, esperado))
+    return controladas, fallas
+
+
+def leer_excel(ruta):
+    filas = leer_hoja(ruta)
+    bloques = _ubicar_bloques(filas)
+    if "original" not in bloques:
+        raise SystemExit(
+            "[ERROR] No se encontro el bloque 'Series originales' en la planilla.\n"
+            "        Puede que la camara haya cambiado el formato del Excel.")
+
+    tablas = {}
+    for clave, (col_mes, col0) in bloques.items():
+        tablas[clave] = _tabla(filas, col_mes, col0)
+    tablas.setdefault("desest", [])
+
+    col_mes, col0 = bloques["original"]
+    controladas, fallas = _controlar(tablas["original"], _fila_aa(filas, col_mes, col0))
+    if fallas:
+        print("\n[ERROR] El control contra la fila '%% a/a' del informe fallo en "
+              "%d columna(s):" % len(fallas))
+        for f in fallas:
+            print("        " + f)
+        raise SystemExit("Se conserva el ceduc_cache.js anterior.")
+    if controladas:
+        print("   Control: las %d columnas del interanual de %s coinciden con la "
+              "fila '%% a/a' del informe." % (controladas, tablas["original"][-1][0][:7]))
+    else:
+        print("   [AVISO] La planilla no trae la fila '% a/a': se publica sin ese control.")
+    return tablas
+
+
+# ─────────────────────────────────────────────────────────────
+#  Lectura del .txt (formato viejo, pegado del PDF)
+# ─────────────────────────────────────────────────────────────
+FILA_TXT = re.compile(r"^\s*([A-Za-z]{3})-(\d{2})\s+(.+?)\s*$")
+
+
+def _num_txt(tok):
     if tok in ("-", "", "n/d", "N/D"):
         return None
     try:
@@ -98,17 +224,12 @@ def a_num(tok):
         return None
 
 
-def parsear(texto):
-    """Devuelve {'original': [...], 'desest': [...]}.
-
-    Se recorre el texto de arriba abajo cambiando de tabla cuando aparece el
-    titulo de cada seccion. No se asume en que linea empieza cada una."""
+def leer_txt(ruta):
+    texto = open(ruta, encoding="utf-8", errors="replace").read()
     tablas = {"original": [], "desest": []}
     actual = None
-
     for linea in texto.splitlines():
         bajo = linea.lower()
-
         if bajo.startswith("series originales"):
             actual = "original"
             continue
@@ -117,25 +238,20 @@ def parsear(texto):
             continue
         if actual is None:
             continue
-
-        m = FILA.match(linea)
+        m = FILA_TXT.match(linea)
         if not m:
             continue
         fecha = a_fecha(m.group(1), m.group(2))
         if not fecha:
             continue
-
-        vals = [a_num(t) for t in m.group(3).split()]
-        if len(vals) < 12:
-            vals += [None] * (12 - len(vals))
-        vals = vals[:12]
+        vals = [_num_txt(t) for t in m.group(3).split()]
+        vals = (vals + [None] * COLUMNAS)[:COLUMNAS]
         if all(v is None for v in vals):
             continue
         tablas[actual].append([fecha] + vals)
 
     for k in tablas:
         tablas[k].sort(key=lambda r: r[0])
-        # Si un informe repitiera un mes, gana el ultimo que aparece
         unicas, vistos = [], set()
         for r in reversed(tablas[k]):
             if r[0] not in vistos:
@@ -145,14 +261,18 @@ def parsear(texto):
     return tablas
 
 
-def ultimo_txt():
-    archivos = sorted(glob.glob(os.path.join(CARPETA, "*.txt")))
-    if not archivos:
-        raise SystemExit(
-            "[ERROR] No hay ningun .txt en la carpeta ceduc.\n"
-            "        Abri el PDF del informe, Ctrl+A, Ctrl+C, pegalo en el\n"
-            "        Bloc de notas y guardalo ahi como ceduc-AAAA-MM.txt")
-    return archivos[-1]
+def ultimo_informe():
+    """El archivo mas reciente de la carpeta. El Excel manda sobre el .txt."""
+    xlsx = sorted(glob.glob(os.path.join(CARPETA, "*.xlsx")))
+    if xlsx:
+        return xlsx[-1], "xlsx"
+    txt = sorted(glob.glob(os.path.join(CARPETA, "*.txt")))
+    if txt:
+        return txt[-1], "txt"
+    raise SystemExit(
+        "[ERROR] No hay ningun informe en la carpeta ceduc.\n"
+        "        Deja ahi el Excel que manda la camara:\n"
+        "        'CEDUC - Indice de ventas de inmuebles AAAA MM version CEDUC.xlsx'")
 
 
 def num(v):
@@ -164,49 +284,27 @@ def num(v):
 def main():
     print("Actualizando el indice de ventas CEDUC...")
 
-    ruta = ultimo_txt()
-    print("   Archivo: %s" % os.path.basename(ruta))
+    ruta, tipo = ultimo_informe()
+    print("   Archivo: %s (%s)" % (os.path.basename(ruta), tipo))
 
-    texto = open(ruta, encoding="utf-8", errors="replace").read()
-    tablas = parsear(texto)
-
+    tablas = leer_excel(ruta) if tipo == "xlsx" else leer_txt(ruta)
     orig, des = tablas["original"], tablas["desest"]
+
     if len(orig) < 24:
         print("\n[ERROR] La serie original salio con %d meses, muy poco." % len(orig))
-        print("        Puede que el pegado haya perdido las tablas.")
         raise SystemExit("Se conserva el ceduc_cache.js anterior.")
 
     print("   Original       : %d meses (%s a %s)"
           % (len(orig), orig[0][0][:7], orig[-1][0][:7]))
-    print("   Desestacionaliz: %d meses (%s a %s)"
-          % (len(des), des[0][0][:7], des[-1][0][:7]) if des else "   Desestacionaliz: —")
+    if des:
+        print("   Desestacionaliz: %d meses (%s a %s)"
+              % (len(des), des[0][0][:7], des[-1][0][:7]))
 
     hasta = orig[-1][0][:7]
 
-    # ── Control contra el cuadro de sintesis ──
-    mapa = {r[0][:7]: r for r in orig}
-    ctrl = mapa.get(CONTROL["mes"])
-    if ctrl:
-        idx = ctrl[12]                      # ultima columna = indice total
-        esperado = CONTROL["indice_total_original"]
-        if idx is None or abs(idx - esperado) > 0.05:
-            print("\n[ERROR] Control fallado: %s deberia dar un indice total de "
-                  "%.2f y dio %s." % (CONTROL["mes"], esperado, idx))
-            print("        Revisa que el pegado tenga las columnas completas.")
-            raise SystemExit("Se conserva el ceduc_cache.js anterior.")
-        prev = mapa.get("%04d-%s" % (int(CONTROL["mes"][:4]) - 1, CONTROL["mes"][5:]))
-        if prev and prev[12]:
-            ia = (idx / prev[12] - 1) * 100
-            print("   Control: %s indice %.2f, %+.1f%% i.a. (informe: %+.1f%%) -> %s"
-                  % (CONTROL["mes"], idx, ia, CONTROL["ia_total"],
-                     "OK" if abs(ia - CONTROL["ia_total"]) <= 0.2 else "NO COINCIDE"))
-    else:
-        print("   [AVISO] El mes de control no esta en la serie; se publica sin verificar.")
-
-    def bloque(filas):
-        return ",\n".join(
-            "    [\"%s\",%s]" % (r[0], ",".join(num(v) for v in r[1:]))
-            for r in filas)
+    def bloque(f):
+        return ",\n".join('    ["%s",%s]' % (r[0], ",".join(num(v) for v in r[1:]))
+                          for r in f)
 
     fuente = "CEDUC - Economic Trends S.A."
     js = (
@@ -232,8 +330,10 @@ def main():
         "};\n"
     )
 
-    with open(CACHE_PATH, "w", encoding="utf-8") as f:
+    tmp = CACHE_PATH + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
         f.write(js)
+    os.replace(tmp, CACHE_PATH)
 
     print("\n[OK] ceduc_cache.js")
     print("     %d meses de serie original, hasta %s" % (len(orig), hasta))
