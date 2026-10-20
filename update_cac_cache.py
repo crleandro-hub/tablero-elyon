@@ -546,6 +546,56 @@ def leer_ultimo_mes_cache():
     return fechas[-1] if fechas else None
 
 
+def _serie_del_cache():
+    """{'AAAA-MM': (general, materiales, mano de obra)} del cac_cache.js actual."""
+    try:
+        with open(CACHE_JS_PATH, "r", encoding="utf-8") as f:
+            txt = f.read()
+    except Exception:
+        return {}
+    filas = re.findall(
+        r'\["(\d{4}-\d{2})-\d{2}",\s*([\d.]+),\s*([\d.]+),\s*([\d.]+)\]', txt)
+    return {m[0]: (float(m[1]), float(m[2]), float(m[3])) for m in filas}
+
+
+def avisar_revisiones(registros):
+    """Avisa cuando el Excel nuevo cambia meses que ya estaban cargados.
+
+    La CAC revisa meses publicados. El 20/10/2026, al cargar la serie con
+    septiembre, junio y julio vinieron distintos: el general de julio paso de
+    21960,7 a 22053,0 y la mano de obra de 18752,8 a 18980,4. Eso no es un
+    detalle: la variacion de agosto, que es con la que se ajusta un saldo,
+    paso de +4,48% a +4,05% sin que nadie tocara agosto.
+
+    Antes esto entraba sin hacer ruido. Si un contrato se ajusto con el valor
+    viejo, hay que saber que el indice cambio."""
+    antes = _serie_del_cache()
+    if not antes:
+        return
+    ahora = {r["fecha"].strftime("%Y-%m"): (r["gen"], r["mat"], r["mo"])
+             for r in registros}
+
+    etiquetas = ("general", "materiales", "mano de obra")
+    cambios = []
+    for mes in sorted(set(antes) & set(ahora)):
+        for i, (x, y) in enumerate(zip(antes[mes], ahora[mes])):
+            if x is None or y is None:
+                continue
+            if abs(x - y) > 0.05:
+                cambios.append("       %s %-12s %s -> %s (%+.2f%%)"
+                               % (mes, etiquetas[i], x, y, (y / x - 1) * 100))
+    if not cambios:
+        return
+
+    print("\n[REVISION] La CAC cambio %d valor(es) de meses ya publicados:"
+          % len(cambios))
+    for c in cambios[:12]:
+        print(c)
+    if len(cambios) > 12:
+        print("       ...y %d mas." % (len(cambios) - 12))
+    print("       Ojo con los ajustes que ya se hicieron con los valores viejos.")
+
+
 def main():
     print("Actualizando cac_cache.js...")
     mes_previo = leer_ultimo_mes_cache()
@@ -569,6 +619,7 @@ def main():
     raw_rows = read_raw(path)
     registros, warnings, faltantes = parse_cac(raw_rows)
 
+    avisar_revisiones(registros)
     write_cache(registros, path)
 
     print(
