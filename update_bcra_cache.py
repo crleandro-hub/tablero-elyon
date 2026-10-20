@@ -68,7 +68,14 @@ def _open(url):
 
 
 def fetch_detalle(var_id, dias):
-    """Devuelve [{fecha, valor}] descendente de los ultimos `dias`."""
+    """Devuelve [{fecha, valor}] descendente de los ultimos `dias`.
+
+    Se descartan los valores que no son positivos. Las seis series que pide
+    este script son tasas, la UVA y las reservas: ninguna puede valer cero.
+    Cuando aparece un cero es un dato en blanco del BCRA, no una tasa del 0%.
+    Paso el 16/10/2026: la serie 44 (TAMAR) publico 0,00 ese dia, con 24,50 el
+    15 y 24,5625 el 14, y el tablero mostro TAMAR 0%. Tomar el ultimo dato a
+    ciegas convierte un hueco de la fuente en un numero que se lee como real."""
     hasta = datetime.now().date()
     desde = hasta - timedelta(days=dias)
     url = API.format(id=var_id, desde=desde.isoformat(), hasta=hasta.isoformat())
@@ -77,9 +84,26 @@ def fetch_detalle(var_id, dias):
     if not results:
         return []
     detalle = results[0].get("detalle") or []
+
+    validos, descartados = [], []
+    for d in detalle:
+        try:
+            v = float(d.get("valor"))
+        except (TypeError, ValueError):
+            descartados.append(str(d.get("fecha")))
+            continue
+        if v > 0:
+            validos.append(d)
+        else:
+            descartados.append(str(d.get("fecha")))
+
+    if descartados:
+        print("     [AVISO] serie %s: se ignoran %d dia(s) en cero o sin valor (%s)"
+              % (var_id, len(descartados), ", ".join(descartados[:4])))
+
     # La API devuelve orden descendente, pero ordenamos por las dudas.
-    detalle.sort(key=lambda d: d["fecha"], reverse=True)
-    return detalle
+    validos.sort(key=lambda d: d["fecha"], reverse=True)
+    return validos
 
 
 def fetch_serie(var_id):

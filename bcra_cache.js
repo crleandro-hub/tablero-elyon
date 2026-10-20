@@ -9,7 +9,7 @@
    reservas = serie 1 (millones de US$); var30 = % contra ~30 dias atras
 ----------------------------------------------------------------- */
 window.BCRA_CACHE = {
-  tamar: { valor: 0.0, fecha: "2026-10-16" },
+  tamar: { valor: 24.5, fecha: "2026-10-15" },
   badlar: { valor: 23.625, fecha: "2026-10-16" },
   pasiva: { valor: 22.66, fecha: "2026-10-16" },
   personales: { valor: 62.5, fecha: "2026-10-16" },
