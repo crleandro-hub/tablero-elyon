@@ -246,11 +246,48 @@ def ccl_en2(ccl, fecha):
     return None
 
 
+def elegir_serie():
+    """Prueba las cuatro fuentes y se queda con la que llega MAS LEJOS.
+
+    Antes era una cascada: la primera que contestara ganaba. El problema es
+    que una fuente puede contestar perfecto y estar vieja, y entonces nunca se
+    llegaba a las de atras. Paso en octubre de 2026: Yahoo dejo de actualizar
+    el ^MERV el 16/10 pero seguia respondiendo con la serie hasta esa fecha,
+    asi que el tablero se quedo una semana clavado mientras el mercado
+    operaba. Responder no es lo mismo que estar al dia.
+
+    Se las prueba a todas, que son cuatro pedidos livianos una vez por hora, y
+    gana la de fecha mas reciente. Si empatan gana la primera, que es el orden
+    de confianza de siempre."""
+    candidatas = [
+        ("Yahoo Finance", serie_yahoo),
+        ("Rava (API)", serie_rava_api),
+        ("Rava (CSV)", serie_rava_csv),
+        ("Stooq", serie_stooq),
+    ]
+    mejor_nombre, mejor = None, None
+    for nombre, fn in candidatas:
+        try:
+            serie = fn()
+        except Exception as e:
+            print("     [AVISO] %s fallo: %s" % (nombre, e))
+            continue
+        if not serie:
+            continue
+        print("     %-16s hasta %s (%d ruedas)" % (nombre, serie[-1][0], len(serie)))
+        if mejor is None or serie[-1][0] > mejor[-1][0]:
+            mejor_nombre, mejor = nombre, serie
+
+    if mejor:
+        print("   Se usa %s: es la que llega mas lejos (%s)."
+              % (mejor_nombre, mejor[-1][0]))
+    return mejor
+
+
 def main():
     print("Actualizando merval_cache.js ...")
 
-    serie = (serie_yahoo() or serie_rava_api() or serie_rava_csv()
-             or serie_stooq())
+    serie = elegir_serie()
     if not serie:
         raise SystemExit("[ERROR] Ninguna fuente devolvio el Merval. "
                          "Se conserva el cache anterior.")
