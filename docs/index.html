@@ -1,4 +1,4 @@
-<!-- Version autocontenida generada por build_publicar.py el 24/10/2026 00:20 - datos embebidos, no depende de archivos externos -->
+<!-- Version autocontenida generada por build_publicar.py el 24/10/2026 00:28 - datos embebidos, no depende de archivos externos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -5010,7 +5010,7 @@ window.APYMECO_CACHE = {
 ═══════════════════════════════════════════════════════════════════ */
 
 window.SALARIOS_CACHE = {
-  actualizado: "2026-10-01",
+  actualizado: "2026-10-24",
 
   uocra: {
     nombre:  "UOCRA",
@@ -5119,7 +5119,7 @@ window.SALARIOS_CACHE = {
     cct:     "CCT 660/13",
     zona:    "Zona II (Centro) - escala nacional",
     unidad:  "mes",
-    fuente:  "Acuerdo CAMARCO/FAEC-UECARA jun-jul-ago 2026",
+    fuente:  "Escalas homologadas CAMARCO/FAEC-UECARA: RE-2026-53262369 (jun-jul-ago)\n                y CI-068-26 / RE-2026-92794446 (sep-oct-nov) de 2026",
     /* IMPORTANTE PARA ELYON: el CCT 660/13 rige en TODO EL PAIS EXCEPTO
        CORDOBA. En Cordoba se aplica el CCT 735/15 (UECARA Cordoba), que
        sigue los mismos porcentajes de paritaria pero tiene basicos
@@ -5156,10 +5156,32 @@ window.SALARIOS_CACHE = {
                     adm1:1579990, adm2:1461443, adm3:1337376, adm4:1174566,
                     tec1:1727887, tec2:1603918, tec3:1476305, tec4:1308453,
                     sis1:1728374, sis2:1604404, sis3:1308939,
-                    maest1:935299, maest2:830244 }, true]
-      /* Agosto 2026: +1,9 por ciento MAS absorcion de la suma no
-         remunerativa de julio. Como el monto absorbido no esta publicado,
-         no se carga: cargalo desde la escala homologada. */
+                    maest1:935299, maest2:830244 }, false],
+      /* Agosto 2026: +1,9 por ciento sobre los basicos al 31/07/2026 MAS la
+         absorcion de la fraccion no remunerativa de julio. En los hechos la
+         escala sube 9,11 por ciento parejo en las 16 categorias. */
+      ["2026-08", { capataz1:2189455, capataz2:1997773, capataz3:1830348,
+                    adm1:1723927, adm2:1594580, adm3:1459211, adm4:1281569,
+                    tec1:1885298, tec2:1750035, tec3:1610797, tec4:1427653,
+                    sis1:1885829, sis2:1750565, sis3:1428184,
+                    maest1:1020505, maest2:905880 }, false],
+      /* Septiembre a noviembre: acuerdo CI-068-26 (RE-2026-92794446-APN-CGDTEYS#MCH),
+         +1,9 / +1,8 / +1,7 por ciento acumulativos sobre el mes anterior. */
+      ["2026-09", { capataz1:2231055, capataz2:2035731, capataz3:1865125,
+                    adm1:1756682, adm2:1624878, adm3:1486936, adm4:1305918,
+                    tec1:1921118, tec2:1783286, tec3:1641402, tec4:1454778,
+                    sis1:1921659, sis2:1783826, sis3:1455319,
+                    maest1:1039895, maest2:923092 }, false],
+      ["2026-10", { capataz1:2271214, capataz2:2072374, capataz3:1898697,
+                    adm1:1788302, adm2:1654125, adm3:1513701, adm4:1329425,
+                    tec1:1955698, tec2:1815385, tec3:1670947, tec4:1480964,
+                    sis1:1956249, sis2:1815935, sis3:1481515,
+                    maest1:1058613, maest2:939707 }, false],
+      ["2026-11", { capataz1:2309825, capataz2:2107604, capataz3:1930975,
+                    adm1:1818703, adm2:1682245, adm3:1539434, adm4:1352025,
+                    tec1:1988945, tec2:1846246, tec3:1699353, tec4:1506141,
+                    sis1:1989505, sis2:1846805, sis3:1506701,
+                    maest1:1076609, maest2:955682 }, false]
     ]
   },
 
@@ -8862,13 +8884,21 @@ function _pintarUecara() {
   const cont = document.getElementById('sal-uecara-tabla');
   if (!cont || !e || !e.serie || !e.serie.length) return;
 
-  const ultima = e.serie[e.serie.length - 1];
+  /* Igual que en UOCRA: se muestra la escala del mes en curso, no la del
+     ultimo tramo acordado. Si el acuerdo ya fijo meses que no empezaron,
+     se avisa al lado de la fecha en vez de adelantar valores. */
+  const vigentes = salFilasVigentes(e.serie);
+  const ultima = vigentes[vigentes.length - 1];
   const ym = ultima[0], vals = ultima[1], estimado = ultima[2];
-  const prev = e.serie.length > 1 ? e.serie[e.serie.length - 2][1] : null;
+  const prev = vigentes.length > 1 ? vigentes[vigentes.length - 2][1] : null;
+  const acordadoHasta = e.serie[e.serie.length - 1][0];
 
   const fe = document.getElementById('sal-uecara-fecha');
   if (fe) fe.textContent = '· ' + fmtMes(ym + '-01') + ' · ' + e.zona + ' · ' + e.cct
-                         + (estimado ? ' · valor estimado' : '');
+                         + (estimado ? ' · valor estimado' : '')
+                         + (acordadoHasta > ym
+                             ? ' · acordada hasta ' + fmtMes(acordadoHasta + '-01')
+                             : '');
 
   /* La primera categoria (capataz de obra) queda siempre a la vista y el
      resto se despliega con el boton: son 16 filas y ocupan media pantalla. */

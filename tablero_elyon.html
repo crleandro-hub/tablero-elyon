@@ -4837,13 +4837,21 @@ function _pintarUecara() {
   const cont = document.getElementById('sal-uecara-tabla');
   if (!cont || !e || !e.serie || !e.serie.length) return;
 
-  const ultima = e.serie[e.serie.length - 1];
+  /* Igual que en UOCRA: se muestra la escala del mes en curso, no la del
+     ultimo tramo acordado. Si el acuerdo ya fijo meses que no empezaron,
+     se avisa al lado de la fecha en vez de adelantar valores. */
+  const vigentes = salFilasVigentes(e.serie);
+  const ultima = vigentes[vigentes.length - 1];
   const ym = ultima[0], vals = ultima[1], estimado = ultima[2];
-  const prev = e.serie.length > 1 ? e.serie[e.serie.length - 2][1] : null;
+  const prev = vigentes.length > 1 ? vigentes[vigentes.length - 2][1] : null;
+  const acordadoHasta = e.serie[e.serie.length - 1][0];
 
   const fe = document.getElementById('sal-uecara-fecha');
   if (fe) fe.textContent = '· ' + fmtMes(ym + '-01') + ' · ' + e.zona + ' · ' + e.cct
-                         + (estimado ? ' · valor estimado' : '');
+                         + (estimado ? ' · valor estimado' : '')
+                         + (acordadoHasta > ym
+                             ? ' · acordada hasta ' + fmtMes(acordadoHasta + '-01')
+                             : '');
 
   /* La primera categoria (capataz de obra) queda siempre a la vista y el
      resto se despliega con el boton: son 16 filas y ocupan media pantalla. */
