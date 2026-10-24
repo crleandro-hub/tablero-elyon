@@ -121,6 +121,14 @@ FRESCURA = {
 SIN_CONTROL_SALTO = {"transferencias", "hipotecas", "empleo", "permisos", "serie_riesgo",
                      "original", "desest"}   # CEDUC: son volumenes de venta, saltan solos
 
+# Series donde un cero es un dato legitimo y no un hueco de la fuente.
+SIN_CONTROL_CERO = {"permisos", "empleo"}
+
+# Series que se repiten por su naturaleza y no por falta de actualizacion:
+# el valor de la UVA de los dias no habiles, por ejemplo.
+SIN_CONTROL_CLAVADO = {"uva", "serie", "reservas"}
+DIAS_CLAVADO = 6         # registros identicos seguidos para avisar
+
 UMBRAL_SALTO = 0.60      # 60% mes a mes
 MESES_SIN_NULOS = 12
 
@@ -232,6 +240,29 @@ def revisar_serie(archivo, clave, filas):
     if nulos:
         avi("%s · %s: %d nulo(s) en los ultimos %d registros (%s)"
             % (archivo, clave, len(nulos), MESES_SIN_NULOS, ", ".join(nulos[:4])))
+
+    # ── Ceros al final de la serie ──
+    # Una tasa, un indice o un precio no valen cero: cuando aparece un cero es
+    # un dato en blanco de la fuente. El 16/10/2026 el BCRA publico 0,00 en la
+    # serie de la TAMAR y el tablero mostro "0%" sin que nada fallara: el dato
+    # era fresco, solo que no existia. El control de frescura no ve esto.
+    ceros = [f for f, v in filas[-6:] if v and v[0] == 0]
+    if ceros and clave not in SIN_CONTROL_CERO:
+        avi("%s · %s: %d valor(es) en CERO al final de la serie (%s) — "
+            "suele ser un dato en blanco de la fuente, no un cero real"
+            % (archivo, clave, len(ceros), ", ".join(ceros[:4])))
+
+    # ── Valor clavado ──
+    # Fechas que avanzan con el mismo numero repetido: la fuente contesta pero
+    # dejo de actualizar. Es lo que hizo Yahoo con el MERVAL en octubre de
+    # 2026. Se pide que los valores sean identicos, no parecidos, asi una
+    # serie que de verdad no se movio en unos dias no dispara el aviso.
+    if clave not in SIN_CONTROL_CLAVADO:
+        vals = [v[0] for _, v in filas[-DIAS_CLAVADO:] if v and v[0] is not None]
+        if len(vals) >= DIAS_CLAVADO and len(set(vals)) == 1:
+            avi("%s · %s: el mismo valor (%s) en los ultimos %d registros — "
+                "la fuente puede haber dejado de actualizar"
+                % (archivo, clave, vals[0], DIAS_CLAVADO))
 
     if clave in SIN_CONTROL_SALTO:
         return
