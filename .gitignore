@@ -49,3 +49,9 @@ ceduc/*.xlsx
 
 # PDFs que baja probar_cifras.py para inspeccionarlos. Son de consulta.
 _diagnostico_cifras/
+
+# Informes del INDEC que uso para leer los cuadros 3 y 4 (empleo y permisos).
+# Lo que se publica es isac_manual.json / isac_cache.js, no el PDF original.
+isac/*.pdf
+isac/*.xls
+isac/*.xlsx

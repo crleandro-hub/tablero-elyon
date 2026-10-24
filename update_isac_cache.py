@@ -19,8 +19,9 @@ que ademas suele adelantarse un mes al PDF (cuando este script se escribio, el
 PDF llegaba hasta mayo-2026 y la API ya tenia junio-2026).
 
 Lo que la API NO publica son los puestos de trabajo registrados ni la superficie
-autorizada por permisos de edificacion. Esos dos cuadros se cargan a mano en
-isac_manual.json (cuadros 3 y 4 del informe) y este script los embebe tal cual.
+autorizada por permisos de edificacion. Esos dos cuadros los lee este mismo
+script de los cuadros 3 y 4 del PDF del informe: alcanza con dejar el informe
+en la carpeta isac/. De ahi regenera isac_manual.json y lo embebe.
 
 Salida: isac_cache.js
     window.ISAC_CACHE = {
@@ -37,6 +38,9 @@ Uso:
 
 import json
 import os
+import re
+import glob
+import zlib
 import ssl
 import urllib.request as req
 from datetime import datetime
@@ -111,8 +115,208 @@ def num(v):
     return "null" if v is None else ("%g" % v)
 
 
+# ═══════════════════════════════════════════════════════════════════
+#  CUADROS 3 Y 4 DEL INFORME, DESDE EL PDF
+#  ═══════════════════════════════════════════════════════════════
+#  Los puestos de trabajo registrados y la superficie autorizada por
+#  permisos de edificacion NO estan en la API de datos.gob.ar: solo salen en
+#  el informe de prensa. Hasta octubre de 2026 se copiaban a mano en
+#  isac_manual.json, y por eso el archivo se quedo cuatro meses atras.
+#
+#  El PDF del INDEC tiene capa de texto, asi que se lee con zlib y
+#  expresiones regulares, sin librerias de terceros. El circuito queda igual
+#  de simple que el de CEDUC: se deja el PDF en la carpeta isac y listo.
+#
+#  Los nombres de los meses vienen partidos por el kerning del PDF
+#  ("F ebrero"), por eso cada mes se busca con un patron que tolera espacios
+#  entre letras.
+# ═══════════════════════════════════════════════════════════════════
+CARPETA_INFORMES = os.path.join(BASE_DIR, "isac")
+
+COMENTARIO_MANUAL = [
+    "Datos del informe mensual del INDEC 'Indicadores de coyuntura de la actividad de la construccion'",
+    "que NO estan publicados en la API de apis.datos.gob.ar: puestos de trabajo registrados y",
+    "superficie autorizada por permisos de edificacion.",
+    "NO se edita a mano: update_isac_cache.py lee los cuadros 3 y 4 del ultimo PDF que haya en la",
+    "carpeta isac/ y regenera este archivo solo. Para cargar un mes nuevo basta dejar ahi el informe",
+    "del INDEC (https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-9-45) y correr el tablero.",
+    "Si el PDF no se puede leer, el script avisa y deja este archivo como estaba.",
+    "Formato empleo:   [fecha, puestos de trabajo]",
+    "Formato permisos: [fecha, superficie autorizada m2, cantidad de permisos]",
+]
+
+MESES_INFORME = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                 "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre",
+                 "Diciembre"]
+RE_NUM_INFORME = re.compile(r"\d{1,3}(?:\.\d{3})+")
+RE_ANIO_INFORME = re.compile(r"\b(20\d\d)\s*\*?")
+RE_MES_INFORME = re.compile("|".join(
+    "(?P<m%d>%s)" % (i, r"\s*".join(re.escape(c) for c in m))
+    for i, m in enumerate(MESES_INFORME)))
+
+
+def _streams_pdf(datos):
+    salida = []
+    for m in re.finditer(rb"stream\r?\n(.*?)endstream", datos, re.S):
+        try:
+            crudo = zlib.decompress(m.group(1))
+        except Exception:
+            continue
+        trozos = []
+        for s in re.finditer(rb"\((?:\\.|[^\\()])*\)", crudo, re.S):
+            t = s.group(0)[1:-1]
+            t = re.sub(rb"\\([()\\])", rb"\1", t)
+            t = re.sub(rb"\\([0-7]{1,3})",
+                       lambda g: bytes([int(g.group(1), 8) & 0xFF]), t)
+            trozos.append(t)
+        if trozos:
+            salida.append(re.sub(r"\s+", " ",
+                                 b" ".join(trozos).decode("latin-1", "replace")))
+    return salida
+
+
+def _filas_informe(texto, columnas):
+    filas, anio, pos = [], None, 0
+    while True:
+        mm = RE_MES_INFORME.search(texto, pos)
+        if not mm:
+            break
+        previo = RE_ANIO_INFORME.findall(texto[max(0, pos - 40):mm.start()])
+        if previo:
+            anio = int(previo[-1])
+        idx = next(k for k in range(12) if mm.group("m%d" % k))
+        nums = RE_NUM_INFORME.findall(texto[mm.end():mm.end() + 120])
+        if anio and nums:
+            fila = ["%04d-%02d-01" % (anio, idx + 1),
+                    int(nums[0].replace(".", ""))]
+            if columnas == 2:
+                fila.append(int(nums[1].replace(".", "")) if len(nums) > 1 else None)
+            filas.append(fila)
+        pos = mm.end()
+    vistos, unicas = set(), []
+    for f in filas:
+        if f[0] not in vistos:
+            vistos.add(f[0])
+            unicas.append(f)
+    return sorted(unicas)
+
+
+def _ultimo_informe_pdf():
+    if not os.path.isdir(CARPETA_INFORMES):
+        return None
+    utiles = []
+    for ruta in glob.glob(os.path.join(CARPETA_INFORMES, "*.pdf")):
+        nombre = os.path.basename(ruta).lower()
+        if nombre.startswith("~$") or "conflicto" in nombre:
+            continue
+        if os.path.getsize(ruta) < 10000:
+            continue
+        utiles.append(ruta)
+    return max(utiles, key=os.path.getmtime) if utiles else None
+
+
+def _contiguos(filas):
+    """True si la serie no tiene huecos mensuales."""
+    for a, b in zip(filas, filas[1:]):
+        ya, ma = int(a[0][:4]), int(a[0][5:7])
+        esperado = "%04d-%02d-01" % (ya + (ma == 12), ma % 12 + 1)
+        if b[0] != esperado:
+            return False
+    return True
+
+
+def _avisar_revisiones(antes, ahora, etiqueta):
+    """El INDEC revisa los datos provisorios: conviene enterarse."""
+    if not antes:
+        return
+    viejos = {f[0]: f[1:] for f in antes}
+    cambios = []
+    for f in ahora:
+        v = viejos.get(f[0])
+        if v and list(v) != list(f[1:]):
+            cambios.append("       %s %s -> %s" % (f[0][:7], list(v), list(f[1:])))
+    if cambios:
+        print("   [REVISION] %s: el INDEC cambio %d mes(es) ya cargado(s):"
+              % (etiqueta, len(cambios)))
+        for c in cambios[:6]:
+            print(c)
+        if len(cambios) > 6:
+            print("       ...y %d mas." % (len(cambios) - 6))
+
+
+def actualizar_manual_desde_pdf():
+    """Regenera isac_manual.json con los cuadros 3 y 4 del informe.
+
+    Si algo no cierra NO toca el archivo: se sigue con lo que ya habia."""
+    ruta = _ultimo_informe_pdf()
+    if not ruta:
+        return
+    print("   Informe del INDEC: %s" % os.path.basename(ruta))
+
+    try:
+        datos = open(ruta, "rb").read()
+    except Exception as e:
+        print("   [AVISO] no se pudo abrir el informe: %s" % e)
+        return
+    if not datos.startswith(b"%PDF"):
+        print("   [AVISO] el archivo no es un PDF.")
+        return
+
+    empleo, permisos = [], []
+    for s in _streams_pdf(datos):
+        if len(RE_NUM_INFORME.findall(s)) < 12 or "Enero" not in s:
+            continue
+        if "Cuentas Nacionales" in s and not empleo:
+            empleo = _filas_informe(s, 1)
+        elif ("Mineras" in s or "Construcci" in s) and not permisos:
+            filas = _filas_informe(s, 2)
+            if filas and filas[-1][1] > 500000:
+                permisos = filas
+
+    if len(empleo) < 12 or len(permisos) < 12:
+        print("   [AVISO] no se reconocieron los cuadros 3 y 4 "
+              "(empleo %d, permisos %d). Se usa isac_manual.json como estaba."
+              % (len(empleo), len(permisos)))
+        return
+    if not _contiguos(empleo) or not _contiguos(permisos):
+        print("   [AVISO] las series del informe tienen huecos. No se toca nada.")
+        return
+
+    previo = {}
+    if os.path.exists(MANUAL_PATH):
+        try:
+            with open(MANUAL_PATH, encoding="utf-8") as f:
+                previo = json.load(f)
+        except Exception:
+            previo = {}
+
+    _avisar_revisiones(previo.get("empleo", {}).get("serie"), empleo, "empleo")
+    _avisar_revisiones(previo.get("permisos", {}).get("serie"), permisos, "permisos")
+
+    salida = dict(previo)
+    salida["_comentario"] = COMENTARIO_MANUAL
+    salida["fuente"] = ("INDEC, Indicadores de coyuntura de la actividad de la "
+                        "construccion (cuadros 3 y 4), leido de " + os.path.basename(ruta))
+    salida["informe"] = os.path.basename(ruta)
+    salida["empleo"] = {"hasta": empleo[-1][0][:7], "serie": empleo}
+    salida["permisos"] = {"hasta": permisos[-1][0][:7],
+                          "municipios": previo.get("permisos", {}).get("municipios", 246),
+                          "serie": permisos}
+
+    tmp = MANUAL_PATH + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(salida, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, MANUAL_PATH)
+    print("   isac_manual.json regenerado: empleo hasta %s, permisos hasta %s."
+          % (empleo[-1][0][:7], permisos[-1][0][:7]))
+
+
 def main():
     print("Actualizando ISAC desde apis.datos.gob.ar (INDEC / SSPM)...")
+
+    # 0) Cuadros 3 y 4 del informe del INDEC (antes de la red: si la API
+    #    falla, igual queremos empleo y permisos al dia)
+    actualizar_manual_desde_pdf()
 
     # 1) Nivel general: original + desestacionalizada, serie completa
     serie = bajar_csv([ID_NIVEL_ORIG, ID_NIVEL_DESEST], 1000, "asc")
@@ -165,7 +369,7 @@ def main():
         + datetime.now().strftime("%d/%m/%Y %H:%M") + "\n"
         "   Fuente: " + fuente + "\n"
         "   NO editar a mano: se pisa en cada corrida.\n"
-        "   (Empleo y permisos se editan en isac_manual.json)\n"
+        "   (Empleo y permisos salen del PDF que haya en la carpeta isac)\n"
         "═══════════════════════════ */\n"
         "window.ISAC_CACHE = {\n"
         '  updated: "' + datetime.now().isoformat(timespec="seconds") + '",\n'
