@@ -26,6 +26,7 @@ Ejecutar diariamente via tarea programada, antes de build_publicar.py.
 """
 
 import csv
+import html as htmllib
 import io
 import json
 import os
@@ -47,6 +48,7 @@ STOOQ = "https://stooq.com/q/d/l/?s=%5Emrv&i=d"
 RAVA_PERFIL = "https://clasico.rava.com/perfil/MERVAL"
 RAVA_API = "https://clasico.rava.com/lib/restapi/v3/publico/cotizaciones/historicos"
 RAVA_CSV = "https://clasico.rava.com/empresas/precioshistoricos.php?e=MERVAL&csv=1"
+RAVA_WWW = "https://www.rava.com/perfil/MERVAL"
 CCL = "https://api.argentinadatos.com/v1/cotizaciones/dolares/contadoconliqui"
 
 ANIOS_SERIE = 5          # cuantos años de historia se guardan en el cache
@@ -207,6 +209,37 @@ def serie_stooq():
     return _serie_csv(STOOQ, "Stooq", ("date", "fecha"), ("close", "cierre"))
 
 
+def serie_rava_perfil():
+    """[(fecha ISO, cierre)] de la tabla de www.rava.com/perfil/MERVAL.
+
+    Es la misma lectura que ya usan caucion y riesgo pais. El dominio
+    clasico.rava.com (API y CSV) timeoutea desde la maquina del tablero, pero
+    www.rava.com sirve la tabla de cotizaciones historicas dentro del HTML, sin
+    JavaScript. Trae pocas ruedas, no sirve de serie larga: sirve para empalmar
+    los dias que a Yahoo le faltan."""
+    doc = _get(RAVA_WWW).decode("utf-8", "replace")
+    out = {}
+    for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", doc, re.S | re.I):
+        celdas = [htmllib.unescape(re.sub(r"<[^>]+>", "", c)).strip()
+                  for c in re.findall(r"<t[dh][^>]*>(.*?)</t[dh]>", tr, re.S | re.I)]
+        if len(celdas) < 5:
+            continue
+        m = re.match(r"^(\d{2})/(\d{2})/(\d{4})$", celdas[0])
+        if not m:
+            continue
+        s = celdas[4].strip().replace(".", "").replace(",", ".")
+        s = re.sub(r"[^0-9.\-]", "", s)
+        try:
+            cierre = float(s)
+        except ValueError:
+            continue
+        if cierre > 0:
+            out["%s-%s-%s" % (m.group(3), m.group(2), m.group(1))] = cierre
+    if not out:
+        raise ValueError("no se encontraron filas en la tabla del perfil")
+    return sorted(out.items())
+
+
 def serie_ccl():
     """{fecha ISO: venta} del contado con liquidacion."""
     try:
@@ -256,16 +289,19 @@ def elegir_serie():
     asi que el tablero se quedo una semana clavado mientras el mercado
     operaba. Responder no es lo mismo que estar al dia.
 
-    Se las prueba a todas, que son cuatro pedidos livianos una vez por hora, y
-    gana la de fecha mas reciente. Si empatan gana la primera, que es el orden
-    de confianza de siempre."""
+    Se las prueba a todas, que son pedidos livianos una vez por hora. La serie
+    larga la pone la fuente con mas ruedas; si otra llega a dias mas nuevos, se
+    le empalman esos dias, pero solo despues de comprobar que las dos miden lo
+    mismo en las ruedas que comparten. Sin ese control, una fuente en otra
+    escala meteria un salto inventado en el grafico."""
     candidatas = [
         ("Yahoo Finance", serie_yahoo),
         ("Rava (API)", serie_rava_api),
         ("Rava (CSV)", serie_rava_csv),
+        ("Rava (perfil web)", serie_rava_perfil),
         ("Stooq", serie_stooq),
     ]
-    mejor_nombre, mejor = None, None
+    vivas = []
     for nombre, fn in candidatas:
         try:
             serie = fn()
@@ -274,14 +310,51 @@ def elegir_serie():
             continue
         if not serie:
             continue
-        print("     %-16s hasta %s (%d ruedas)" % (nombre, serie[-1][0], len(serie)))
-        if mejor is None or serie[-1][0] > mejor[-1][0]:
-            mejor_nombre, mejor = nombre, serie
+        print("     %-18s hasta %s (%d ruedas)" % (nombre, serie[-1][0], len(serie)))
+        vivas.append((nombre, serie))
 
-    if mejor:
-        print("   Se usa %s: es la que llega mas lejos (%s)."
-              % (mejor_nombre, mejor[-1][0]))
-    return mejor
+    if not vivas:
+        return None
+
+    # Base: la serie mas larga, que es la que da el historico del grafico.
+    base_nombre, base = max(vivas, key=lambda x: len(x[1]))
+    fresca_nombre, fresca = max(vivas, key=lambda x: x[1][-1][0])
+
+    if fresca[-1][0] <= base[-1][0]:
+        print("   Se usa %s (%d ruedas, hasta %s)."
+              % (base_nombre, len(base), base[-1][0]))
+        return base
+
+    # Hay una fuente que llega mas lejos. Antes de empalmar hay que ver si
+    # miden lo mismo, y en que escala. www.rava.com publica el Merval en una
+    # escala propia: en octubre de 2026 daba 100.000 el mismo dia que Yahoo
+    # daba 2.848.945, exactamente 28,4895 veces mas. Es el mismo indice con
+    # otra unidad, asi que se puede encadenar, pero reexpresandolo primero.
+    mapa_base = dict(base)
+    comunes = [(v, mapa_base[f]) for f, v in fresca if f in mapa_base and mapa_base[f]]
+    if len(comunes) < 10:
+        print("   [AVISO] %s llega hasta %s pero comparte solo %d rueda(s) con "
+              "%s: no se empalma." % (fresca_nombre, fresca[-1][0], len(comunes),
+                                      base_nombre))
+        return base
+
+    razones = sorted(b / a for a, b in comunes if a)
+    k = razones[len(razones) // 2]                      # mediana
+    desvio = max(abs(r / k - 1) for r in razones)
+    if desvio > 0.005:
+        print("   [AVISO] la relacion entre %s y %s no es estable "
+              "(se mueve hasta %.2f%% en las %d ruedas en comun): no se empalma."
+              % (fresca_nombre, base_nombre, desvio * 100, len(razones)))
+        return base
+
+    nuevas = [(f, v * k) for f, v in fresca if f > base[-1][0]]
+    escala = ("" if abs(k - 1) < 0.005
+              else " reexpresadas por %.6f (la fuente publica el indice en otra escala)" % k)
+    print("   Se usa %s (%d ruedas) y se le empalman %d rueda(s) de %s%s, "
+          "hasta %s. Las %d ruedas en comun no se desvian mas de %.3f%%."
+          % (base_nombre, len(base), len(nuevas), fresca_nombre, escala,
+             fresca[-1][0], len(razones), desvio * 100))
+    return base + nuevas
 
 
 def main():

@@ -1,7 +1,8 @@
-# Normaliza los finales de linea: en el repositorio siempre LF,
-# en Windows se ven como CRLF. Evita que un archivo aparezca como
-# "modificado por completo" cuando en realidad no cambio nada.
-* text=auto
+# Finales de linea: LF en el repositorio y tambien en la copia de trabajo.
+# Python, los .js y los .md andan igual con LF en Windows, y asi git deja de
+# avisar "LF will be replaced by CRLF" en cada corrida automatica.
+# Lo unico que necesita CRLF de verdad es cmd.exe y PowerShell (abajo).
+* text=auto eol=lf
 
 # Archivos que no son texto: no tocar nunca
 *.xls  binary
