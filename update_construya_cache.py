@@ -388,7 +388,7 @@ def main():
 
     js = emitir(filas, informe, "Grupo Construya (indice_construya)")
     limpiar_diagnostico(BASE_DIR, "construya")
-    with open(CACHE_PATH, "w", encoding="utf-8") as f:
+    with open(CACHE_PATH, "w", encoding="utf-8", newline="\n") as f:
         f.write(js)
 
     ult = filas[-1]

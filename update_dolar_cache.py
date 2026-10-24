@@ -148,7 +148,7 @@ def main():
         "};\n"
     )
 
-    with open(CACHE_PATH, "w", encoding="utf-8") as f:
+    with open(CACHE_PATH, "w", encoding="utf-8", newline="\n") as f:
         f.write(js)
 
     print("[OK] dolar_cache.js  ->  " + " / ".join(

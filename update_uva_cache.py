@@ -137,7 +137,7 @@ def escribir_cache(serie):
         f"  serie: [{pares}]\n"
         "};\n"
     )
-    with open(CACHE_PATH, "w", encoding="utf-8") as f:
+    with open(CACHE_PATH, "w", encoding="utf-8", newline="\n") as f:
         f.write(contenido)
     return len(items), desde, hasta
 

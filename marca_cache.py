@@ -71,7 +71,7 @@ def marcar(cache_path, aviso=None):
     txt = txt.replace(m.group(1), m.group(1) + marca, 1)
     try:
         tmp = cache_path + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
+        with open(tmp, "w", encoding="utf-8", newline="\n") as f:
             f.write(txt)
         os.replace(tmp, cache_path)     # atomico: nunca queda un cache a medias
         return True

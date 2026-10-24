@@ -171,7 +171,7 @@ def write_cache(data):
             lines.append(f"  {key}: null,")
     lines.append(f'  updated: "{ts}"')
     lines.append("};")
-    with open(CACHE_PATH, "w", encoding="utf-8") as f:
+    with open(CACHE_PATH, "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(lines) + "\n")
     print(f"[OK] bcra_cache.js actualizado - {ts}")
     for k, v in data.items():

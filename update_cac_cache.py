@@ -543,7 +543,7 @@ def write_cache(registros, source_path):
         "};",
     ]
     content = "\n".join(lines) + "\n"
-    with open(CACHE_JS_PATH, "w", encoding="utf-8") as f:
+    with open(CACHE_JS_PATH, "w", encoding="utf-8", newline="\n") as f:
         f.write(content)
 
 

@@ -340,7 +340,7 @@ def actualizar_manual_desde_pdf():
                           "serie": permisos}
 
     tmp = MANUAL_PATH + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
+    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
         json.dump(salida, f, ensure_ascii=False, indent=2)
     os.replace(tmp, MANUAL_PATH)
     print("   isac_manual.json regenerado: empleo hasta %s, permisos hasta %s."
@@ -451,7 +451,7 @@ def main():
         "};\n"
     )
 
-    with open(CACHE_PATH, "w", encoding="utf-8") as f:
+    with open(CACHE_PATH, "w", encoding="utf-8", newline="\n") as f:
         f.write(js)
 
     ult = serie[-1]

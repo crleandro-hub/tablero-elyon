@@ -294,7 +294,7 @@ def _volcar_diagnostico(contenido, motivo):
             celdas = " | ".join(_texto(c) for c in fila)
             if celdas.strip():
                 lineas.append("%4d: %s" % (i, celdas[:300]))
-        with open(DIAG_PATH, "w", encoding="utf-8") as f:
+        with open(DIAG_PATH, "w", encoding="utf-8", newline="\n") as f:
             f.write("\n".join(lineas) + "\n")
         print("   [diagnostico] volcado en _rem_diagnostico.txt")
     except Exception as e:
@@ -527,7 +527,7 @@ def marcar_chequeado(aviso=None):
         marca += '\n  aviso: "%s",' % str(aviso).replace('"', "'")[:180]
     txt = txt.replace("window.REM_CACHE = {", "window.REM_CACHE = {" + marca, 1)
     try:
-        with open(CACHE_PATH, "w", encoding="utf-8") as f:
+        with open(CACHE_PATH, "w", encoding="utf-8", newline="\n") as f:
             f.write(txt)
     except Exception:
         pass
@@ -599,7 +599,7 @@ def main():
         "};\n"
     )
 
-    with open(CACHE_PATH, "w", encoding="utf-8") as f:
+    with open(CACHE_PATH, "w", encoding="utf-8", newline="\n") as f:
         f.write(contenido)
 
     print("[OK] rem_cache.js  ->  relevamiento %s  |  prox. 12 meses: %s%%"

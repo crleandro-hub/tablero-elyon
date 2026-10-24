@@ -355,7 +355,7 @@ def main():
     )
 
     tmp = CACHE_PATH + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
+    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
         f.write(js)
     os.replace(tmp, CACHE_PATH)
 

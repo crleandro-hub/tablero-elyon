@@ -148,7 +148,7 @@ def probar(nombre, url):
     base = nombre.lower().replace(" ", "_")
     with open(os.path.join(SALIDA, base + ".pdf"), "wb") as f:
         f.write(datos)
-    with open(os.path.join(SALIDA, base + ".txt"), "w", encoding="utf-8") as f:
+    with open(os.path.join(SALIDA, base + ".txt"), "w", encoding="utf-8", newline="\n") as f:
         f.write(limpio)
     print("   Guardado en _diagnostico_cifras/%s.txt (y el .pdf al lado)" % base)
     print()

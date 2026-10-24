@@ -263,7 +263,7 @@ def main():
         print("   HTML en _diagnostico_ieric\\pagina_cordoba.html para mirarlo.")
         os.makedirs(DEST_DIR, exist_ok=True)
         with open(os.path.join(DEST_DIR, "pagina_cordoba.html"), "w",
-                  encoding="utf-8") as f:
+                  encoding="utf-8", newline="\n") as f:
             f.write(html)
         return 1
 

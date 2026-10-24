@@ -150,7 +150,7 @@ def main():
 
     os.makedirs(DOCS_DIR, exist_ok=True)
     for destino in (OUT_PAGES, OUT_PORTABLE):
-        with open(destino, "w", encoding="utf-8") as f:
+        with open(destino, "w", encoding="utf-8", newline="\n") as f:
             f.write(html)
 
     # .nojekyll evita que GitHub Pages ignore archivos que empiezan con guion bajo

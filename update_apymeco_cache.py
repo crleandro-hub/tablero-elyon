@@ -543,7 +543,7 @@ def main():
     filas = mezclar(bajadas, previas)
     ratio = controlar(filas, bajadas, html)
 
-    with open(CACHE_PATH, "w", encoding="utf-8") as f:
+    with open(CACHE_PATH, "w", encoding="utf-8", newline="\n") as f:
         f.write(emitir(filas, ratio))
 
     ult = filas[-1]
