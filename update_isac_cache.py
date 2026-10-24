@@ -43,6 +43,7 @@ import re
 import glob
 import zlib
 import ssl
+import time
 import urllib.request as req
 from datetime import datetime
 
@@ -51,7 +52,9 @@ CACHE_PATH = os.path.join(BASE_DIR, "isac_cache.js")
 MANUAL_PATH = os.path.join(BASE_DIR, "isac_manual.json")
 
 API = "https://apis.datos.gob.ar/series/api/series"
-TIMEOUT = 30
+TIMEOUT = 40
+INTENTOS = 3             # la API del SSPM se cuelga seguido; reintentar alcanza
+ESPERA = 4               # segundos entre intentos (se va alargando)
 MESES_INSUMOS = 30        # alcanza para interanual y acumulado del año
 
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -85,26 +88,52 @@ INSUMOS = [
 ]
 
 
+_sin_verificar = [False]     # se prende si el handshake SSL falla una vez
+
+
 def _get(url):
-    """GET con reintento sin verificar certificado (algunas PC corporativas
-    tienen el store de certificados desactualizado y falla el handshake)."""
+    """GET con reintentos.
+
+    Dos cosas distintas pueden fallar. El handshake SSL, en PC con el store de
+    certificados desactualizado: eso no se arregla reintentando, asi que a
+    partir del primer fallo se sigue sin verificar. Y la lectura, porque
+    apis.datos.gob.ar a veces tarda mas que el timeout y corta: ahi no hay nada
+    roto, solo hay que volver a pedir. Un intento como mucho tarda TIMEOUT, y
+    son INTENTOS intentos, para no colgar la corrida entera."""
     r = req.Request(url, headers={"User-Agent": UA, "Accept": "text/csv,*/*"})
-    try:
-        with req.urlopen(r, timeout=TIMEOUT) as resp:
-            return resp.read().decode("utf-8", "replace")
-    except Exception:
-        ctx = ssl.create_default_context()
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
-        with req.urlopen(r, timeout=TIMEOUT, context=ctx) as resp:
-            return resp.read().decode("utf-8", "replace")
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+
+    ultimo = None
+    for intento in range(INTENTOS):
+        try:
+            with req.urlopen(r, timeout=TIMEOUT,
+                             context=ctx if _sin_verificar[0] else None) as resp:
+                return resp.read().decode("utf-8", "replace")
+        except ssl.SSLError as e:
+            ultimo = e
+            _sin_verificar[0] = True       # el proximo intento va sin verificar
+            continue                       # sin esperar: es otro problema
+        except Exception as e:
+            ultimo = e
+        if intento < INTENTOS - 1:
+            time.sleep(ESPERA * (intento + 1))
+    raise ultimo
 
 
 def bajar_csv(ids, limit, sort="asc"):
     """Devuelve [[fecha, v1, v2, ...], ...] para una lista de ids.
     La API corta las URLs largas, asi que se pide de a pocos ids."""
     url = "%s/?ids=%s&limit=%d&sort=%s&format=csv" % (API, ",".join(ids), limit, sort)
-    txt = _get(url).strip()
+    try:
+        txt = _get(url).strip()
+    except Exception as e:
+        # Un problema de red no justifica volcar un traceback de 60 lineas en
+        # el log de la corrida: se avisa en una linea y el que llama decide.
+        print("   [AVISO] la API no contesto (%s): %s"
+              % (", ".join(ids)[:60], str(e).strip() or type(e).__name__))
+        return []
     filas = []
     for linea in txt.splitlines()[1:]:          # se saltea el encabezado
         partes = linea.split(",")
@@ -328,8 +357,11 @@ def main():
     # 1) Nivel general: original + desestacionalizada, serie completa
     serie = bajar_csv([ID_NIVEL_ORIG, ID_NIVEL_DESEST], 1000, "asc")
     if not serie:
-        raise SystemExit("[ERROR] La API no devolvio el nivel general. "
-                         "Se conserva el isac_cache.js anterior.")
+        raise SystemExit(
+            "[AVISO] apis.datos.gob.ar no contesto el nivel general en %d intentos. "
+            "No se toca isac_cache.js: queda el de la corrida anterior y en la "
+            "proxima se vuelve a intentar. (Empleo y permisos, que salen del PDF, "
+            "ya quedaron actualizados.)" % INTENTOS)
     hasta = serie[-1][0][:7]
     print("   Nivel general : %d meses, hasta %s" % (len(serie), hasta))
 

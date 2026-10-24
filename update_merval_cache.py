@@ -338,22 +338,31 @@ def elegir_serie():
                                       base_nombre))
         return base
 
+    # La relacion se mide con la mediana y se juzga por el grueso de las
+    # ruedas, no por la peor. Dos fuentes distintas siempre tienen algun dia
+    # que no cierra igual (un cierre corregido, una rueda a medias), y con el
+    # maximo alcanzaba un solo dia raro en 240 para bloquear el empalme.
     razones = sorted(b / a for a, b in comunes if a)
-    k = razones[len(razones) // 2]                      # mediana
-    desvio = max(abs(r / k - 1) for r in razones)
-    if desvio > 0.005:
+    n = len(razones)
+    k = razones[n // 2]                                 # mediana
+    p10, p90 = razones[int(n * 0.10)], razones[min(n - 1, int(n * 0.90))]
+    cuerpo = max(abs(p10 / k - 1), abs(p90 / k - 1))    # dispersion del 80% central
+    peores = sum(1 for r in razones if abs(r / k - 1) > 0.005)
+
+    if cuerpo > 0.005:
         print("   [AVISO] la relacion entre %s y %s no es estable "
-              "(se mueve hasta %.2f%% en las %d ruedas en comun): no se empalma."
-              % (fresca_nombre, base_nombre, desvio * 100, len(razones)))
+              "(el 80%% central se mueve %.2f%% en %d ruedas en comun): no se empalma."
+              % (fresca_nombre, base_nombre, cuerpo * 100, n))
         return base
 
     nuevas = [(f, v * k) for f, v in fresca if f > base[-1][0]]
     escala = ("" if abs(k - 1) < 0.005
               else " reexpresadas por %.6f (la fuente publica el indice en otra escala)" % k)
     print("   Se usa %s (%d ruedas) y se le empalman %d rueda(s) de %s%s, "
-          "hasta %s. Las %d ruedas en comun no se desvian mas de %.3f%%."
+          "hasta %s. En las %d ruedas en comun el 80%% central se mueve %.3f%%%s."
           % (base_nombre, len(base), len(nuevas), fresca_nombre, escala,
-             fresca[-1][0], len(razones), desvio * 100))
+             fresca[-1][0], n, cuerpo * 100,
+             "" if not peores else " (%d rueda(s) sueltas se van mas de 0,5%%)" % peores))
     return base + nuevas
 
 
