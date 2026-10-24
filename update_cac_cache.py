@@ -196,13 +196,17 @@ def _serie(path):
             for r in registros}
 
 
-def _control_cruzado(path_local, path_bajado):
+def _control_cruzado(path_local, path_bajado, bajado_viejo=False):
     """Compara los meses que estan en los dos archivos.
 
     Sirve para el caso habitual: cifrasonline va un mes atras, asi que lo que
     se bajo no reemplaza nada. Pero ese archivo es la fuente oficial, y el
     local lo cargamos a mano: si un mes no coincide, el error esta de nuestro
-    lado y conviene enterarse ahora y no dentro de seis meses."""
+    lado y conviene enterarse ahora y no dentro de seis meses.
+
+    bajado_viejo marca que lo descargado llega a un mes anterior al nuestro:
+    entonces es una foto vieja de la serie y una diferencia puede ser,
+    simplemente, una revision que la camara hizo despues."""
     a, b = _serie(path_local), _serie(path_bajado)
     if not a or not b:
         return
@@ -229,11 +233,19 @@ def _control_cruzado(path_local, path_bajado):
             print(d)
         if len(difs) > 12:
             print("       ...y %d mas." % (len(difs) - 12))
-        print("       Uno de los dos esta mal. No siempre es el tuyo: el 20/10/2026")
-        print("       la planilla de cifrasonline traia 7423,2 de mano de obra en")
-        print("       mayo cuando la serie encadenada da 17423,2, un 1 que se les")
-        print("       perdio. Mira la variacion del mes contra los meses vecinos:")
-        print("       el valor bueno es el que no rompe la serie.")
+        if bajado_viejo:
+            print("       OJO: lo que se bajo llega hasta %s y tu Excel hasta %s,"
+                  % (max(b), max(a)))
+            print("       asi que es una foto mas vieja de la serie. El CAC revisa")
+            print("       meses ya publicados (paso con junio y julio de 2026), y una")
+            print("       planilla que no se actualizo desde entonces va a diferir sin")
+            print("       que nadie se haya equivocado.")
+        print("       %s uno de los dos esta mal, y no siempre es el tuyo:"
+              % ("Si no es eso," if bajado_viejo else "Entonces"))
+        print("       el 20/10/2026 la planilla de cifrasonline traia 7423,2 de mano")
+        print("       de obra en mayo cuando la serie encadenada da 17423,2, un 1 que")
+        print("       se les perdio. Mira la variacion del mes contra los meses")
+        print("       vecinos: el valor bueno es el que no rompe la serie.")
     else:
         print("     [OK] Los %d meses en comun coinciden con el archivo de la camara."
               % len(comunes))
@@ -324,7 +336,7 @@ def intentar_descarga():
             print("     [AVISO] Lo bajado es PEOR que lo que ya tenes ("
                   + nuevo[1].strftime("%Y-%m") + " / " + str(nuevo[0]) + " meses, contra "
                   + viejo[1].strftime("%Y-%m") + " / " + str(viejo[0]) + "). Se descarta.")
-            _control_cruzado(actual, tmp)
+            _control_cruzado(actual, tmp, bajado_viejo=True)
             os.remove(tmp)
             return
         if nuevo[1] == viejo[1]:
