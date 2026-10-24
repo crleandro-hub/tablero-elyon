@@ -1,4 +1,4 @@
-<!-- Version autocontenida generada por build_publicar.py el 24/10/2026 00:28 - datos embebidos, no depende de archivos externos -->
+<!-- Version autocontenida generada por build_publicar.py el 24/10/2026 00:36 - datos embebidos, no depende de archivos externos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -11092,6 +11092,9 @@ const ISAC_MESES = ['enero','febrero','marzo','abril','mayo','junio',
 
 let isacSerie   = [];   // [[fecha, original, desestacionalizada], ...] ascendente
 let isacInsumos = {};   // clave -> [[fecha, indice], ...]
+/* Insumos que no salen de la serie original sino de la sin estacionalidad:
+   la distribucion 33.3 del INDEC devuelve esas columnas vacias. */
+let isacInsDesest = [];
 let isacChart = null, isacInsChart = null;
 
 /* 'aaaa-mm-dd' -> 'junio de 2026' */
@@ -11176,6 +11179,7 @@ async function loadIsac() {
   }
   if (!Object.keys(isacInsumos).length && cache && cache.insumos) {
     isacInsumos = cache.insumos;
+    isacInsDesest = cache.insumosDesest || [];
   }
 
   const src = document.getElementById('isac-datasource');
@@ -11278,6 +11282,7 @@ function pintarIsacInsumos() {
       mes:  isacUltimoMes(mapa),
       ia:   isacVarIA(mapa),
       acum: isacVarAcum(mapa),
+      sinEst: isacInsDesest.indexOf(clave) >= 0,
     });
   });
 
@@ -11298,11 +11303,24 @@ function pintarIsacInsumos() {
     const color = f.ia == null ? '#888' : (sube ? 'var(--verde)' : 'var(--rojo-txt)');
     return '<div class="ins-card ' + (f.ia == null ? '' : (sube ? 'sube' : 'baja')) + '">'
          +   '<div class="ins-emoji">' + f.emoji + '</div>'
-         +   '<div class="ins-nombre">' + f.nombre + '</div>'
+         +   '<div class="ins-nombre">' + f.nombre + (f.sinEst ? ' *' : '') + '</div>'
          +   '<div class="ins-ia" style="color:' + color + ';">' + pct(f.ia) + '</div>'
          +   '<div class="ins-acum">acum. año ' + pct(f.acum) + '</div>'
          + '</div>';
   }).join('');
+
+  /* Los insumos marcados con * salen de la serie sin estacionalidad porque la
+     serie original del INDEC viene vacia en la API. El interanual casi no
+     cambia; el acumulado del año puede diferir unas decimas. */
+  const conAst = filas.filter(f => f.sinEst);
+  if (conAst.length) {
+    cont.innerHTML += '<div style="grid-column:1/-1;font-size:10px;color:var(--gris-txt);'
+      + 'margin-top:8px;line-height:1.5;">* ' + conAst.map(f => f.nombre).join(', ')
+      + (conAst.length === 1 ? ' sale' : ' salen')
+      + ' de la serie <b>sin estacionalidad</b>: la serie original del INDEC viene '
+      + 'vacía en la API de datos.gob.ar. El interanual es prácticamente el mismo; '
+      + 'el acumulado del año puede moverse unas décimas.</div>';
+  }
 
   const sub = document.getElementById('isac-ins-sub');
   if (sub) {

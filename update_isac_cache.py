@@ -28,6 +28,7 @@ Salida: isac_cache.js
       updated, source, hasta,
       serie:    [[fecha, original, desestacionalizada], ...]   desde 2012-01
       insumos:  { clave: [[fecha, indice], ...], ... }          ultimos 30 meses
+      insumosDesest: [claves que salen de la serie sin estacionalidad]
       empleo:   { hasta, serie: [[fecha, puestos], ...] }
       permisos: { hasta, municipios, serie: [[fecha, m2, permisos], ...] }
     }
@@ -61,20 +62,26 @@ ID_NIVEL_ORIG = "33.2_ISAC_NIVELRAL_0_M_18_63"
 ID_NIVEL_DESEST = "33.2_ISAC_SIN_EDAD_0_M_23_56"
 
 # Insumos, serie original (distribucion 33.3). El orden es el del informe.
+# Cada insumo: (clave, id de la serie ORIGINAL, id de la serie SIN ESTACIONALIDAD).
+# El INDEC publica las dos, pero la distribucion "serie original" (33.3) devuelve
+# la columna vacia para cemento, sanitarios, asfalto y resto: el catalogo los
+# lista hasta el ultimo mes, pero la API no trae un solo valor. Para esos cuatro
+# se usa la serie sin estacionalidad (33.4), que si viene completa, y el tablero
+# lo aclara en la tarjeta.
 INSUMOS = [
-    ("cemento",   "33.3_ISAC_CEMENAND_0_0_21_29"),
-    ("hormigon",  "33.3_ISAC_HORMIADO_0_0_23_36"),
-    ("hierro",    "33.3_ISAC_HIERRION_0_0_49_36"),
-    ("ladrillos", "33.3_ISAC_LADRICOS_0_0_21_27"),
-    ("cales",     "33.3_ISAC_CALESLES_0_0_10_7"),
-    ("yeso",      "33.3_ISAC_YESOESO_0_0_9_54"),
-    ("placas",    "33.3_ISAC_PLACAESO_0_0_19_5"),
-    ("pisos",     "33.3_ISAC_PISOSCOS_0_0_37_22"),
-    ("mosaicos",  "33.3_ISAC_MOSAIEOS_0_0_36_91"),
-    ("sanitarios", "33.3_ISAC_ARTICICA_0_0_37_38"),
-    ("pinturas",  "33.3_ISAC_PINTUION_0_0_31_13"),
-    ("asfalto",   "33.3_ISAC_ASFALLTO_0_0_12_97"),
-    ("resto",     "33.3_ISAC_RESTOSTO_0_0_10_50"),
+    ("cemento",    "33.3_ISAC_CEMENAND_0_0_21_29", "33.4_ISAC_CEMENAND_0_0_21_24"),
+    ("hormigon",   "33.3_ISAC_HORMIADO_0_0_23_36", "33.4_ISAC_HORMIADO_0_0_23_66"),
+    ("hierro",     "33.3_ISAC_HIERRION_0_0_49_36", "33.4_ISAC_HIERRION_0_0_49_34"),
+    ("ladrillos",  "33.3_ISAC_LADRICOS_0_0_21_27", "33.4_ISAC_LADRICOS_0_0_21_3"),
+    ("cales",      "33.3_ISAC_CALESLES_0_0_10_7",  "33.4_ISAC_CALESLES_0_0_10_20"),
+    ("yeso",       "33.3_ISAC_YESOESO_0_0_9_54",   "33.4_ISAC_YESOESO_0_0_9_99"),
+    ("placas",     "33.3_ISAC_PLACAESO_0_0_19_5",  None),
+    ("pisos",      "33.3_ISAC_PISOSCOS_0_0_37_22", "33.4_ISAC_PISOSCOS_0_0_37_54"),
+    ("mosaicos",   "33.3_ISAC_MOSAIEOS_0_0_36_91", "33.4_ISAC_MOSAIEOS_0_0_36_95"),
+    ("sanitarios", "33.3_ISAC_ARTICICA_0_0_37_38", "33.4_ISAC_ARTICICA_0_0_37_66"),
+    ("pinturas",   "33.3_ISAC_PINTUION_0_0_31_13", None),
+    ("asfalto",    "33.3_ISAC_ASFALLTO_0_0_12_97", "33.4_ISAC_ASFALLTO_0_0_12_6"),
+    ("resto",      "33.3_ISAC_RESTOSTO_0_0_10_50", "33.4_ISAC_RESTOSTO_0_0_10_0"),
 ]
 
 
@@ -326,17 +333,45 @@ def main():
     hasta = serie[-1][0][:7]
     print("   Nivel general : %d meses, hasta %s" % (len(serie), hasta))
 
-    # 2) Insumos, de a 3 ids por request (URLs mas largas fallan)
+    # 2) Insumos, de a 3 ids por request (URLs mas largas fallan).
+    #    Primero la serie original; lo que venga vacio se reintenta con la
+    #    serie sin estacionalidad y queda marcado.
     insumos = {}
-    for i in range(0, len(INSUMOS), 3):
-        grupo = INSUMOS[i:i + 3]
-        filas = bajar_csv([sid for _, sid in grupo], MESES_INSUMOS, "desc")
-        if not filas:
-            print("   [AVISO] sin datos para: %s" % ", ".join(k for k, _ in grupo))
-            continue
-        for j, (clave, _) in enumerate(grupo):
-            insumos[clave] = [[f[0], f[j + 1]] for f in filas if len(f) > j + 1]
-    print("   Insumos       : %d de %d" % (len(insumos), len(INSUMOS)))
+    desest = []
+
+    def pedir(pares):
+        """pares: [(clave, id)]. Devuelve {clave: [[fecha, valor], ...]} con
+        datos de verdad (descarta las columnas que vienen todas vacias)."""
+        salida = {}
+        for i in range(0, len(pares), 3):
+            grupo = pares[i:i + 3]
+            filas = bajar_csv([sid for _, sid in grupo], MESES_INSUMOS, "desc")
+            if not filas:
+                print("   [AVISO] sin datos para: %s" % ", ".join(k for k, _ in grupo))
+                continue
+            for j, (clave, _) in enumerate(grupo):
+                col = [[f[0], f[j + 1]] for f in filas if len(f) > j + 1]
+                if any(v is not None for _, v in col):
+                    salida[clave] = sorted(col)      # del mes mas viejo al mas nuevo
+        return salida
+
+    insumos.update(pedir([(k, orig) for k, orig, _ in INSUMOS]))
+
+    faltan = [(k, sinest) for k, _, sinest in INSUMOS
+              if k not in insumos and sinest]
+    if faltan:
+        print("   Sin serie original: %s. Se reintenta sin estacionalidad."
+              % ", ".join(k for k, _ in faltan))
+        rescatados = pedir(faltan)
+        insumos.update(rescatados)
+        desest = sorted(rescatados)
+
+    vacios = [k for k, _, _ in INSUMOS if k not in insumos]
+    print("   Insumos       : %d de %d%s" % (len(insumos), len(INSUMOS),
+          (" (sin datos: " + ", ".join(vacios) + ")") if vacios else ""))
+    if desest:
+        print("   [AVISO] sin estacionalidad (la original viene vacia): %s"
+              % ", ".join(desest))
 
     # 3) Empleo y permisos: cuadros que la API no publica
     manual = {}
@@ -355,7 +390,7 @@ def main():
         for f in serie)
 
     bloques = []
-    for clave, _ in INSUMOS:
+    for clave, _, _ in INSUMOS:
         datos = insumos.get(clave)
         if not datos:
             continue
@@ -377,6 +412,7 @@ def main():
         '  hasta: "' + hasta + '",\n'
         "  serie: [\n" + filas_serie + "\n  ],\n"
         "  insumos: {\n" + ",\n".join(bloques) + "\n  },\n"
+        "  insumosDesest: " + json.dumps(desest) + ",\n"
         "  empleo: " + json.dumps(manual.get("empleo", {}), ensure_ascii=False) + ",\n"
         "  permisos: " + json.dumps(manual.get("permisos", {}), ensure_ascii=False) + ",\n"
         '  informe: ' + json.dumps(manual.get("informe", ""), ensure_ascii=False) + "\n"
