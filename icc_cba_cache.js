@@ -1,13 +1,13 @@
 /* ═══════════════════════════
    icc_cba_cache.js  -  Grupo Elyon
-   Generado por update_icc_cba_cache.py el 24/10/2026 12:58
+   Generado por update_icc_cba_cache.py el 26/10/2026 11:04
    Fuente: Direccion General de Estadistica y Censos de Cordoba (datos abiertos, CKAN)
    Vivienda social tipo de 50,25 m2 - base 2012 = 100
    Columnas: fecha, nivel general, materiales, mano de obra, varios, valor m2
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.ICC_CBA_CACHE = {
-  updated: "2026-10-24T12:58:31",
+  updated: "2026-10-26T11:04:14",
   source: "Direccion General de Estadistica y Censos de Cordoba",
   hasta: "2026-09",
   serie: [
