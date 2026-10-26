@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------
    acciones_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-10-26T14:03:50
+   Generado: 2026-10-26T15:03:57
    Las 3 mayores subas y las 3 mayores bajas del PANEL LIDER del
    Merval en la rueda. Fuente: data912 (panel de BYMA).
    pct = variacion % contra el cierre anterior
@@ -8,16 +8,16 @@
 ----------------------------------------------------------------- */
 window.ACCIONES_CACHE = {
   mejores: [
-    { symbol: "IRSA", nombre: "IRSA", precio: 2145.0, pct: -0.02 },
-    { symbol: "METR", nombre: "Metrogas", precio: 2410.0, pct: -0.78 },
-    { symbol: "YPFD", nombre: "YPF", precio: 8275.0, pct: -0.89 }
+    { symbol: "IRSA", nombre: "IRSA", precio: 2150.0, pct: 0.2 },
+    { symbol: "TXAR", nombre: "Ternium Argentina", precio: 775.0, pct: -0.12 },
+    { symbol: "MIRG", nombre: "Mirgor", precio: 1800.0, pct: -0.55 }
   ],
   peores: [
-    { symbol: "SUPV", nombre: "Grupo Supervielle", precio: 2340.0, pct: -7.5 },
-    { symbol: "TECO2", nombre: "Telecom", precio: 3952.5, pct: -6.67 },
-    { symbol: "BMA", nombre: "Banco Macro", precio: 10150.0, pct: -6.62 }
+    { symbol: "SUPV", nombre: "Grupo Supervielle", precio: 2346.0, pct: -7.27 },
+    { symbol: "BBAR", nombre: "Banco Francés", precio: 6770.0, pct: -6.49 },
+    { symbol: "GGAL", nombre: "Grupo Galicia", precio: 5900.0, pct: -5.75 }
   ],
   panel: 23,
   fuente: "Panel líder · BYMA vía data912",
-  updated: "2026-10-26T14:03:50"
+  updated: "2026-10-26T15:03:57"
 };
