@@ -1,6 +1,6 @@
 /* ═══════════════════════════
    icc_indec_cache.js  -  Grupo Elyon
-   Generado por update_icc_indec_cache.py el 27/10/2026 11:04
+   Generado por update_icc_indec_cache.py el 28/10/2026 11:04
    Fuente: INDEC - ICC Gran Buenos Aires
    https://www.indec.gob.ar/ftp/cuadros/economia/icc_variaciones_indices_2016.xls
    tipo: indice  (indice = niveles; variacion_mensual = % mes a mes)
@@ -8,7 +8,7 @@
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.ICC_INDEC_CACHE = {
-  updated: "2026-10-27T11:04:17",
+  updated: "2026-10-28T11:04:32",
   source: "INDEC - ICC Gran Buenos Aires",
   tipo: "indice",
   hasta: "2026-09",
