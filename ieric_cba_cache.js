@@ -1,6 +1,6 @@
 /* ═══════════════════════════
    ieric_cba_cache.js  -  Grupo Elyon
-   Generado por update_ieric_cba_cache.py el 29/10/2026 11:04
+   Generado por update_ieric_cba_cache.py el 30/10/2026 11:04
    Fuente: IERIC - series estadisticas de la provincia de Cordoba
    https://www.ieric.org.ar/series_estadisticas/cordoba/
 
@@ -14,16 +14,16 @@
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.IERIC_CBA_CACHE = {
-  updated: "2026-10-29T11:04:18",
+  updated: "2026-10-30T11:04:22",
   source: "IERIC - Instituto de Estadistica y Registro de la Industria de la Construccion",
   pagina: "https://www.ieric.org.ar/series_estadisticas/cordoba/",
   puestos: {
     titulo: "Construcción. Puestos de trabajo registrados. Provincia de Córdoba. Desde Junio de 2007 en adelante (en cantidad de puestos y var. %)",
     unidad: "puestos",
-    hasta: "2026-07",
+    hasta: "2026-08",
     provisorio: true,
     fuente: "Elaboración IERIC en base a datos de OSPECON y Seguro de Vida Obligatorio",
-    archivo: "https://www.ieric.org.ar/wp-content/uploads/2026/09/Puestos-de-trabajo-Cordoba-SC.xls",
+    archivo: "https://www.ieric.org.ar/wp-content/uploads/2026/10/Puestos-de-trabajo-Cordoba-SC.xls",
     notas: ["el dato del último mes es provisorio"],
     serie: [
       ["2007-06-01",30688,419957,null,null,null,null,null,null],
@@ -255,16 +255,17 @@ window.IERIC_CBA_CACHE = {
       ["2026-04-01",27954,358754,-0.7245,10.1505,1.5464,-1.0558,0.9324,0.5768],
       ["2026-05-01",28227,356566,0.9766,10.8898,2.0854,-0.6099,0.1162,0.5496],
       ["2026-06-01",28521,356544,1.0416,11.219,2.587,-0.0062,0.676,0.5566],
-      ["2026-07-01",27487.8128,352510.6678,-3.6225,6.5543,2.7947,-1.1312,-0.9749,0.4757]
+      ["2026-07-01",27476,352965,-3.664,6.5085,2.7923,-1.0038,-0.8472,0.4824],
+      ["2026-08-01",28398.8927,358757.0374,3.3589,8.0422,3.0581,1.641,0.6368,0.4902]
     ]
   },
   salario: {
     titulo: "Construcción. Salario promedio mensual de los trabajadores registrados. Provincia de Córdoba . Desde Enero de 2005 en adelante (en pesos y % de var)",
     unidad: "pesos por mes",
-    hasta: "2026-07",
+    hasta: "2026-08",
     provisorio: true,
     fuente: "Elaboración IERIC en base a datos de OSPECON y Seguro de Vida Obligatorio",
-    archivo: "https://www.ieric.org.ar/wp-content/uploads/2026/09/Salario-Promedio-Cordoba-SC.xls",
+    archivo: "https://www.ieric.org.ar/wp-content/uploads/2026/10/Salario-Promedio-Cordoba-SC.xls",
     notas: ["el dato del último mes es provisorio"],
     serie: [
       ["2007-06-01",1639.5569,1948.4673,null,null,null,null,null,null],
@@ -496,16 +497,17 @@ window.IERIC_CBA_CACHE = {
       ["2026-04-01",1170722.65,1424116.07,9.0428,34.5769,43.3343,11.986,38.1543,41.2812],
       ["2026-05-01",1176357.64,1389418.69,0.4813,31.7333,42.4719,-2.4364,32.7537,40.6635],
       ["2026-06-01",1751109.87,2078377.51,48.8586,38.198,42.0641,49.5861,38.8543,40.4937],
-      ["2026-07-01",1277506.3841,1503157.7004,-27.0459,36.6426,41.7076,-27.6764,38.3543,40.3572]
+      ["2026-07-01",1287406.85,1492150.59,-26.4805,37.7016,41.7772,-28.206,37.3412,40.2926],
+      ["2026-08-01",1344367.4699,1559484.2441,4.4244,44.2782,41.9311,4.5125,43.5887,40.4902]
     ]
   },
   empresas: {
     titulo: "Cantidad de empresas en Actividad. Desde Enero de 2005 en adelante. Provincia de Córdoba y Total País.",
     unidad: "empresas",
-    hasta: "2026-08",
+    hasta: "2026-09",
     provisorio: false,
     fuente: "IERIC",
-    archivo: "https://www.ieric.org.ar/wp-content/uploads/2026/09/Empresas-al-dia-Cordoba.xls",
+    archivo: "https://www.ieric.org.ar/wp-content/uploads/2026/10/Empresas-al-dia-Cordoba.xls",
     notas: ["A partir del año 2024 el vencimiento de la renovación anual de aranceles será el último día hábil del mes de febrero.", "El 30 de abril de cada año se produce el vencimiento del arancel anual, por tal motivo en el mes de mayo disminuye la cantidad de empresas con arancel al día, situación que se regulariza en el transcurso del año."],
     serie: [
       ["2005-01-01",1084,16074,null,null],
@@ -767,7 +769,8 @@ window.IERIC_CBA_CACHE = {
       ["2026-05-01",1303,16477,4.4071,-0.0121],
       ["2026-06-01",1345,17113,5.325,0.641],
       ["2026-07-01",1371,17512,4.1002,0.3036],
-      ["2026-08-01",1387,17919,2.0603,0.2798]
+      ["2026-08-01",1387,17919,2.0603,0.2798],
+      ["2026-09-01",1417,18330,1.5043,0.4989]
     ]
   }
 };
