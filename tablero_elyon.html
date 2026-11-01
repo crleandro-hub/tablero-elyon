@@ -322,6 +322,10 @@ body {
 .multi-dd-panel label:hover { background: var(--gris-med); }
 .multi-dd-panel input[type=checkbox] { accent-color: var(--rojo); cursor: pointer; margin: 0; }
 .dd-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+/* Las aperturas de un indice comparten el color del grupo, asi que en la
+   lista el punto solo no alcanza para distinguirlas: la marca de materiales y
+   mano de obra imita el trazo con el que se dibujan en el grafico. */
+.dd-dot.trazo { width: 16px; height: 3px; border-radius: 1px; }
 .multi-dd-actions {
   display: flex; gap: 6px; border-top: 1px solid var(--gris-brd);
   margin-top: 6px; padding-top: 7px;
@@ -4095,22 +4099,22 @@ const COMP_SERIES = {
   ipc:       { label: 'IPC (INDEC)',        color: '#f59e0b', get: () => compIpc() },
 
   cac:       { label: 'CAC general',        color: '#ef4444', get: () => compCac('cacGen') },
-  cacMat:    { label: 'CAC materiales',     color: '#f87171', dash: [7, 4], get: () => compCac('mat') },
-  cacMo:     { label: 'CAC mano de obra',   color: '#fca5a5', dash: [2, 3], get: () => compCac('mo') },
+  cacMat:    { label: 'CAC materiales',     color: '#f87171', fam: 'cac', dash: [7, 4], get: () => compCac('mat') },
+  cacMo:     { label: 'CAC mano de obra',   color: '#fca5a5', fam: 'cac', dash: [2, 3], get: () => compCac('mo') },
 
   iccCba:    { label: 'ICC Córdoba',        color: '#2dd4bf', get: () => compIccCba(1) },
-  iccCbaMat: { label: 'ICC Cba materiales', color: '#5eead4', dash: [7, 4], get: () => compIccCba(2) },
-  iccCbaMo:  { label: 'ICC Cba mano obra',  color: '#99f6e4', dash: [2, 3], get: () => compIccCba(3) },
+  iccCbaMat: { label: 'ICC Cba materiales', color: '#5eead4', fam: 'iccCba', dash: [7, 4], get: () => compIccCba(2) },
+  iccCbaMo:  { label: 'ICC Cba mano obra',  color: '#99f6e4', fam: 'iccCba', dash: [2, 3], get: () => compIccCba(3) },
 
   iccIndec:  { label: 'ICC INDEC (GBA)',    color: '#a78bfa', get: () => compIccIndec(1) },
-  iccIndecMat: { label: 'ICC INDEC materiales', color: '#c4b5fd', dash: [7, 4], get: () => compIccIndec(2) },
-  iccIndecMo:  { label: 'ICC INDEC mano obra',  color: '#ddd6fe', dash: [2, 3], get: () => compIccIndec(3) },
+  iccIndecMat: { label: 'ICC INDEC materiales', color: '#c4b5fd', fam: 'iccIndec', dash: [7, 4], get: () => compIccIndec(2) },
+  iccIndecMo:  { label: 'ICC INDEC mano obra',  color: '#ddd6fe', fam: 'iccIndec', dash: [2, 3], get: () => compIccIndec(3) },
 
   uva:       { label: 'UVA',                color: '#e879f9', get: () => compUva() },
   apymeco:   { label: 'APYMECO (pymes)',    color: '#38bdf8', get: () => compApymeco() },
 
   uocraReal: { label: 'Jornal UOCRA (paritaria)', color: '#a3e635', get: () => salSerieUocraReal('oficial') },
-  uocra:     { label: 'Jornal UOCRA (básico)',    color: '#bef264', dash: [2, 3], get: () => salSerieUocra('oficial') },
+  uocra:     { label: 'Jornal UOCRA (básico)',    color: '#bef264', fam: 'uocraReal', dash: [2, 3], get: () => salSerieUocra('oficial') },
 
   oficial:   { label: 'Dólar oficial',      color: '#60a5fa', dash: [7, 4], get: () => compUsd('oficial') },
   blue:      { label: 'Dólar blue',         color: '#22c55e', get: () => compUsd('blue') },
@@ -4144,6 +4148,30 @@ const COMP_SERIES = {
    El IPC va primero en los dos. En el de barras no aparece como barra sino
    como la linea punteada contra la que se miden las demas. */
 const COMP_DEFAULT = ['ipc', 'cac', 'iccIndec', 'iccCba', 'uva', 'blue'];
+
+/* Color del GRUPO. Las aperturas de un indice (general, materiales y mano de
+   obra) comparten el color de su nivel general: asi, de un vistazo, las tres
+   barras del CAC se leen como el CAC y no como tres indices distintos. En el
+   grafico de linea lo que las distingue adentro del grupo es el trazo, no el
+   tono (ver COMP_SERIES). */
+/* La marca de color de la lista: punto para el nivel general, tramo punteado
+   para las aperturas, con el mismo patron que usa el grafico. */
+function compDotClase(k) {
+  return (COMP_SERIES[k] && COMP_SERIES[k].dash) ? 'dd-dot trazo' : 'dd-dot';
+}
+
+function compDotFondo(k) {
+  const s = COMP_SERIES[k], c = compColor(k);
+  if (!s || !s.dash) return c;
+  const [on, off] = s.dash;
+  return `repeating-linear-gradient(90deg, ${c} 0 ${on}px, transparent ${on}px ${on + off}px)`;
+}
+
+function compColor(k) {
+  const s = COMP_SERIES[k];
+  if (!s) return '#888';
+  return (s.fam && COMP_SERIES[s.fam] ? COMP_SERIES[s.fam] : s).color;
+}
 
 const COMP_MES_DEFAULT = ['cac', 'cacMat', 'cacMo',
                           'iccCba', 'iccCbaMat', 'iccCbaMo',
@@ -4425,7 +4453,7 @@ function initComparador() {
       if (!hay) return '';
       const tildado = porDefecto.includes(k) ? ' checked' : '';
       return `<label><input type="checkbox" value="${k}"${tildado} onchange="${handler}()">`
-           + `<span class="dd-dot" style="background:${s.color}"></span>${s.label}</label>`;
+           + `<span class="${compDotClase(k)}" style="background:${compDotFondo(k)}"></span>${s.label}</label>`;
     }).join('');
 
   const acciones = pref =>
@@ -4504,8 +4532,8 @@ function renderCompChart() {
     data: labels.map(ym => s.ia.has(ym) ? +s.ia.get(ym).toFixed(2) : null),
     // El trazo distingue el capitulo dentro de un mismo indice (ver COMP_SERIES)
     borderDash: s.cfg.dash || [],
-    borderColor: s.cfg.color,
-    backgroundColor: s.cfg.color + '1A',
+    borderColor: compColor(s.k),
+    backgroundColor: compColor(s.k) + '1A',
     borderWidth: 2, pointRadius: 0, tension: .25, fill: false, spanGaps: true,
     /* 'line' hace que la referencia dibuje un tramo de linea con el mismo
        trazo del dataset, en vez de un circulo: sin esto el punteado que
@@ -4604,7 +4632,7 @@ function renderCompMes() {
 
 
   const filas = conVar.filter(s => s.mes.has(mesRef))
-                      .map(s => ({ label: s.cfg.label, color: s.cfg.color,
+                      .map(s => ({ label: s.cfg.label, color: compColor(s.k),
                                    act: !!s.cfg.act, v: s.mes.get(mesRef) }))
                       .sort((a, b) => b.v - a.v);
   if (!filas.length) { limpiar(); return; }
@@ -4770,7 +4798,7 @@ function renderCompResumen(series) {
 
   const filas = series.map(s => {
     const ym = [...s.ia.keys()].sort().pop();
-    return { label: s.cfg.label, color: s.cfg.color, ym, valor: s.ia.get(ym) };
+    return { label: s.cfg.label, color: compColor(s.k), ym, valor: s.ia.get(ym) };
   }).sort((a, b) => b.valor - a.valor);
 
   cont.innerHTML =
