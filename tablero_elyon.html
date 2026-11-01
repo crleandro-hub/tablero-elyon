@@ -67,18 +67,43 @@ body {
 .screen.active { display: flex; flex-direction: column; }
 
 /* ─── HEADER ─────────────────────────────── */
+/* Tres columnas: la del medio es auto y las de los costados reparten el resto
+   por igual, asi el titulo queda centrado en la PANTALLA y no entre los
+   botones. Y va sticky: el tablero es largo y a los dos scrolls uno perdia la
+   referencia de donde estaba parado. */
 .header {
-  background: #000;
+  background: linear-gradient(180deg, #0b0b0b 0%, #000 100%);
   border-bottom: 3px solid var(--rojo);
-  padding: 13px 28px;
-  display: flex;
+  padding: 12px 28px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  box-shadow: 0 6px 18px rgba(0,0,0,.55);
 }
-.logo { font-size: 18px; font-weight: 800; letter-spacing: 3px; }
+.header-izq { justify-self: start; }
+.header-centro { justify-self: center; text-align: center; }
+.header-der { justify-self: end; display: flex; align-items: center; gap: 10px; }
+
+.logo { font-size: 23px; font-weight: 800; letter-spacing: 4px; color: #fff;
+        line-height: 1.1; display: block; }
 .logo .r { color: var(--rojo-txt); }
-.header-sub { font-size: 10px; color: var(--gris-txt); letter-spacing: 1px; margin-left: 12px; }
+.header-sub { display: block; font-size: 10px; font-weight: 700; color: #9e9e9e;
+              letter-spacing: 3.2px; text-transform: uppercase; margin-top: 4px; }
+
+/* En pantalla angosta no entran tres columnas: el titulo pasa arriba y los
+   botones abajo, los dos centrados. */
+@media (max-width: 860px) {
+  .header { grid-template-columns: 1fr; gap: 10px; padding: 11px 14px; }
+  .header-izq { display: none; }
+  .header-centro, .header-der { justify-self: center; }
+  .header-der { flex-wrap: wrap; justify-content: center; }
+  .logo { font-size: 19px; letter-spacing: 3px; }
+}
 
 /* ─── BOTONES ────────────────────────────── */
 .btn { cursor: pointer; border: none; border-radius: 6px; padding: 8px 16px; font-size: 12px; font-weight: 700; letter-spacing: 1px; transition: opacity .15s; }
@@ -128,6 +153,24 @@ body {
   content: ''; flex: 0 0 auto;
   width: 3px; height: 15px; border-radius: 2px; background: var(--rojo);
 }
+/* Tarjeta del dato que uno viene a buscar en una seccion: el numero
+   principal, no una variacion mas. Lleva el mismo tratamiento que los
+   titulos de la grilla de indices, asi la jerarquia es la misma en todo el
+   tablero: linea roja arriba, nombre en blanco con la marca, valor grande. */
+.card.destacada {
+  border-top: 3px solid var(--rojo); padding-top: 13px;
+  background: linear-gradient(180deg, #221316 0%, var(--gris-osc) 62%);
+}
+.card.destacada .kpi-label {
+  font-size: 13px; font-weight: 800; letter-spacing: .7px; color: #fff;
+  display: flex; align-items: center; gap: 7px; margin-bottom: 9px;
+}
+.card.destacada .kpi-label::before {
+  content: ''; flex: 0 0 auto;
+  width: 3px; height: 13px; border-radius: 2px; background: var(--rojo);
+}
+.card.destacada .kpi-value { font-size: 26px; }
+
 .res-vars  { margin-top: 11px; padding-top: 9px; border-top: 1px solid var(--gris-brd); }
 .res-vars > div { display: flex; justify-content: space-between; align-items: baseline;
                   font-size: 11px; padding: 2px 0; }
@@ -314,6 +357,10 @@ body {
 /* TIPO DE CAMBIO — 5 columnas: los cinco dolares arriba, y abajo los dos
    euros con el futuro ocupando las tres columnas que sobran. */
 .kpi-cambio { grid-template-columns: repeat(5, 1fr); }
+/* El nombre de la casa es el rotulo de la tarjeta: con 11px en gris habia que
+   buscarlo. Un punto mas grande, mas peso y mas claro, sin llegar al titulo
+   de seccion (que seria pelearle al numero). */
+.kpi-cambio .kpi-label { font-size: 12px; font-weight: 800; color: #e2e2e2; letter-spacing: 1px; }
 @media (max-width: 1180px) { .kpi-cambio { grid-template-columns: repeat(3, 1fr); }
                              #dolar-futuro { grid-column: span 3 !important; } }
 @media (max-width: 760px)  { .kpi-cambio { grid-template-columns: repeat(2, 1fr); }
@@ -401,12 +448,12 @@ body {
 ══════════════════════════════════════ -->
 <div id="screen-indicadores" class="screen">
   <div class="header">
-    <div style="display:flex;align-items:center;gap:14px;">
-      <span class="logo" style="font-size:15px;">GRUPO <span class="r">ELYON</span>
-        <span class="header-sub">Indicadores Generales</span>
-      </span>
+    <div class="header-izq"></div>
+    <div class="header-centro">
+      <span class="logo">GRUPO <span class="r">ELYON</span></span>
+      <span class="header-sub">Indicadores Generales</span>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;">
+    <div class="header-der">
       <span id="refresh-ts" style="font-size:9px;color:var(--gris-txt);"></span>
       <button class="btn btn-ghost" onclick="reloadAll()">🔄 Actualizar</button>
       <button class="btn btn-ghost" id="btn-guardar" onclick="saveSnapshot()" style="border-color:#22C55E;color:#22C55E;">💾 Guardar</button>
@@ -801,7 +848,7 @@ body {
       </div>
 
       <div class="kpi-grid">
-        <div class="card">
+        <div class="card destacada">
           <div class="kpi-label">Costo del m²</div>
           <div class="kpi-value" id="kpi-apy-m2">—</div>
           <div class="kpi-sub" id="kpi-apy-fecha">—</div>
@@ -821,7 +868,7 @@ body {
           <div class="kpi-value" id="kpi-apy-ytd">—</div>
           <div class="kpi-sub" id="kpi-apy-ytd-sub">vs. dic. año ant.</div>
         </div>
-        <div class="card">
+        <div class="card destacada">
           <div class="kpi-label">Costo en dólares</div>
           <div class="kpi-value" id="kpi-apy-usd">—</div>
           <div class="kpi-sub" id="kpi-apy-usd-sub">US$/m² · MEP promedio del mes</div>
@@ -1017,7 +1064,7 @@ body {
 
     <div id="isac-section">
       <div class="kpi-grid">
-        <div class="card">
+        <div class="card destacada">
           <div class="kpi-label">ISAC nivel general</div>
           <div class="kpi-value" id="kpi-isac-idx">—</div>
           <div class="kpi-sub" id="kpi-isac-fecha">—</div>
@@ -1075,7 +1122,7 @@ body {
 
     <div id="construya-section">
       <div class="kpi-grid">
-        <div class="card">
+        <div class="card destacada">
           <div class="kpi-label">Índice Construya</div>
           <div class="kpi-value" id="kpi-cy-idx">—</div>
           <div class="kpi-sub" id="kpi-cy-fecha">—</div>
@@ -1271,12 +1318,12 @@ body {
 ══════════════════════════════════════ -->
 <div id="screen-herramientas" class="screen">
   <div class="header">
-    <div style="display:flex;align-items:center;gap:14px;">
-      <span class="logo" style="font-size:15px;">GRUPO <span class="r">ELYON</span>
-        <span class="header-sub" id="herram-titulo">Herramientas</span>
-      </span>
+    <div class="header-izq"></div>
+    <div class="header-centro">
+      <span class="logo">GRUPO <span class="r">ELYON</span></span>
+      <span class="header-sub" id="herram-titulo">Herramientas</span>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;">
+    <div class="header-der">
       <button class="btn btn-ghost" onclick="volverAlTablero()">&lsaquo; VOLVER AL TABLERO</button>
     </div>
   </div>
@@ -1350,12 +1397,12 @@ body {
 ══════════════════════════════════════ -->
 <div id="screen-detalle" class="screen">
   <div class="header">
-    <div style="display:flex;align-items:center;gap:14px;">
-      <span class="logo" style="font-size:15px;">GRUPO <span class="r">ELYON</span>
-        <span class="header-sub" id="detalle-titulo">Detalle</span>
-      </span>
+    <div class="header-izq"></div>
+    <div class="header-centro">
+      <span class="logo">GRUPO <span class="r">ELYON</span></span>
+      <span class="header-sub" id="detalle-titulo">Detalle</span>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;">
+    <div class="header-der">
       <button class="btn btn-ghost" onclick="volverAlTablero()">&lsaquo; VOLVER AL TABLERO</button>
     </div>
   </div>
@@ -4912,8 +4959,8 @@ function salSaltos(cat, desde) {
   return out;
 }
 
-function _salCard(label, valor, sub, color) {
-  return '<div class="card">'
+function _salCard(label, valor, sub, color, destacada) {
+  return '<div class="card' + (destacada ? ' destacada' : '') + '">'
        + '<div class="kpi-label">' + label + '</div>'
        + '<div class="kpi-value"' + (color ? ' style="color:' + color + ';"' : '') + '>' + valor + '</div>'
        + '<div class="kpi-sub">' + sub + '</div>'
@@ -5239,16 +5286,20 @@ async function renderSalChart() {
    el script de actualizacion ya controla que cierren contra los niveles.
    ══════════════════════════════════════════ */
 
+/* destacar: cual de las tarjetas del bloque es EL dato de la seccion. En
+   empleo es el interanual (el nivel de puestos dice poco suelto, lo que se
+   mira es si sube o baja); en salario es el monto, que es contra lo que se
+   compara el basico de convenio. */
 const IERIC_BLOQUES = {
   puestos: {
     pref: 'ier-pue', etiqueta: 'Puestos registrados', ejeNivel: 'Puestos · Córdoba',
     col: { mens: 3, ia: 4, acum: 5, paisIa: 7 },
-    fmt: v => fmtN(v, 0),
+    fmt: v => fmtN(v, 0), destacar: 'ia',
   },
   salario: {
     pref: 'ier-sal', etiqueta: 'Salario promedio', ejeNivel: 'Pesos corrientes · Córdoba',
     col: { mens: 3, ia: 4, acum: 5, paisIa: 7 },
-    fmt: v => fmtARS(v),
+    fmt: v => fmtARS(v), destacar: 'nivel',
   },
   empresas: {
     pref: 'ier-emp', etiqueta: 'Empresas en actividad', ejeNivel: 'Empresas · Córdoba',
@@ -5282,7 +5333,8 @@ function _pintarIericKpis(clave) {
   const cards = [];
 
   cards.push(_salCard(spec.etiqueta, spec.fmt(u[1]),
-    'Córdoba · ' + fmtMes(u[0]) + (d.provisorio ? ' · provisorio' : ''), ''));
+    'Córdoba · ' + fmtMes(u[0]) + (d.provisorio ? ' · provisorio' : ''), '',
+    spec.destacar === 'nivel'));
 
   if (c.mens != null) {
     cards.push(_salCard('Var. mensual', _signoPct(u[c.mens]),
@@ -5290,7 +5342,8 @@ function _pintarIericKpis(clave) {
   }
 
   cards.push(_salCard('Var. interanual', _signoPct(u[c.ia]),
-    'vs. mismo mes año ant.', _iericColor(u[c.ia])));
+    'vs. mismo mes año ant.', _iericColor(u[c.ia]),
+    spec.destacar === 'ia'));
 
   if (c.acum != null) {
     cards.push(_salCard('Acum. en el año', _signoPct(u[c.acum]),
