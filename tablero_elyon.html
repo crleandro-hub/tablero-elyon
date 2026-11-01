@@ -107,6 +107,20 @@ body {
    importan abajo, separadas por una línea. La idea es poder comparar CAC,
    ICC Córdoba, ICC INDEC y UVA de un vistazo, sin bajar a cada sección. */
 .res-grid  { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 12px; }
+/* El nombre del indice es lo primero que se busca en esta grilla, asi que no
+   va con la etiqueta chica y gris de un KPI cualquiera: va al tamaño de un
+   subtitulo, en blanco y con la marca roja, para que se lea de un saque cual
+   tarjeta es cual. La tarjeta ademas lleva una linea roja arriba. */
+.res-grid > .card { border-top: 3px solid var(--rojo); padding-top: 13px; }
+.res-nombre {
+  font-size: 15px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase;
+  color: #fff; line-height: 1.2; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.res-nombre::before {
+  content: ''; flex: 0 0 auto;
+  width: 3px; height: 15px; border-radius: 2px; background: var(--rojo);
+}
 .res-vars  { margin-top: 11px; padding-top: 9px; border-top: 1px solid var(--gris-brd); }
 .res-vars > div { display: flex; justify-content: space-between; align-items: baseline;
                   font-size: 11px; padding: 2px 0; }
@@ -537,6 +551,7 @@ body {
           </div>
 
           <select class="period-select" id="blue-range" onchange="renderBlueChart()">
+            <option value="ytd" selected>Lo que va de este año</option>
             <option value="365">Último año</option>
             <option value="1095">Últimos 3 años</option>
             <option value="1825">Últimos 5 años</option>
@@ -709,10 +724,10 @@ body {
           </div>
 
           <select class="period-select" id="comp-range" onchange="renderCompChart()">
-            <option value="ytd">Lo que va de este año</option>
+            <option value="ytd" selected>Lo que va de este año</option>
             <option value="12">Último año</option>
             <option value="24">Últimos 2 años</option>
-            <option value="36" selected>Últimos 3 años</option>
+            <option value="36">Últimos 3 años</option>
             <option value="60">Últimos 5 años</option>
             <option value="0">Histórico completo</option>
           </select>
@@ -728,7 +743,18 @@ body {
 
       <!-- Variación del último mes: es la que se aplica para indexar saldos -->
       <div id="comp-mes-bloque" style="margin-top:24px;">
-        <div class="sub-title" style="margin-bottom:3px;">Variación mensual, índice por índice</div>
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <div class="sub-title" style="margin-bottom:3px;">Variación mensual, índice por índice</div>
+          <!-- Seleccion propia: este grafico se mira con mas detalle que el
+               interanual, asi que arranca con mas indices tildados. -->
+          <div class="multi-dd" id="comp-mes-dd">
+            <button type="button" class="period-select multi-dd-btn" id="comp-mes-dd-btn"
+                    onclick="toggleCompMesDD(event)">
+              <span id="comp-mes-dd-label">Cargando…</span><span style="opacity:.55;font-size:9px;">▼</span>
+            </button>
+            <div class="multi-dd-panel" id="comp-mes-dd-panel"></div>
+          </div>
+        </div>
         <div id="comp-mes-sub" style="font-size:10.5px;color:var(--gris-txt);margin-bottom:10px;"></div>
         <div class="chart-wrap" style="height:290px;">
           <canvas id="chart-comp-mes" role="img"
@@ -858,14 +884,114 @@ body {
         Fuente: escalas homologadas UOCRA (CCT 76/75 y 577/10) y UECARA (CCT 660/13) ·
         carga manual desde el acuerdo publicado
       </div>
-    </div>
 
-    <div class="nav-mas">
-      <div>
-        <div class="sub-title" style="margin-bottom:4px;">Salarios y empleo · detalle</div>
-        <div style="font-size:11px;color:var(--gris-txt);">Empleo registrado y salario efectivamente pagado en Córdoba (IERIC), y empleo privado del país.</div>
+      <!-- ─── Lo que antes estaba detras de "VER DETALLE" ───
+           Empleo registrado y salario efectivamente pagado en Cordoba (IERIC) y
+           empleo privado del pais (INDEC). Se trajo a la vista principal: el
+           basico de convenio solo no alcanza para leer el costo laboral, hace
+           falta tener al lado lo que se liquida de verdad y cuanta gente hay. -->
+      <div class="det-analisis" id="an-salarios" style="margin-top:26px;"></div>
+      <!-- ─── EMPLEO REGISTRADO · CÓRDOBA · IERIC ─── -->
+      <div style="margin:26px 0 8px;">
+        <div class="sub-title">
+          Empleo registrado en la construcción · Córdoba
+          <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="ier-pue-fecha"></span>
+        </div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;">
+          Puestos de trabajo registrados en la provincia, del padrón de la propia industria.
+          No es una encuesta ni una estimación: es un conteo.
+        </div>
       </div>
-      <button class="btn btn-rojo" onclick="abrirDetalle('salarios')">VER DETALLE &rsaquo;</button>
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));"
+           id="ier-pue-kpis"></div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución del empleo</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select class="period-select" id="ier-pue-modo" onchange="renderIericChart('puestos')">
+            <option value="nivel">Puestos · Córdoba</option>
+            <option value="ia">Var. interanual · Córdoba y país</option>
+          </select>
+          <select class="period-select" id="ier-pue-range" onchange="renderIericChart('puestos')">
+            <option value="24">Últimos 2 años</option>
+            <option value="60" selected>Últimos 5 años</option>
+            <option value="120">Últimos 10 años</option>
+            <option value="0">Histórico completo</option>
+          </select>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-ier-pue" role="img"
+                aria-label="Puestos de trabajo registrados en la construcción, provincia de Córdoba"></canvas>
+      </div>
+      <div class="fuente-bloque" id="ier-pue-fuente"></div>
+
+      <!-- ─── SALARIO PROMEDIO PAGADO · CÓRDOBA · IERIC ─── -->
+      <div style="margin:26px 0 8px;">
+        <div class="sub-title">
+          Salario promedio pagado · Córdoba
+          <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="ier-sal-fecha"></span>
+        </div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;">
+          Salario mensual promedio de los trabajadores registrados, en pesos corrientes.
+          Es lo que efectivamente se liquida, contra el básico de convenio de más arriba.
+        </div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));"
+           id="ier-sal-kpis"></div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
+        <div class="sub-title">Evolución del salario pagado</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select class="period-select" id="ier-sal-modo" onchange="renderIericChart('salario')">
+            <option value="ia" selected>Var. interanual · Córdoba y país</option>
+            <option value="nivel">Pesos corrientes · Córdoba</option>
+          </select>
+          <select class="period-select" id="ier-sal-range" onchange="renderIericChart('salario')">
+            <option value="24">Últimos 2 años</option>
+            <option value="60" selected>Últimos 5 años</option>
+            <option value="120">Últimos 10 años</option>
+            <option value="0">Histórico completo</option>
+          </select>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-ier-sal" role="img"
+                aria-label="Salario promedio de la construcción, provincia de Córdoba"></canvas>
+      </div>
+      <div class="fuente-bloque" id="ier-sal-fuente"></div>
+
+      <!-- ─── EMPLEO REGISTRADO PRIVADO · TOTAL PAÍS · INDEC ───
+           Estaba dentro de "Actividad de la construcción", junto a los permisos
+           de edificacion. Se movio aca para que el empleo quede todo junto. Los
+           permisos siguen alla, que es donde corresponden. -->
+      <div style="margin:26px 0 8px;">
+        <div class="sub-title">Empleo registrado privado · total país</div>
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;" id="isac-ep-sub">
+          Del informe mensual del INDEC · un mes más de rezago que el ISAC
+        </div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
+        <div class="card">
+          <div class="kpi-label">Puestos registrados</div>
+          <div class="kpi-value" id="kpi-emp-val">—</div>
+          <div class="kpi-sub" id="kpi-emp-fecha">sector privado</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Empleo · interanual</div>
+          <div class="kpi-value" id="kpi-emp-ia">—</div>
+          <div class="kpi-sub">vs. mismo mes año ant.</div>
+        </div>
+        <div class="card">
+          <div class="kpi-label">Empleo · acum. año</div>
+          <div class="kpi-value" id="kpi-emp-acum">—</div>
+          <div class="kpi-sub">vs. igual período año ant.</div>
+        </div>
+      </div>
+      <div class="fuente-bloque">
+        Fuente: INDEC · Indicadores de coyuntura de la actividad de la construcción, cuadro 3
+        (puestos de asalariados registrados del sector privado, base SIPA).
+        <strong style="color:#999;">No es comparable en niveles con la serie del IERIC</strong>:
+        son universos distintos.
+      </div>
     </div>
 
     <!-- ── ISAC · ACTIVIDAD DE LA CONSTRUCCIÓN ──────────── -->
@@ -1643,111 +1769,6 @@ body {
 
     </div>
 
-    <div class="det-panel" id="det-salarios" style="display:none;">
-      <div class="det-analisis" id="an-salarios"></div>
-      <!-- ─── EMPLEO REGISTRADO · CÓRDOBA · IERIC ─── -->
-      <div style="margin:26px 0 8px;">
-        <div class="sub-title">
-          Empleo registrado en la construcción · Córdoba
-          <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="ier-pue-fecha"></span>
-        </div>
-        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;">
-          Puestos de trabajo registrados en la provincia, del padrón de la propia industria.
-          No es una encuesta ni una estimación: es un conteo.
-        </div>
-      </div>
-      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));"
-           id="ier-pue-kpis"></div>
-      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div class="sub-title">Evolución del empleo</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <select class="period-select" id="ier-pue-modo" onchange="renderIericChart('puestos')">
-            <option value="nivel">Puestos · Córdoba</option>
-            <option value="ia">Var. interanual · Córdoba y país</option>
-          </select>
-          <select class="period-select" id="ier-pue-range" onchange="renderIericChart('puestos')">
-            <option value="24">Últimos 2 años</option>
-            <option value="60" selected>Últimos 5 años</option>
-            <option value="120">Últimos 10 años</option>
-            <option value="0">Histórico completo</option>
-          </select>
-        </div>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="chart-ier-pue" role="img"
-                aria-label="Puestos de trabajo registrados en la construcción, provincia de Córdoba"></canvas>
-      </div>
-      <div class="fuente-bloque" id="ier-pue-fuente"></div>
-
-      <!-- ─── SALARIO PROMEDIO PAGADO · CÓRDOBA · IERIC ─── -->
-      <div style="margin:26px 0 8px;">
-        <div class="sub-title">
-          Salario promedio pagado · Córdoba
-          <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="ier-sal-fecha"></span>
-        </div>
-        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;">
-          Salario mensual promedio de los trabajadores registrados, en pesos corrientes.
-          Es lo que efectivamente se liquida, contra el básico de convenio de más arriba.
-        </div>
-      </div>
-      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));"
-           id="ier-sal-kpis"></div>
-      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin:16px 0 8px;flex-wrap:wrap;gap:8px;">
-        <div class="sub-title">Evolución del salario pagado</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <select class="period-select" id="ier-sal-modo" onchange="renderIericChart('salario')">
-            <option value="ia" selected>Var. interanual · Córdoba y país</option>
-            <option value="nivel">Pesos corrientes · Córdoba</option>
-          </select>
-          <select class="period-select" id="ier-sal-range" onchange="renderIericChart('salario')">
-            <option value="24">Últimos 2 años</option>
-            <option value="60" selected>Últimos 5 años</option>
-            <option value="120">Últimos 10 años</option>
-            <option value="0">Histórico completo</option>
-          </select>
-        </div>
-      </div>
-      <div class="chart-wrap">
-        <canvas id="chart-ier-sal" role="img"
-                aria-label="Salario promedio de la construcción, provincia de Córdoba"></canvas>
-      </div>
-      <div class="fuente-bloque" id="ier-sal-fuente"></div>
-
-      <!-- ─── EMPLEO REGISTRADO PRIVADO · TOTAL PAÍS · INDEC ───
-           Estaba dentro de "Actividad de la construcción", junto a los permisos
-           de edificacion. Se movio aca para que el empleo quede todo junto. Los
-           permisos siguen alla, que es donde corresponden. -->
-      <div style="margin:26px 0 8px;">
-        <div class="sub-title">Empleo registrado privado · total país</div>
-        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;" id="isac-ep-sub">
-          Del informe mensual del INDEC · un mes más de rezago que el ISAC
-        </div>
-      </div>
-      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
-        <div class="card">
-          <div class="kpi-label">Puestos registrados</div>
-          <div class="kpi-value" id="kpi-emp-val">—</div>
-          <div class="kpi-sub" id="kpi-emp-fecha">sector privado</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Empleo · interanual</div>
-          <div class="kpi-value" id="kpi-emp-ia">—</div>
-          <div class="kpi-sub">vs. mismo mes año ant.</div>
-        </div>
-        <div class="card">
-          <div class="kpi-label">Empleo · acum. año</div>
-          <div class="kpi-value" id="kpi-emp-acum">—</div>
-          <div class="kpi-sub">vs. igual período año ant.</div>
-        </div>
-      </div>
-      <div class="fuente-bloque">
-        Fuente: INDEC · Indicadores de coyuntura de la actividad de la construcción, cuadro 3
-        (puestos de asalariados registrados del sector privado, base SIPA).
-        <strong style="color:#999;">No es comparable en niveles con la serie del IERIC</strong>:
-        son universos distintos.
-      </div>
-    </div>
-
     <div class="det-panel" id="det-isac" style="display:none;">
       <div class="det-analisis" id="an-isac"></div>
       <!-- ─── INSUMOS ─── -->
@@ -1970,6 +1991,8 @@ function showScreen(id) {
     revisarFuentes();  // avisa si algún cache quedó viejo
     initSalarios();   // escalas de convenio (dato local, pinta al toque)
     initIericCba();   // empleo, salario pagado y empresas de Córdoba · IERIC (dato local)
+    pintarAnalisis('salarios');   // la lectura automatica vive en el tablero,
+                                  // no en una pantalla aparte
     initAjuste();     // calculadora de redeterminacion
     loadSnapshot();   // datos guardados inmediatamente
     reloadAll();      // refrescar APIs en paralelo
@@ -3534,7 +3557,8 @@ function renderBlueChart() {
 
   const sel     = usdChartSel();
   const rangeEl = document.getElementById('blue-range');
-  const days    = rangeEl ? parseInt(rangeEl.value, 10) : 365;
+  const rango   = rangeEl ? rangeEl.value : 'ytd';
+  const days    = parseInt(rango, 10);        // NaN cuando el rango es 'ytd' 
 
   /* Eje X = union de fechas de las series elegidas, recortada por rango.
      Se usan dias calendario (no cantidad de registros) para que todas las
@@ -3548,7 +3572,14 @@ function renderBlueChart() {
     return;
   }
 
-  if (days > 0) {
+  if (rango === 'ytd') {
+    /* Desde el 1 de enero, igual que el comparador: es contra el cierre de
+       diciembre que se mide el atraso o el adelanto del dolar en el año. En
+       enero va a mostrar pocos dias, y esta bien que asi sea. */
+    const corte = new Date().getFullYear() + '-01-01';
+    const recortado = fechas.filter(f => f >= corte);
+    if (recortado.length > 1) fechas = recortado;
+  } else if (days > 0) {
     const d = new Date(fechas[fechas.length - 1] + 'T00:00:00');
     d.setDate(d.getDate() - days);
     const corte = uvaISO(d.getFullYear(), d.getMonth(), d.getDate());
@@ -3975,24 +4006,32 @@ const COMP_SERIES = {
   construya: { label: 'Construya (actividad)', color: '#eab308', act: true, get: () => compConstruya() },
 };
 
-/* Los tres indices de costo abiertos en general, materiales y mano de obra,
-   mas el jornal de paritaria, la UVA y el APYMECO. Es la seleccion con la que
-   se mira una obra: de donde viene el aumento (materiales o mano de obra),
-   contra que se indexan los saldos y cuanto pide el mercado pyme.
+/* ── Que se muestra por defecto en cada uno de los dos graficos ──────────
 
-   El jornal va en la version "paritaria", no en la del basico: el basico pega
-   saltos cuando se pasa una suma no remunerativa al valor hora, y eso no es
-   un aumento de costo real. El dolar sale de la seleccion por
-   defecto pero sigue disponible para tildar.
+   Son DOS selecciones distintas a proposito, porque las dos preguntas son
+   distintas.
 
-   El IPC va primero porque es contra lo que se lee todo lo demas: un indice
-   que sube 3% en un mes de 2% de inflacion subio 1% de verdad. En el grafico
-   de barras no aparece como barra sino como la linea punteada de referencia. */
-const COMP_DEFAULT = ['ipc',
-                      'cac', 'cacMat', 'cacMo',
-                      'iccCba', 'iccCbaMat', 'iccCbaMo',
-                      'iccIndec', 'iccIndecMat', 'iccIndecMo',
-                      'uocraReal', 'uva', 'apymeco'];
+   El de arriba (interanual) se lee de lejos: doce meses alisan el ruido y lo
+   que se quiere ver es quien le gano a quien a lo largo del año. Con quince
+   lineas no se ve nada, asi que van seis: la inflacion como vara, los tres
+   indices de costo en su nivel general, la UVA (contra la que se indexan los
+   saldos) y el dolar blue (contra el que se piensa el precio de venta). Las
+   aperturas por rubro siguen a un clic, tildandolas.
+
+   El de abajo (mensual) se lee de cerca: es el numero que efectivamente se
+   aplica para ajustar un saldo este mes, y ahi si interesa el detalle. Por eso
+   va mas ancho: las aperturas en materiales y mano de obra de los tres
+   indices, el jornal de paritaria y el APYMECO. La dispersion entre esas
+   barras es, justamente, el dato.
+
+   El IPC va primero en los dos. En el de barras no aparece como barra sino
+   como la linea punteada contra la que se miden las demas. */
+const COMP_DEFAULT = ['ipc', 'cac', 'iccIndec', 'iccCba', 'uva', 'blue'];
+
+const COMP_MES_DEFAULT = ['cac', 'cacMat', 'cacMo',
+                          'iccCba', 'iccCbaMat', 'iccCbaMo',
+                          'iccIndec', 'iccIndecMat', 'iccIndecMo',
+                          'uva', 'apymeco', 'uocraReal'];
 
 /* ── Normalizadores: cada uno devuelve Map 'aaaa-mm' -> nivel ── */
 
@@ -4210,6 +4249,45 @@ function compSel() {
     .filter(c => c.checked).map(c => c.value);
 }
 
+/* ── Desplegable del grafico mensual ──
+   Es el mismo widget que el de arriba pero con su propia lista: los dos
+   graficos responden preguntas distintas y no tienen por que mostrar lo
+   mismo (ver el comentario de COMP_DEFAULT). */
+function toggleCompMesDD(e) {
+  if (e) e.stopPropagation();
+  const dd = document.getElementById('comp-mes-dd');
+  if (dd) dd.classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  const dd = document.getElementById('comp-mes-dd');
+  if (dd && dd.classList.contains('open') && !dd.contains(e.target)) dd.classList.remove('open');
+});
+
+function compMesSel() {
+  return [...document.querySelectorAll('#comp-mes-dd-panel input[type=checkbox]')]
+    .filter(c => c.checked).map(c => c.value);
+}
+
+function compMesDDAll(marcar) {
+  document.querySelectorAll('#comp-mes-dd-panel input[type=checkbox]')
+    .forEach(c => { c.checked = marcar; });
+  onCompMesSel();
+}
+
+async function onCompMesSel() {
+  const sel = compMesSel();
+  const lbl = document.getElementById('comp-mes-dd-label');
+  if (lbl) {
+    const total = document.querySelectorAll('#comp-mes-dd-panel input[type=checkbox]').length;
+    lbl.textContent = !sel.length ? 'Ninguno'
+                    : sel.length === total ? 'Todos'
+                    : sel.length <= 2 ? sel.map(k => COMP_SERIES[k].label).join(' · ')
+                    : sel.length + ' índices';
+  }
+  await compAsegurarDatos(sel);
+  renderCompMes();
+}
+
 function compDDAll(marcar) {
   document.querySelectorAll('#comp-dd-panel input[type=checkbox]')
     .forEach(c => { c.checked = marcar; });
@@ -4221,19 +4299,31 @@ function initComparador() {
   const panel = document.getElementById('comp-dd-panel');
   if (!panel) return;
 
-  const filas = Object.entries(COMP_SERIES).map(([k, s]) => {
-    const hay = s.get() !== null || k === 'ipc';   // el IPC se baja al vuelo
-    if (!hay) return '';
-    const tildado = COMP_DEFAULT.includes(k) ? ' checked' : '';
-    return `<label><input type="checkbox" value="${k}"${tildado} onchange="onCompSel()">`
-         + `<span class="dd-dot" style="background:${s.color}"></span>${s.label}</label>`;
-  }).join('');
+  /* Un panel por grafico. El del mensual no lista el IPC: ahi no es una barra
+     mas sino la linea de referencia, y se dibuja siempre. */
+  const armar = (porDefecto, handler, conIpc) =>
+    Object.entries(COMP_SERIES).map(([k, s]) => {
+      if (!conIpc && k === 'ipc') return '';
+      const hay = s.get() !== null || k === 'ipc';   // el IPC se baja al vuelo
+      if (!hay) return '';
+      const tildado = porDefecto.includes(k) ? ' checked' : '';
+      return `<label><input type="checkbox" value="${k}"${tildado} onchange="${handler}()">`
+           + `<span class="dd-dot" style="background:${s.color}"></span>${s.label}</label>`;
+    }).join('');
 
-  panel.innerHTML = filas
-    + '<div class="multi-dd-actions">'
-    + '<button type="button" onclick="compDDAll(true)">Todos</button>'
-    + '<button type="button" onclick="compDDAll(false)">Ninguno</button>'
+  const acciones = pref =>
+      '<div class="multi-dd-actions">'
+    + `<button type="button" onclick="${pref}DDAll(true)">Todos</button>`
+    + `<button type="button" onclick="${pref}DDAll(false)">Ninguno</button>`
     + '</div>';
+
+  panel.innerHTML = armar(COMP_DEFAULT, 'onCompSel', true) + acciones('comp');
+
+  const panelMes = document.getElementById('comp-mes-dd-panel');
+  if (panelMes) {
+    panelMes.innerHTML = armar(COMP_MES_DEFAULT, 'onCompMesSel', false) + acciones('compMes');
+    onCompMesSel();
+  }
 
   onCompSel();
 }
@@ -4268,8 +4358,6 @@ function renderCompChart() {
     return { k, cfg: COMP_SERIES[k], niv, ia: compVarIA(niv) };
   });
   const series = todas.filter(s => s.ia.size);
-
-  renderCompMes(todas.filter(s => s.niv && s.niv.size));
 
   // Eje X: union de meses, recortada al rango elegido
   const todos = new Set();
@@ -4344,7 +4432,7 @@ function renderCompChart() {
    ISAC a los cuarenta, asi que se estarian comparando meses distintos. */
 let compMesChart = null;
 
-function renderCompMes(series) {
+function renderCompMes() {
   const ctx = document.getElementById('chart-comp-mes');
   const sub = document.getElementById('comp-mes-sub');
   const pie = document.getElementById('comp-mes-pie');
@@ -4356,9 +4444,12 @@ function renderCompMes(series) {
     bloque.style.display = 'none';
   };
 
-  // El IPC no va como barra: es la linea contra la que se miden las barras.
-  const conVar = series.map(s => ({ k: s.k, cfg: s.cfg, mes: compVarMes(s.niv) }))
-                       .filter(s => s.mes.size && s.k !== 'ipc');
+  /* Seleccion propia, no la del grafico de arriba. El IPC nunca va como
+     barra: es la linea contra la que se miden las barras. */
+  const conVar = compMesSel()
+    .filter(k => COMP_SERIES[k] && k !== 'ipc')
+    .map(k => ({ k, cfg: COMP_SERIES[k], mes: compVarMes(COMP_SERIES[k].get()) }))
+    .filter(s => s.mes.size);
   if (!conVar.length) { limpiar(); return; }
 
   // Se calcula aparte, no desde la seleccion: la referencia tiene que estar
@@ -4619,6 +4710,9 @@ async function reloadAll() {
   // La lectura del mercado inmobiliario vive en el tablero, no en una pantalla
   // aparte, asi que se repinta aca con el credito hipotecario ya bajado.
   pintarAnalisis('inmobiliario');
+  // Idem salarios: se repinta con el IPC ya bajado, que es lo que usa para
+  // leer el jornal en pesos constantes.
+  pintarAnalisis('salarios');
 }
 
 /* ══════════════════════════════════════════
@@ -6528,7 +6622,7 @@ function renderResumenConstruccion() {
 
   cont.innerHTML = tarjetas.map(t =>
       '<div class="card">'
-    +   '<div class="kpi-label">' + t.nombre + '</div>'
+    +   '<div class="res-nombre">' + t.nombre + '</div>'
     +   '<div class="kpi-value">' + (t.pesos ? '$ ' : '') + fmtN(t.d.valor, t.dec) + '</div>'
     +   '<div class="kpi-sub">'
     +     (t.d.dia ? 'al ' + fmtFecha(t.d.dia) : isacMesLargo(t.d.mes + '-01'))
@@ -7509,7 +7603,6 @@ const DET_TITULOS = {
   'uva':          'Índice UVA',
   'dolar':        'Dólar · análisis',
   'apymeco':      'APYMECO · costo del m²',
-  'salarios':     'Salarios y empleo',
   'isac':         'Insumos y actividad de la construcción',
   'construya':    'Índice Construya',
 };
