@@ -1,4 +1,4 @@
-<!-- Version autocontenida generada por build_publicar.py el 01/11/2026 01:36 - datos embebidos, no depende de archivos externos -->
+<!-- Version autocontenida generada por build_publicar.py el 01/11/2026 02:26 - datos embebidos, no depende de archivos externos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -54,6 +54,13 @@ body {
   --gris-brd: #383838;
   --gris-txt: #888;
   --verde:    #22C55E;
+  /* El rojo es la marca y la alarma; para "se movio para el lado malo" va el
+     ambar. Antes eran el mismo color y la grilla de indices quedaba en un muro
+     rojo todos los meses (los costos suben casi siempre), asi que el rojo no
+     avisaba nada: era el color de fondo de la pagina. Ahora el rojo pleno
+     queda para lo que de verdad hay que mirar — una fuente desactualizada, un
+     dato que falta, una advertencia — y el ambar para la direccion. */
+  --ambar:    #FFB224;
 }
 
 /* ─── PANTALLAS ──────────────────────────── */
@@ -96,7 +103,7 @@ body {
 .ins-card { background: var(--gris-osc); border: 1px solid var(--gris-brd); border-radius: 10px;
             padding: 11px 12px; display: flex; flex-direction: column; }
 .ins-card.sube { border-left: 3px solid var(--verde); }
-.ins-card.baja { border-left: 3px solid var(--rojo); }
+.ins-card.baja { border-left: 3px solid var(--ambar); }
 .ins-emoji  { font-size: 19px; line-height: 1; }
 .ins-nombre { font-size: 10px; color: #a8a8a8; line-height: 1.3; margin: 7px 0 6px;
               min-height: 26px; letter-spacing: .3px; }
@@ -155,7 +162,7 @@ body {
 .an-lista strong { color: #fff; }
 .an-nota  { font-size: 10.5px; color: var(--gris-txt); line-height: 1.6; margin-top: 12px;
             border-top: 1px solid var(--gris-brd); padding-top: 10px; }
-.an-mal   { color: var(--rojo-txt); font-weight: 700; }
+.an-mal   { color: var(--ambar); font-weight: 700; }  /* se movio para el lado malo, no es una alarma */
 .an-bien  { color: var(--verde);    font-weight: 700; }
 
 /* Tabla mensual de los detalles */
@@ -231,9 +238,14 @@ body {
 /* DÓLAR CARDS */
 .dolar-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 6px; gap: 6px; }
 .d-side-label { font-size: 10px; font-weight: 600; color: #a8a8a8; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 3px; }
+/* Compra y venta NO son una polaridad: son dos etiquetas. Pintarlas de verde
+   y rojo chocaba con el resto del tablero, donde el verde es "bajo" y el rojo
+   "subio". Ahora manda la jerarquia: la venta, que es la que se usa para
+   cotizar, va en blanco y mas grande; la compra queda en gris al lado. */
 .d-val { font-size: 16px; font-weight: 700; line-height: 1; }
-.d-val.compra { color: var(--verde); }
-.d-val.venta  { color: var(--rojo-txt); }
+.d-val.compra { color: #9a9a9a; font-size: 14px; font-weight: 600; }
+.d-val.venta  { color: #fff; font-size: 19px; }
+.d-side-label.venta { color: #d0d0d0; }
 
 /* UPLOAD */
 
@@ -341,7 +353,7 @@ body {
 .dolar-vars { display:flex; align-items:center; gap:6px; margin-top:8px; font-size:10px; }
 .var-badge   { font-weight:700; color:var(--gris-txt); }
 .var-badge.up  { color:#22C55E; }
-.var-badge.dn  { color:var(--rojo-txt); }
+.var-badge.dn  { color:var(--ambar); }
 .var-badge.na  { color:var(--gris-txt); font-weight:400; }
 .var-sep     { color:var(--gris-brd); font-size:9px; }
 
@@ -413,7 +425,7 @@ body {
         <div class="kpi-label">Dólar Oficial</div>
         <div class="dolar-row">
           <div><div class="d-side-label">Compra</div><div class="d-val compra" data-f="compra">—</div></div>
-          <div style="text-align:right;"><div class="d-side-label">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
+          <div style="text-align:right;"><div class="d-side-label venta">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
         </div>
         <div class="dolar-vars">
           <span class="var-badge" id="var-oficial-dia">—</span>
@@ -427,7 +439,7 @@ body {
         <div class="kpi-label">Dólar Blue</div>
         <div class="dolar-row">
           <div><div class="d-side-label">Compra</div><div class="d-val compra" data-f="compra">—</div></div>
-          <div style="text-align:right;"><div class="d-side-label">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
+          <div style="text-align:right;"><div class="d-side-label venta">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
         </div>
         <div class="dolar-vars">
           <span class="var-badge" id="var-blue-dia">—</span>
@@ -441,7 +453,7 @@ body {
         <div class="kpi-label">Dólar MEP (Bolsa)</div>
         <div class="dolar-row">
           <div><div class="d-side-label">Compra</div><div class="d-val compra" data-f="compra">—</div></div>
-          <div style="text-align:right;"><div class="d-side-label">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
+          <div style="text-align:right;"><div class="d-side-label venta">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
         </div>
         <div class="dolar-vars">
           <span class="var-badge" id="var-mep-dia">—</span>
@@ -455,7 +467,7 @@ body {
         <div class="kpi-label">Dólar CCL (Cable)</div>
         <div class="dolar-row">
           <div><div class="d-side-label">Compra</div><div class="d-val compra" data-f="compra">—</div></div>
-          <div style="text-align:right;"><div class="d-side-label">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
+          <div style="text-align:right;"><div class="d-side-label venta">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
         </div>
         <div class="dolar-vars">
           <span class="var-badge" id="var-ccl-dia">—</span>
@@ -469,7 +481,7 @@ body {
         <div class="kpi-label">Dólar Cripto</div>
         <div class="dolar-row">
           <div><div class="d-side-label">Compra</div><div class="d-val compra" data-f="compra">—</div></div>
-          <div style="text-align:right;"><div class="d-side-label">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
+          <div style="text-align:right;"><div class="d-side-label venta">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
         </div>
         <div class="dolar-vars">
           <span class="var-badge" id="var-cripto-dia">—</span>
@@ -483,7 +495,7 @@ body {
         <div class="kpi-label">Euro Oficial</div>
         <div class="dolar-row">
           <div><div class="d-side-label">Compra</div><div class="d-val compra" data-f="compra">—</div></div>
-          <div style="text-align:right;"><div class="d-side-label">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
+          <div style="text-align:right;"><div class="d-side-label venta">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
         </div>
         <div class="dolar-vars">
           <span class="var-badge na" id="cross-euro-oficial">—</span>
@@ -495,7 +507,7 @@ body {
         <div class="kpi-label">Euro Blue</div>
         <div class="dolar-row">
           <div><div class="d-side-label">Compra</div><div class="d-val compra" data-f="compra">—</div></div>
-          <div style="text-align:right;"><div class="d-side-label">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
+          <div style="text-align:right;"><div class="d-side-label venta">Venta</div><div class="d-val venta" data-f="venta">—</div></div>
         </div>
         <div class="dolar-vars">
           <span class="var-badge na" id="cross-euro-blue">—</span>
@@ -6141,7 +6153,33 @@ function setFuente(id, fechaISO, fuente) {
   el.textContent = (fechaISO ? fmtFecha(fechaISO) + ' · ' : '') + fuente;
 }
 
+/* La fecha que repiten casi todas las tarjetas de dolar. Si una casa viene
+   con otra, es esa la que hay que mirar; la mayoria no dice nada nuevo. */
+function fechaComunDolar(fechas) {
+  const cuenta = new Map();
+  Object.values(fechas).forEach(f => { if (f) cuenta.set(f, (cuenta.get(f) || 0) + 1); });
+  let mejor = null, tope = 0;
+  cuenta.forEach((n, f) => { if (n > tope) { tope = n; mejor = f; } });
+  return mejor;
+}
+
+/* Deja la linea de fuente de la tarjeta vacia cuando su fecha es la de todos,
+   y la usa para avisar cuando NO lo es. */
+function marcarFechasDolar(fechas) {
+  const comun = fechaComunDolar(fechas);
+  Object.keys(fechas).forEach(k => {
+    const el = document.getElementById('src-dolar-' + k);
+    if (!el) return;
+    const f = fechas[k];
+    if (!f || f === comun) { el.textContent = ''; el.style.display = 'none'; return; }
+    el.style.display = '';
+    el.style.color = 'var(--ambar)';
+    el.textContent = '⚠ dato al ' + fmtFecha(f);
+  });
+}
+
 async function loadDolar() {
+  const fechasTarjeta = {};
   const km = {
     oficial:          'oficial',
     blue:             'blue',
@@ -6173,15 +6211,25 @@ async function loadDolar() {
       if (!card) return;
       card.querySelector('[data-f="compra"]').textContent = fmtARS(item.compra);
       card.querySelector('[data-f="venta"]').textContent  = fmtARS(item.venta);
-      setFuente('src-dolar-' + k, fISO, 'dolarapi.com');
+      fechasTarjeta[k] = fISO;
       found++;
     });
+
+    /* La fecha y la fuente eran iguales en las cinco tarjetas y se repetian
+       cinco veces ("30/10/2026 · último dato · dolarapi.com"). Van una sola
+       vez abajo de la fila, y en la tarjeta solo queda un aviso cuando esa
+       casa viene con una fecha distinta al resto, que es el unico caso en que
+       mirar la fecha tarjeta por tarjeta sirve para algo. */
+    marcarFechasDolar(fechasTarjeta);
+    const comun = fechaComunDolar(fechasTarjeta);
 
     const ts = new Date().toLocaleString('es-AR', {
       day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
     });
     document.getElementById('dolar-ts').textContent =
-      (found >= 4 ? '✔' : '⚠') + ' Actualizado ' + ts + ' · dolarapi.com';
+      (found >= 4 ? '✔' : '⚠') + ' Cotizaciones'
+      + (comun ? ' al ' + fmtFecha(comun) : '')
+      + ' · dolarapi.com · leído ' + ts;
 
   } catch (e) {
     /* Sin respuesta de la API se cae al cache que deja update_dolar_cache.py
@@ -6199,14 +6247,15 @@ async function loadDolar() {
           card.querySelector('[data-f="compra"]').textContent = fmtARS(d.compra);
           card.querySelector('[data-f="venta"]').textContent  = fmtARS(d.venta);
         }
-        setFuente('src-dolar-' + k, d.fecha, 'último dato · dolarapi.com');
+        fechasTarjeta[k] = String(d.fecha || '').slice(0, 10);
         rescatadas++;
       } else if (card) {
         card.querySelector('[data-f="compra"]').textContent = 'N/D';
         card.querySelector('[data-f="venta"]').textContent  = 'N/D';
-        setFuente('src-dolar-' + k, null, 'dolarapi.com · sin respuesta');
+        setFuente('src-dolar-' + k, null, 'sin respuesta');
       }
     });
+    marcarFechasDolar(fechasTarjeta);
 
     if (c && c.mayorista && c.mayorista.venta != null) dolarVivo.mayorista = c.mayorista;
 
@@ -6335,8 +6384,8 @@ async function loadDolarVariaciones() {
     try { serie = await loadUsdSerie(casa); } catch (_) {}
 
     if (!serie.length) {
-      setVarBadge(`var-${id}-dia`, null, '1d N/D');
-      setVarBadge(`var-${id}-ia`,  null, '1a N/D');
+      setVarBadge(`var-${id}-dia`, null, 'día —');
+      setVarBadge(`var-${id}-ia`,  null, 'año —');
       return;
     }
 
@@ -6345,12 +6394,12 @@ async function loadDolarVariaciones() {
 
     setVarBadge(`var-${id}-dia`,
       (ayer && ayer.venta) ? (hoy.venta / ayer.venta - 1) * 100 : null,
-      ayer ? '1d' : '1d N/D');
+      ayer ? 'día' : 'día —');
 
     const ref = buscarUsd(casa, uvaDesplazar(hoy.fecha, { anios: 1 }));
     setVarBadge(`var-${id}-ia`,
       (ref && ref.venta) ? (hoy.venta / ref.venta - 1) * 100 : null,
-      ref ? '1a' : '1a N/D');
+      ref ? 'año' : 'año —');
   }));
 }
 
@@ -6392,14 +6441,14 @@ async function loadInflacion() {
       setMacro('val-inf-m', 'src-inf-m',
         fmtN(pctM, 1) + '%',
         fmtMes(data[0][0]) + sello,
-        'var(--rojo-txt)');
+        'var(--ambar)');
     }
     if (data.length >= 13) {
       const pctIA = (data[0][1] / data[12][1] - 1) * 100;
       setMacro('val-inf-ia', 'src-inf-ia',
         fmtN(pctIA, 2) + '%',
         'Interanual a ' + fmtMes(data[0][0]) + sello,
-        'var(--rojo-txt)');
+        'var(--ambar)');
     }
 
     /* ── Acumulada del año en curso: ultimo indice contra el de diciembre
@@ -6413,7 +6462,7 @@ async function loadInflacion() {
       setMacro('val-inf-acum', 'src-inf-acum',
         fmtN(pctAcum, 2) + '%',
         `${meses} ${meses === 1 ? 'mes' : 'meses'} a ${fmtMes(data[0][0])}${sello}`,
-        'var(--rojo-txt)');
+        'var(--ambar)');
     } else {
       setMacro('val-inf-acum', 'src-inf-acum', 'N/D', 'Sin base de diciembre', '');
     }
@@ -6687,7 +6736,7 @@ function _pintarAcciones(contId, srcId, lista, panel) {
   }
 
   cont.innerHTML = lista.map(a => {
-    const col = a.pct >= 0 ? 'var(--verde)' : 'var(--rojo-txt)';
+    const col = a.pct >= 0 ? 'var(--verde)' : 'var(--ambar)';
     const signo = a.pct >= 0 ? '+' : '';
     return '<div class="acc-fila">'
          + '<span class="acc-izq"><span class="acc-tkr">' + a.symbol + '</span>'
@@ -6745,7 +6794,7 @@ function loadRofex() {
   const visibles = curva.slice(0, ROFEX_VENC_VISIBLES);
   cont.innerHTML = visibles.map(v => {
     const col = v.varPct == null ? '#fff'
-              : v.varPct > 0 ? 'var(--rojo-txt)'
+              : v.varPct > 0 ? 'var(--ambar)'
               : v.varPct < 0 ? 'var(--verde)' : '#fff';
     const tna = v.tna == null ? '' : fmtN(v.tna, 2) + '%';
     return '<div class="cauc-col">'
@@ -6793,7 +6842,7 @@ function loadReservas() {
   let color = '';
   if (ref.var30 != null) {
     pie = (ref.var30 >= 0 ? '▲ +' : '▼ ') + fmtN(ref.var30, 2) + '% en el mes · ' + pie;
-    color = ref.var30 >= 0 ? 'var(--verde)' : 'var(--rojo-txt)';
+    color = ref.var30 >= 0 ? 'var(--verde)' : 'var(--ambar)';
   }
   setMacro('val-reservas', 'src-reservas', texto, pie, color);
 }
@@ -6834,7 +6883,7 @@ function loadDevaluacion() {
 
   if (c.tcnIa != null) {
     vEl.textContent = (c.tcnIa >= 0 ? '+' : '') + fmtN(c.tcnIa, 2) + '%';
-    vEl.style.color = c.tcnIa >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+    vEl.style.color = c.tcnIa >= 0 ? 'var(--ambar)' : 'var(--verde)';
     sEl.textContent = tcn + ' · i.a. vs dic-' + String(anio - 1).slice(2)
                       + (relev ? ' · REM ' + relev : '');
     return;
@@ -6845,7 +6894,7 @@ function loadDevaluacion() {
   if (may) {
     const pct = (c.tcnDic / may - 1) * 100;
     vEl.textContent = (pct >= 0 ? '+' : '') + fmtN(pct, 2) + '%';
-    vEl.style.color = pct >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+    vEl.style.color = pct >= 0 ? 'var(--ambar)' : 'var(--verde)';
     sEl.textContent = tcn + ' · desde el mayorista de hoy'
                       + (relev ? ' · REM ' + relev : '');
   } else {
@@ -6898,7 +6947,7 @@ function loadCaucion() {
        y mejora colocar, asi que va en verde igual que el resto del tablero. */
     el.style.color = d.varPp == null ? '#fff'
                    : d.varPp > 0 ? 'var(--verde)'
-                   : d.varPp < 0 ? 'var(--rojo-txt)' : '#fff';
+                   : d.varPp < 0 ? 'var(--ambar)' : '#fff';
     if (d.fecha) fechas.push(d.fecha);
   });
 
@@ -6975,7 +7024,7 @@ function _pintarMerval(d) {
   const badge = pct => pct == null ? '' :
     (pct >= 0 ? '▲ +' : '▼ ') + fmtN(pct, 2) + '% · ';
   const color = pct => pct == null ? '#e5e7eb'
-    : pct >= 0 ? 'var(--verde)' : 'var(--rojo-txt)';
+    : pct >= 0 ? 'var(--verde)' : 'var(--ambar)';
 
   /* El subtitulo va corto a proposito: la tarjeta ya dice "MERVAL" y con
      nueve KPIs en pantalla cualquier texto largo rompe la grilla. */
@@ -7184,7 +7233,7 @@ function _calcUvaVariaciones(data) {
     if (!el || !ref || !v0) return;
     const pct = (v0 / ref - 1) * 100;
     el.textContent = (pct >= 0 ? '+' : '') + fmtN(pct, 2) + '%';
-    el.style.color = pct >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+    el.style.color = pct >= 0 ? 'var(--ambar)' : 'var(--verde)';
   };
 
   pintar('val-uva-m',  valorEn(uvaDesplazar(anclaF, { meses: 1 })));
@@ -7373,7 +7422,7 @@ function renderUvaConsulta() {
       </div>`;
     }
     const pct   = (act.valor / ref.valor - 1) * 100;
-    const color = pct >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+    const color = pct >= 0 ? 'var(--ambar)' : 'var(--verde)';
     const signo = pct >= 0 ? '+' : '';
     return `<div style="flex:1 1 150px;background:var(--gris-osc);border:1px solid var(--gris-brd);border-radius:8px;padding:12px 14px;">
       <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:6px;">${titulo}</div>
@@ -7526,7 +7575,7 @@ async function loadBlue() {
     if (!ref || !ref.venta) { el.textContent = '—'; return; }
     const pct = (hoy.venta / ref.venta - 1) * 100;
     el.textContent  = (pct >= 0 ? '+' : '') + fmtN(pct, 2) + '%';
-    el.style.color  = pct >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+    el.style.color  = pct >= 0 ? 'var(--ambar)' : 'var(--verde)';
   };
   pintarVar('val-blue-m',  buscarUsd('blue', uvaDesplazar(hoy.fecha, { meses: 1 })));
   pintarVar('val-blue-ia', buscarUsd('blue', uvaDesplazar(hoy.fecha, { anios: 1 })));
@@ -7555,7 +7604,7 @@ async function loadBlue() {
     if (of && of.venta) {
       const br = (hoy.venta / of.venta - 1) * 100;
       elB.textContent = (br >= 0 ? '+' : '') + fmtN(br, 2) + '%';
-      elB.style.color = br >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+      elB.style.color = br >= 0 ? 'var(--ambar)' : 'var(--verde)';
     } else {
       elB.textContent = '—';
     }
@@ -7810,7 +7859,7 @@ function renderUsdConsulta() {
     const of = buscarUsd('oficial', c.fecha);
     if (of && of.venta) {
       const br    = (c.venta / of.venta - 1) * 100;
-      const color = br >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+      const color = br >= 0 ? 'var(--ambar)' : 'var(--verde)';
       brechaHtml = `
         <div style="flex:1 1 150px;background:var(--gris-osc);border:1px solid var(--gris-brd);border-radius:8px;padding:12px 14px;">
           <div style="font-size:10px;font-weight:700;color:#aaa;letter-spacing:.8px;margin-bottom:6px;">BRECHA VS. OFICIAL</div>
@@ -8033,28 +8082,49 @@ function loadSnapshot() {
 let compChart = null;
 let ipcSerie  = [];   // [fecha, indice] descendente
 
+/* ── Paleta del comparador ───────────────────────────────────────────────
+   Antes el problema era que casi todo era rojo o rosa: ICC Cordoba (#fb7185)
+   e ICC INDEC (#f472b6) eran practicamente el mismo color y con las dos
+   lineas en pantalla no se sabia cual era cual.
+
+   Ahora manda una regla simple: el COLOR dice de que indice se trata y el
+   TRAZO dice que capitulo. Nivel general va solido, materiales punteado
+   largo y mano de obra punteado corto, con el mismo tono un poco mas claro.
+   Asi se pueden tildar las nueve aperturas y el grafico se sigue leyendo,
+   que antes era imposible.
+
+   Los seis que vienen tildados por defecto llevan tonos lo mas separados
+   que se consigue: ambar, rojo, turquesa, violeta, magenta y verde. */
 const COMP_SERIES = {
   ipc:       { label: 'IPC (INDEC)',        color: '#f59e0b', get: () => compIpc() },
+
   cac:       { label: 'CAC general',        color: '#ef4444', get: () => compCac('cacGen') },
-  cacMat:    { label: 'CAC materiales',     color: '#fca5a5', get: () => compCac('mat') },
-  cacMo:     { label: 'CAC mano de obra',   color: '#fdba74', get: () => compCac('mo') },
-  iccCba:    { label: 'ICC Córdoba',        color: '#fb7185', get: () => compIccCba(1) },
-  iccCbaMat: { label: 'ICC Cba materiales', color: '#f9a8d4', get: () => compIccCba(2) },
-  iccCbaMo:  { label: 'ICC Cba mano obra',  color: '#e879f9', get: () => compIccCba(3) },
-  iccIndec:  { label: 'ICC INDEC (GBA)',    color: '#f472b6', get: () => compIccIndec(1) },
-  iccIndecMat: { label: 'ICC INDEC materiales', color: '#fbcfe8', get: () => compIccIndec(2) },
-  iccIndecMo:  { label: 'ICC INDEC mano obra',  color: '#d946ef', get: () => compIccIndec(3) },
-  apymeco:   { label: 'APYMECO (pymes)',    color: '#22d3ee', get: () => compApymeco() },
-  uocra:     { label: 'Jornal UOCRA (básico)', color: '#a3e635', get: () => salSerieUocra('oficial') },
-  uocraReal: { label: 'Jornal UOCRA (paritaria)', color: '#65a30d', get: () => salSerieUocraReal('oficial') },
-  uva:       { label: 'UVA',                color: '#c084fc', get: () => compUva() },
-  oficial:   { label: 'Dólar oficial',      color: '#60a5fa', get: () => compUsd('oficial') },
+  cacMat:    { label: 'CAC materiales',     color: '#f87171', dash: [7, 4], get: () => compCac('mat') },
+  cacMo:     { label: 'CAC mano de obra',   color: '#fca5a5', dash: [2, 3], get: () => compCac('mo') },
+
+  iccCba:    { label: 'ICC Córdoba',        color: '#2dd4bf', get: () => compIccCba(1) },
+  iccCbaMat: { label: 'ICC Cba materiales', color: '#5eead4', dash: [7, 4], get: () => compIccCba(2) },
+  iccCbaMo:  { label: 'ICC Cba mano obra',  color: '#99f6e4', dash: [2, 3], get: () => compIccCba(3) },
+
+  iccIndec:  { label: 'ICC INDEC (GBA)',    color: '#a78bfa', get: () => compIccIndec(1) },
+  iccIndecMat: { label: 'ICC INDEC materiales', color: '#c4b5fd', dash: [7, 4], get: () => compIccIndec(2) },
+  iccIndecMo:  { label: 'ICC INDEC mano obra',  color: '#ddd6fe', dash: [2, 3], get: () => compIccIndec(3) },
+
+  uva:       { label: 'UVA',                color: '#e879f9', get: () => compUva() },
+  apymeco:   { label: 'APYMECO (pymes)',    color: '#38bdf8', get: () => compApymeco() },
+
+  uocraReal: { label: 'Jornal UOCRA (paritaria)', color: '#a3e635', get: () => salSerieUocraReal('oficial') },
+  uocra:     { label: 'Jornal UOCRA (básico)',    color: '#bef264', dash: [2, 3], get: () => salSerieUocra('oficial') },
+
+  oficial:   { label: 'Dólar oficial',      color: '#60a5fa', dash: [7, 4], get: () => compUsd('oficial') },
   blue:      { label: 'Dólar blue',         color: '#22c55e', get: () => compUsd('blue') },
-  bolsa:     { label: 'Dólar MEP',          color: '#14b8a6', get: () => compUsd('bolsa') },
-  contadoconliqui: { label: 'Dólar CCL',    color: '#f97316', get: () => compUsd('contadoconliqui') },
-  merval:    { label: 'MERVAL (pesos)',     color: '#38bdf8', act: true, get: () => compMerval() },
-  isac:      { label: 'ISAC (actividad)',   color: '#94a3b8', act: true, get: () => compIsac() },
-  construya: { label: 'Construya (actividad)', color: '#eab308', act: true, get: () => compConstruya() },
+  bolsa:     { label: 'Dólar MEP',          color: '#14b8a6', dash: [2, 3], get: () => compUsd('bolsa') },
+  contadoconliqui: { label: 'Dólar CCL',    color: '#f97316', dash: [7, 4], get: () => compUsd('contadoconliqui') },
+
+  /* Volumen y cotizacion, no precios: van en gris, como contexto. */
+  merval:    { label: 'MERVAL (pesos)',     color: '#cbd5e1', act: true, get: () => compMerval() },
+  isac:      { label: 'ISAC (actividad)',   color: '#94a3b8', act: true, dash: [7, 4], get: () => compIsac() },
+  construya: { label: 'Construya (actividad)', color: '#64748b', act: true, dash: [2, 3], get: () => compConstruya() },
 };
 
 /* ── Que se muestra por defecto en cada uno de los dos graficos ──────────
@@ -8436,9 +8506,15 @@ function renderCompChart() {
   const datasets = series.map(s => ({
     label: s.cfg.label,
     data: labels.map(ym => s.ia.has(ym) ? +s.ia.get(ym).toFixed(2) : null),
+    // El trazo distingue el capitulo dentro de un mismo indice (ver COMP_SERIES)
+    borderDash: s.cfg.dash || [],
     borderColor: s.cfg.color,
     backgroundColor: s.cfg.color + '1A',
     borderWidth: 2, pointRadius: 0, tension: .25, fill: false, spanGaps: true,
+    /* 'line' hace que la referencia dibuje un tramo de linea con el mismo
+       trazo del dataset, en vez de un circulo: sin esto el punteado que
+       distingue materiales de mano de obra no se ve en la referencia. */
+    pointStyle: 'line',
   }));
 
   if (compChart) compChart.destroy();
@@ -8449,7 +8525,8 @@ function renderCompChart() {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { labels: { color: '#aaa', boxWidth: 12, font: { size: 10 }, usePointStyle: true } },
+        legend: { labels: { color: '#aaa', boxWidth: 26, font: { size: 10 },
+                            usePointStyle: true } },
         tooltip: {
           callbacks: {
             label: c => c.parsed.y == null ? null
@@ -9234,7 +9311,7 @@ const IERIC_BLOQUES = {
 const iericCharts = {};
 
 const _iericColor = pct =>
-  (pct == null || isNaN(pct)) ? '' : (pct >= 0 ? '#22C55E' : 'var(--rojo-txt)');
+  (pct == null || isNaN(pct)) ? '' : (pct >= 0 ? '#22C55E' : 'var(--ambar)');
 
 function iericBloque(clave) {
   const c = window.IERIC_CBA_CACHE;
@@ -9653,7 +9730,7 @@ function renderCacKpis(data, sourceLabel) {
     const ia = (last.cacGen / prevYear.cacGen - 1) * 100;
     const el = document.getElementById('kpi-cac-ia');
     el.textContent = (ia >= 0 ? '+' : '') + fmtN(ia, 2) + '%';
-    el.style.color = ia >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+    el.style.color = ia >= 0 ? 'var(--ambar)' : 'var(--verde)';
   } else if (last.cacGen == null) {
     // General de abr-2026 aún no publicado por INDEC
     const el = document.getElementById('kpi-cac-ia');
@@ -9672,7 +9749,7 @@ function renderCacKpis(data, sourceLabel) {
     if (dicAnt && last.cacGen != null && dicAnt.cacGen != null) {
       const ytd = (last.cacGen / dicAnt.cacGen - 1) * 100;
       elYtd.textContent = (ytd >= 0 ? '+' : '') + fmtN(ytd, 2) + '%';
-      elYtd.style.color = ytd >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+      elYtd.style.color = ytd >= 0 ? 'var(--ambar)' : 'var(--verde)';
     } else if (last.cacGen == null) {
       elYtd.textContent = 'Pend.'; elYtd.style.color = 'var(--gris-txt)';
     }
@@ -9747,7 +9824,7 @@ function cacVarHtml(actual, previo, etiqueta) {
     return `<div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">— ${etiqueta}</div>`;
   }
   const pct   = (actual / previo - 1) * 100;
-  const color = pct >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+  const color = pct >= 0 ? 'var(--ambar)' : 'var(--verde)';
   const signo = pct >= 0 ? '+' : '';
   return `<div style="font-size:10px;color:var(--gris-txt);margin-top:3px;">
             <span style="color:${color};font-weight:700;">${signo}${fmtN(pct, 2)}%</span> ${etiqueta}
@@ -10085,7 +10162,7 @@ function pintarRubros(contId, notaId, desc, etiquetaM2) {
     /* El titular de la tarjeta pasa a ser la variacion MENSUAL: es el numero
        con el que se discute un certificado o una redeterminacion. La
        interanual sigue abajo. */
-    const color = r.mensual == null ? '' : (r.mensual >= 0 ? 'var(--rojo-txt)' : 'var(--verde)');
+    const color = r.mensual == null ? '' : (r.mensual >= 0 ? 'var(--ambar)' : 'var(--verde)');
     return '<div class="card">'
       + '<div class="kpi-label">' + r.nombre + '</div>'
       + '<div class="kpi-value" style="color:' + color + ';">' + sig(r.mensual)
@@ -10124,7 +10201,7 @@ function iccCbaPintarPct(id, pct) {
   if (!el) return;
   if (pct == null || isNaN(pct)) { el.textContent = '—'; el.style.color = ''; return; }
   el.textContent = (pct >= 0 ? '+' : '') + fmtN(pct, 2) + '%';
-  el.style.color = pct >= 0 ? 'var(--rojo-txt)' : 'var(--verde)';
+  el.style.color = pct >= 0 ? 'var(--ambar)' : 'var(--verde)';
 }
 
 function initIccCba() {
@@ -10644,7 +10721,7 @@ function renderResumenConstruccion() {
     ? '—' : (v >= 0 ? '+' : '') + fmtN(v, 2) + '%';
   // Son indices de costo: que suban es mala noticia, van en rojo
   const color = v => v == null || isNaN(v) ? '#888'
-    : (v >= 0 ? 'var(--rojo-txt)' : 'var(--verde)');
+    : (v >= 0 ? 'var(--ambar)' : 'var(--verde)');
 
   const tarjetas = [
     { nombre: 'CAC General',  pie: 'Cámara Arg. de la Construcción · nacional',
@@ -10857,7 +10934,7 @@ function rgpPintarPct(id, pct) {
   if (!el) return;
   if (pct == null || isNaN(pct)) { el.textContent = '—'; el.style.color = ''; return; }
   el.textContent = (pct >= 0 ? '+' : '') + fmtN(pct, 2) + '%';
-  el.style.color = pct >= 0 ? 'var(--verde)' : 'var(--rojo-txt)';
+  el.style.color = pct >= 0 ? 'var(--verde)' : 'var(--ambar)';
 }
 
 function initRgp() {
@@ -11023,7 +11100,7 @@ function initCeduc() {
     ? '—' : (v >= 0 ? '+' : '') + fmtN(v, 2) + '%';
   // Son ventas: que suban es buena noticia
   const color = v => v == null || isNaN(v) ? '#888'
-    : (v >= 0 ? 'var(--verde)' : 'var(--rojo-txt)');
+    : (v >= 0 ? 'var(--verde)' : 'var(--ambar)');
 
   const pintar = (id, col) => {
     const el = document.getElementById('kpi-' + id);
@@ -11247,7 +11324,7 @@ function isacPintarPct(id, pct, decimales) {
   if (!el) return;
   if (pct == null || isNaN(pct)) { el.textContent = '—'; el.style.color = ''; return; }
   el.textContent = (pct >= 0 ? '+' : '') + fmtN(pct, decimales == null ? 1 : decimales) + '%';
-  el.style.color = pct >= 0 ? 'var(--verde)' : 'var(--rojo-txt)';
+  el.style.color = pct >= 0 ? 'var(--verde)' : 'var(--ambar)';
 }
 
 /* ── Carga: API en vivo y, si falla, el cache ── */
@@ -11398,7 +11475,7 @@ function pintarIsacInsumos() {
 
   cont.innerHTML = filas.map(f => {
     const sube  = f.ia != null && f.ia >= 0;
-    const color = f.ia == null ? '#888' : (sube ? 'var(--verde)' : 'var(--rojo-txt)');
+    const color = f.ia == null ? '#888' : (sube ? 'var(--verde)' : 'var(--ambar)');
     return '<div class="ins-card ' + (f.ia == null ? '' : (sube ? 'sube' : 'baja')) + '">'
          +   '<div class="ins-emoji">' + f.emoji + '</div>'
          +   '<div class="ins-nombre">' + f.nombre + (f.sinEst ? ' *' : '') + '</div>'
@@ -11876,7 +11953,7 @@ function qsRender(key) {
   }
 
   const pct = v => v == null || isNaN(v) ? '—'
-    : '<span style="color:' + (v >= 0 ? 'var(--verde)' : 'var(--rojo-txt)') + ';">' +
+    : '<span style="color:' + (v >= 0 ? 'var(--verde)' : 'var(--ambar)') + ';">' +
       (v >= 0 ? '+' : '') + fmtN(v, 2) + '%</span>';
   const val = f => f.money ? fmtARS(f.v) : fmtN(f.v, f.dec);
 
@@ -12443,7 +12520,7 @@ function pintarCyTabla() {
   const conEst = isacMapa(construyaSerie.map(f => [f[0], f[1]]));
   const filas = construyaSerie.slice(-24).slice().reverse();
   const pct = v => v == null || isNaN(v) ? '—'
-    : '<span style="color:' + (v >= 0 ? 'var(--verde)' : 'var(--rojo-txt)') + ';">' +
+    : '<span style="color:' + (v >= 0 ? 'var(--verde)' : 'var(--ambar)') + ';">' +
       (v >= 0 ? '+' : '') + fmtN(v, 1) + '%</span>';
 
   cont.innerHTML = '<div style="overflow-x:auto;"><table class="tab-mens"><thead><tr>'
