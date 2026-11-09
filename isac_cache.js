@@ -1,12 +1,12 @@
 /* ═══════════════════════════
    isac_cache.js  -  Grupo Elyon
-   Generado por update_isac_cache.py el 06/11/2026 11:04
+   Generado por update_isac_cache.py el 09/11/2026 11:04
    Fuente: INDEC via apis.datos.gob.ar (SSPM)
    NO editar a mano: se pisa en cada corrida.
    (Empleo y permisos salen del PDF que haya en la carpeta isac)
 ═══════════════════════════ */
 window.ISAC_CACHE = {
-  updated: "2026-11-06T11:04:10",
+  updated: "2026-11-09T11:04:09",
   source: "INDEC via apis.datos.gob.ar (SSPM)",
   hasta: "2026-08",
   serie: [
