@@ -7422,8 +7422,16 @@ function pintarIsacKpis() {
   document.getElementById('kpi-isac-idx').textContent   = fmtN(orig.get(ult), 1);
   document.getElementById('kpi-isac-fecha').textContent = isacMesLargo(ult) + ' · base 2004=100';
 
-  isacPintarPct('kpi-isac-ia',   isacVarIA(orig));
-  isacPintarPct('kpi-isac-acum', isacVarAcum(orig));
+  /* Si el mes sale del informe de prensa (la API del INDEC lo carga unos dias
+     despues), se muestran las variaciones TAL CUAL las publica el INDEC. Las
+     calcula sin redondear y el informe trae los niveles con un decimal: sobre
+     esos niveles la cuenta da +7,9% donde el informe dice +7,8%. */
+  const vInf = (window.ISAC_CACHE && window.ISAC_CACHE.varInforme) || {};
+
+  isacPintarPct('kpi-isac-ia',
+    vInf[ult] && vInf[ult].ia != null ? vInf[ult].ia : isacVarIA(orig));
+  isacPintarPct('kpi-isac-acum',
+    vInf[ult] && vInf[ult].acum != null ? vInf[ult].acum : isacVarAcum(orig));
 
   const sub = document.getElementById('kpi-isac-acum-sub');
   if (sub) {
@@ -7435,7 +7443,8 @@ function pintarIsacKpis() {
   const mesesD = [...desest.keys()].sort();
   const uD = mesesD[mesesD.length - 1], pD = mesesD[mesesD.length - 2];
   isacPintarPct('kpi-isac-desest',
-    (uD && pD && desest.get(pD)) ? (desest.get(uD) / desest.get(pD) - 1) * 100 : null);
+    (vInf[uD] && vInf[uD].desestMes != null) ? vInf[uD].desestMes
+      : ((uD && pD && desest.get(pD)) ? (desest.get(uD) / desest.get(pD) - 1) * 100 : null));
 }
 
 /* ── Gráfico del nivel general ── */

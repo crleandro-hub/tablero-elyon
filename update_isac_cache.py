@@ -29,6 +29,7 @@ Salida: isac_cache.js
       serie:    [[fecha, original, desestacionalizada], ...]   desde 2012-01
       insumos:  { clave: [[fecha, indice], ...], ... }          ultimos 30 meses
       delInforme: [meses que salen del informe y todavia no de la API]
+      varInforme: { mes: {ia, acum, desestMes} }  variaciones tal cual las publica
       insumosDesest: [claves que salen de la serie sin estacionalidad]
       empleo:   { hasta, serie: [[fecha, puestos], ...] }
       permisos: { hasta, municipios, serie: [[fecha, m2, permisos], ...] }
@@ -364,12 +365,15 @@ def _tengo_informe_de(mes, anio2):
 
 
 def _filas_cuadro1(texto):
-    """[[fecha, nivel original, desestacionalizada], ...] del cuadro 1.
+    """[[fecha, original, desest, var i.a., var acum, var mes desest], ...].
 
-    La fila trae siete numeros: nivel original, su variacion interanual, la
-    acumulada del año, el nivel desestacionalizado, su variacion mensual, el
-    nivel tendencia-ciclo y su variacion. Nos quedamos con el primero y el
-    cuarto, que son los dos niveles que guarda el cache."""
+    La fila del cuadro trae siete numeros: nivel original, su variacion
+    interanual, la acumulada del año, el nivel desestacionalizado, su
+    variacion mensual, el nivel tendencia-ciclo y su variacion. Guardamos los
+    dos niveles que lleva el cache y las tres variaciones que muestra el
+    tablero: el INDEC las calcula sin redondear, asi que cuando el dato sale
+    del informe conviene mostrar la publicada y no recalcularla sobre niveles
+    de un decimal (daria +7,9% donde el informe dice +7,8%)."""
     filas, anio, pos = [], None, 0
     dec = lambda s: float(s.replace("\u2212", "-").replace(",", "."))
     while True:
@@ -381,8 +385,10 @@ def _filas_cuadro1(texto):
             anio = int(previo[-1])
         idx = next(k for k in range(12) if mm.group("m%d" % k))
         nums = RE_DEC_INFORME.findall(texto[mm.end():mm.end() + 90])
-        if anio and len(nums) >= 4:
-            filas.append(["%04d-%02d-01" % (anio, idx + 1), dec(nums[0]), dec(nums[3])])
+        if anio and len(nums) >= 5:
+            filas.append(["%04d-%02d-01" % (anio, idx + 1),
+                          dec(nums[0]), dec(nums[3]),
+                          dec(nums[1]), dec(nums[2]), dec(nums[4])])
         pos = mm.end()
     vistos, unicas = set(), []
     for f in filas:
@@ -414,51 +420,73 @@ def completar_con_informe(serie, ruta):
 
     El INDEC publica el informe de prensa y recien varios dias despues carga
     la serie en la API del SSPM. En esa ventana el tablero mostraba el mes
-    anterior aunque el dato nuevo ya fuera publico, que es exactamente lo que
-    uno va a buscar. Ahora se completa con el informe.
+    anterior aunque el dato nuevo ya fuera publico, que es lo que uno va a
+    buscar. Ahora se completa con el informe.
 
-    Dos resguardos antes de pegar nada: los meses que estan en los dos lados
-    tienen que coincidir (el informe redondea a un decimal, asi que se compara
-    con esa tolerancia) y el mes nuevo tiene que ser el siguiente al ultimo de
-    la API, sin huecos. Si algo no cierra, se deja la serie de la API sola.
+    El control de que estamos leyendo el cuadro correcto se hace SOLO contra
+    la serie original. La desestacionalizada no sirve para controlar nada: el
+    INDEC la reestima completa en cada publicacion, asi que cambia todos los
+    meses por diseño. Medido entre el informe de agosto y el de septiembre de
+    2026: la original dio identica en los 20 meses en comun (0,00 de
+    diferencia) y la desestacionalizada se movio hasta 1,20.
 
-    Devuelve (serie, [meses que salieron del informe])."""
+    Por eso mismo, cuando se completa un mes se reescribe tambien la
+    desestacionalizada de los meses que trae el informe: si no, el mes nuevo
+    (estimacion de hoy) quedaria al lado de meses de una estimacion vieja y la
+    variacion mensual, que es justo el numero que se mira, saldria de comparar
+    dos cosas distintas. La original no se toca: la de la API tiene todos los
+    decimales y el informe redondea a uno.
+
+    Devuelve (serie, [meses del informe], {mes: variaciones publicadas})."""
     filas = nivel_desde_informe(ruta)
     if not filas or not serie:
-        return serie, []
+        return serie, [], {}
 
     ultimo = serie[-1][0]
     nuevas = [f for f in filas if f[0] > ultimo]
     if not nuevas:
-        return serie, []
+        return serie, [], {}
 
     api = {f[0]: f for f in serie}
-    comunes = [f for f in filas if f[0] in api]
+    comunes = [f for f in filas if f[0] in api and api[f[0]][1] is not None]
     if len(comunes) < 6:
         print("   [AVISO] el cuadro 1 comparte solo %d mes(es) con la API: "
               "no se completa." % len(comunes))
-        return serie, []
+        return serie, [], {}
 
-    peor = 0.0
-    for f in comunes:
-        a = api[f[0]]
-        for i in (1, 2):
-            if a[i] is not None:
-                peor = max(peor, abs(round(a[i], 1) - f[i]))
+    peor = max(abs(round(api[f[0]][1], 1) - f[1]) for f in comunes)
     if peor > 0.06:
-        print("   [AVISO] el cuadro 1 no coincide con la API (hasta %.2f de "
-              "diferencia): no se completa." % peor)
-        return serie, []
+        print("   [AVISO] la serie original del cuadro 1 no coincide con la API "
+              "(hasta %.2f de diferencia): no se completa." % peor)
+        return serie, [], {}
 
     esperado = _siguiente_mes(ultimo)
     if nuevas[0][0] != esperado:
         print("   [AVISO] el informe salta de %s a %s: no se completa."
               % (ultimo[:7], nuevas[0][0][:7]))
-        return serie, []
+        return serie, [], {}
+
+    desest = {f[0]: f[2] for f in filas}
+    publicadas = {f[0][:7]: {"ia": f[3], "acum": f[4], "desestMes": f[5]}
+                  for f in filas if len(f) >= 6}
+    salida, reestimados = [], 0
+    for f in serie:
+        d = desest.get(f[0])
+        if d is None:
+            salida.append(f)
+            continue
+        if f[2] is not None and abs(f[2] - d) > 0.05:
+            reestimados += 1
+        salida.append([f[0], f[1], d])
 
     print("   Del informe   : %s (la API del SSPM todavia va hasta %s)"
           % (", ".join(f[0][:7] for f in nuevas), ultimo[:7]))
-    return serie + nuevas, [f[0][:7] for f in nuevas]
+    if reestimados:
+        print("                   %d mes(es) de la desestacionalizada se "
+              "reescriben con la reestimacion del informe." % reestimados)
+    return (salida + [f[:3] for f in nuevas],
+            [f[0][:7] for f in nuevas],
+            {f[0][:7]: publicadas[f[0][:7]] for f in nuevas if f[0][:7] in publicadas})
 
 
 def _siguiente_mes(fecha):
@@ -551,7 +579,7 @@ def main():
             "proxima se vuelve a intentar. (Empleo y permisos, que salen del PDF, "
             "ya quedaron actualizados.)" % INTENTOS)
     print("   Nivel general : %d meses, hasta %s (API)" % (len(serie), serie[-1][0][:7]))
-    serie, del_informe = completar_con_informe(serie, ruta_informe)
+    serie, del_informe, var_informe = completar_con_informe(serie, ruta_informe)
     hasta = serie[-1][0][:7]
 
     # 2) Insumos, de a 3 ids por request (URLs mas largas fallan).
@@ -632,6 +660,7 @@ def main():
         '  source: "' + fuente + '",\n'
         '  hasta: "' + hasta + '",\n'
         "  delInforme: " + json.dumps(del_informe) + ",\n"
+        "  varInforme: " + json.dumps(var_informe, ensure_ascii=False) + ",\n"
         "  serie: [\n" + filas_serie + "\n  ],\n"
         "  insumos: {\n" + ",\n".join(bloques) + "\n  },\n"
         "  insumosDesest: " + json.dumps(desest) + ",\n"
