@@ -28,6 +28,7 @@ Salida: isac_cache.js
       updated, source, hasta,
       serie:    [[fecha, original, desestacionalizada], ...]   desde 2012-01
       insumos:  { clave: [[fecha, indice], ...], ... }          ultimos 30 meses
+      delInforme: [meses que salen del informe y todavia no de la API]
       insumosDesest: [claves que salen de la serie sin estacionalidad]
       empleo:   { hasta, serie: [[fecha, puestos], ...] }
       permisos: { hasta, municipios, serie: [[fecha, m2, permisos], ...] }
@@ -92,6 +93,11 @@ _sin_verificar = [False]     # se prende si el handshake SSL falla una vez
 
 
 def _get(url):
+    """Lo mismo que _get_bytes, decodificado como texto."""
+    return _get_bytes(url).decode("utf-8", "replace")
+
+
+def _get_bytes(url):
     """GET con reintentos.
 
     Dos cosas distintas pueden fallar. El handshake SSL, en PC con el store de
@@ -100,7 +106,7 @@ def _get(url):
     apis.datos.gob.ar a veces tarda mas que el timeout y corta: ahi no hay nada
     roto, solo hay que volver a pedir. Un intento como mucho tarda TIMEOUT, y
     son INTENTOS intentos, para no colgar la corrida entera."""
-    r = req.Request(url, headers={"User-Agent": UA, "Accept": "text/csv,*/*"})
+    r = req.Request(url, headers={"User-Agent": UA, "Accept": "text/csv,text/html,*/*"})
     ctx = ssl.create_default_context()
     ctx.check_hostname = False
     ctx.verify_mode = ssl.CERT_NONE
@@ -110,7 +116,7 @@ def _get(url):
         try:
             with req.urlopen(r, timeout=TIMEOUT,
                              context=ctx if _sin_verificar[0] else None) as resp:
-                return resp.read().decode("utf-8", "replace")
+                return resp.read()
         except ssl.SSLError as e:
             ultimo = e
             _sin_verificar[0] = True       # el proximo intento va sin verificar
@@ -168,6 +174,21 @@ def num(v):
 #  entre letras.
 # ═══════════════════════════════════════════════════════════════════
 CARPETA_INFORMES = os.path.join(BASE_DIR, "isac")
+
+# De donde sale el enlace al informe. Las paginas de seccion del INDEC arman
+# el listado por JavaScript, asi que bajadas en crudo vienen vacias; la home
+# tambien. El unico que sirve es /indec/Portada, que es el fragmento que la
+# home carga por detras y trae el enlace al informe de prensa mas reciente de
+# cada tema ya escrito en el HTML.
+INDEC_BASE = "https://www.indec.gob.ar"
+INDEC_PORTADA = INDEC_BASE + "/indec/Portada"
+RE_LINK_ISAC = re.compile(r"/uploads/informesdeprensa/(isac_[0-9A-Za-z_]+\.pdf)")
+# El nombre del informe lleva el mes de publicacion: isac_11_26XXXXXXXX.pdf
+RE_MES_ARCHIVO = re.compile(r"^isac_(\d{2})_(\d{2})")
+
+# Numeros del cuadro 1: decimales con coma, con o sin signo. No matchea la
+# prosa del informe, donde el kerning del PDF separa las cifras ("4 , 4 %").
+RE_DEC_INFORME = re.compile(r"[-\u2212]?\d{1,3},\d")
 
 COMENTARIO_MANUAL = [
     "Datos del informe mensual del INDEC 'Indicadores de coyuntura de la actividad de la construccion'",
@@ -280,6 +301,171 @@ def _avisar_revisiones(antes, ahora, etiqueta):
             print("       ...y %d mas." % (len(cambios) - 6))
 
 
+def bajar_informe_indec():
+    """Trae el ultimo informe de prensa del ISAC, si todavia no lo tenemos.
+
+    Antes el informe se dejaba a mano en la carpeta isac y por eso el tablero
+    se quedaba atras: el INDEC publica el informe varios dias antes de que la
+    serie aparezca en la API del SSPM, y nadie se enteraba. El enlace sale de
+    la portada del INDEC, que es la unica pagina que lo sirve en el HTML.
+
+    Si algo falla NO es grave: se sigue con el PDF que ya hubiera en la
+    carpeta. Devuelve la ruta del informe mas nuevo, o None."""
+    # La portada pesa un par de megas y el INDEC publica una vez por mes: si
+    # ya tenemos el informe de este mes no hay nada que buscar.
+    hoy = datetime.now()
+    if _tengo_informe_de(hoy.month, hoy.year % 100):
+        return _ultimo_informe_pdf()
+
+    try:
+        html = _get(INDEC_PORTADA)
+    except Exception as e:
+        print("   [AVISO] no se pudo leer la portada del INDEC: %s" % e)
+        return None
+
+    nombres = RE_LINK_ISAC.findall(html)
+    if not nombres:
+        print("   [AVISO] la portada del INDEC no traia enlace al informe del ISAC.")
+        return None
+
+    nombre = nombres[0]
+    destino = os.path.join(CARPETA_INFORMES, nombre)
+    if os.path.exists(destino) and os.path.getsize(destino) > 10000:
+        return destino
+
+    try:
+        os.makedirs(CARPETA_INFORMES, exist_ok=True)
+        datos = _get_bytes(INDEC_BASE + "/uploads/informesdeprensa/" + nombre)
+    except Exception as e:
+        print("   [AVISO] no se pudo bajar %s: %s" % (nombre, e))
+        return None
+
+    if not datos.startswith(b"%PDF") or len(datos) < 10000:
+        print("   [AVISO] lo que bajo de %s no es un PDF." % nombre)
+        return None
+
+    tmp = destino + ".tmp"
+    with open(tmp, "wb") as f:
+        f.write(datos)
+    os.replace(tmp, destino)
+    print("   Informe nuevo del INDEC: %s (%d KB)" % (nombre, len(datos) // 1024))
+    return destino
+
+
+def _tengo_informe_de(mes, anio2):
+    """True si en la carpeta ya hay un informe publicado en ese mes."""
+    if not os.path.isdir(CARPETA_INFORMES):
+        return False
+    for ruta in glob.glob(os.path.join(CARPETA_INFORMES, "*.pdf")):
+        m = RE_MES_ARCHIVO.match(os.path.basename(ruta).lower())
+        if m and int(m.group(1)) == mes and int(m.group(2)) == anio2:
+            return True
+    return False
+
+
+def _filas_cuadro1(texto):
+    """[[fecha, nivel original, desestacionalizada], ...] del cuadro 1.
+
+    La fila trae siete numeros: nivel original, su variacion interanual, la
+    acumulada del año, el nivel desestacionalizado, su variacion mensual, el
+    nivel tendencia-ciclo y su variacion. Nos quedamos con el primero y el
+    cuarto, que son los dos niveles que guarda el cache."""
+    filas, anio, pos = [], None, 0
+    dec = lambda s: float(s.replace("\u2212", "-").replace(",", "."))
+    while True:
+        mm = RE_MES_INFORME.search(texto, pos)
+        if not mm:
+            break
+        previo = RE_ANIO_INFORME.findall(texto[max(0, pos - 40):mm.start()])
+        if previo:
+            anio = int(previo[-1])
+        idx = next(k for k in range(12) if mm.group("m%d" % k))
+        nums = RE_DEC_INFORME.findall(texto[mm.end():mm.end() + 90])
+        if anio and len(nums) >= 4:
+            filas.append(["%04d-%02d-01" % (anio, idx + 1), dec(nums[0]), dec(nums[3])])
+        pos = mm.end()
+    vistos, unicas = set(), []
+    for f in filas:
+        if f[0] not in vistos:
+            vistos.add(f[0])
+            unicas.append(f)
+    return sorted(unicas)
+
+
+def nivel_desde_informe(ruta):
+    """Cuadro 1 del informe, o [] si no se pudo leer."""
+    if not ruta:
+        return []
+    try:
+        datos = open(ruta, "rb").read()
+    except Exception:
+        return []
+    for s in _streams_pdf(datos):
+        if "Enero" not in s or len(RE_DEC_INFORME.findall(s)) < 60:
+            continue
+        filas = _filas_cuadro1(s)
+        if len(filas) >= 12 and _contiguos(filas):
+            return filas
+    return []
+
+
+def completar_con_informe(serie, ruta):
+    """Suma al final de la serie de la API los meses que solo estan en el PDF.
+
+    El INDEC publica el informe de prensa y recien varios dias despues carga
+    la serie en la API del SSPM. En esa ventana el tablero mostraba el mes
+    anterior aunque el dato nuevo ya fuera publico, que es exactamente lo que
+    uno va a buscar. Ahora se completa con el informe.
+
+    Dos resguardos antes de pegar nada: los meses que estan en los dos lados
+    tienen que coincidir (el informe redondea a un decimal, asi que se compara
+    con esa tolerancia) y el mes nuevo tiene que ser el siguiente al ultimo de
+    la API, sin huecos. Si algo no cierra, se deja la serie de la API sola.
+
+    Devuelve (serie, [meses que salieron del informe])."""
+    filas = nivel_desde_informe(ruta)
+    if not filas or not serie:
+        return serie, []
+
+    ultimo = serie[-1][0]
+    nuevas = [f for f in filas if f[0] > ultimo]
+    if not nuevas:
+        return serie, []
+
+    api = {f[0]: f for f in serie}
+    comunes = [f for f in filas if f[0] in api]
+    if len(comunes) < 6:
+        print("   [AVISO] el cuadro 1 comparte solo %d mes(es) con la API: "
+              "no se completa." % len(comunes))
+        return serie, []
+
+    peor = 0.0
+    for f in comunes:
+        a = api[f[0]]
+        for i in (1, 2):
+            if a[i] is not None:
+                peor = max(peor, abs(round(a[i], 1) - f[i]))
+    if peor > 0.06:
+        print("   [AVISO] el cuadro 1 no coincide con la API (hasta %.2f de "
+              "diferencia): no se completa." % peor)
+        return serie, []
+
+    esperado = _siguiente_mes(ultimo)
+    if nuevas[0][0] != esperado:
+        print("   [AVISO] el informe salta de %s a %s: no se completa."
+              % (ultimo[:7], nuevas[0][0][:7]))
+        return serie, []
+
+    print("   Del informe   : %s (la API del SSPM todavia va hasta %s)"
+          % (", ".join(f[0][:7] for f in nuevas), ultimo[:7]))
+    return serie + nuevas, [f[0][:7] for f in nuevas]
+
+
+def _siguiente_mes(fecha):
+    a, m = int(fecha[:4]), int(fecha[5:7])
+    return "%04d-%02d-01" % (a + (m == 12), m % 12 + 1)
+
+
 def actualizar_manual_desde_pdf():
     """Regenera isac_manual.json con los cuadros 3 y 4 del informe.
 
@@ -350,8 +536,10 @@ def actualizar_manual_desde_pdf():
 def main():
     print("Actualizando ISAC desde apis.datos.gob.ar (INDEC / SSPM)...")
 
-    # 0) Cuadros 3 y 4 del informe del INDEC (antes de la red: si la API
-    #    falla, igual queremos empleo y permisos al dia)
+    # 0) El informe del INDEC. Se baja solo y se lee antes de pegarle a la
+    #    API: trae empleo y permisos (que la API no publica) y el nivel
+    #    general del mes nuevo, que la API carga varios dias despues.
+    ruta_informe = bajar_informe_indec() or _ultimo_informe_pdf()
     actualizar_manual_desde_pdf()
 
     # 1) Nivel general: original + desestacionalizada, serie completa
@@ -362,8 +550,9 @@ def main():
             "No se toca isac_cache.js: queda el de la corrida anterior y en la "
             "proxima se vuelve a intentar. (Empleo y permisos, que salen del PDF, "
             "ya quedaron actualizados.)" % INTENTOS)
+    print("   Nivel general : %d meses, hasta %s (API)" % (len(serie), serie[-1][0][:7]))
+    serie, del_informe = completar_con_informe(serie, ruta_informe)
     hasta = serie[-1][0][:7]
-    print("   Nivel general : %d meses, hasta %s" % (len(serie), hasta))
 
     # 2) Insumos, de a 3 ids por request (URLs mas largas fallan).
     #    Primero la serie original; lo que venga vacio se reintenta con la
@@ -442,6 +631,7 @@ def main():
         '  updated: "' + datetime.now().isoformat(timespec="seconds") + '",\n'
         '  source: "' + fuente + '",\n'
         '  hasta: "' + hasta + '",\n'
+        "  delInforme: " + json.dumps(del_informe) + ",\n"
         "  serie: [\n" + filas_serie + "\n  ],\n"
         "  insumos: {\n" + ",\n".join(bloques) + "\n  },\n"
         "  insumosDesest: " + json.dumps(desest) + ",\n"

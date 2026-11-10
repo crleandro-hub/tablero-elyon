@@ -7389,9 +7389,18 @@ async function loadIsac() {
 
   const src = document.getElementById('isac-datasource');
   if (src) {
-    src.textContent = isacSerie.length
+    /* El INDEC publica el informe de prensa y recien varios dias despues
+       carga la serie en la API del SSPM. Los meses que todavia salen solo del
+       informe se avisan: vienen redondeados a un decimal y se van a reescribir
+       con la precision de la API en cuanto esta se actualice. */
+    const delInf = (window.ISAC_CACHE && window.ISAC_CACHE.delInforme) || [];
+    const aviso = delInf.length
+      ? ' · <span style="color:var(--ambar);">' + isacMesLargo(delInf[delInf.length - 1] + '-01')
+        + ' sale del informe de prensa: la API del INDEC todavía no lo publicó</span>'
+      : '';
+    src.innerHTML = isacSerie.length
       ? '📊 INDEC vía ' + (fuente || 'cache local') +
-        ' · serie desde ' + String(isacSerie[0][0]).slice(0, 4)
+        ' · serie desde ' + String(isacSerie[0][0]).slice(0, 4) + aviso
       : '⚠ Sin datos del ISAC (no respondió la API ni hay cache).';
   }
 
