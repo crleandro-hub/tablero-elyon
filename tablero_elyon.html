@@ -7300,6 +7300,11 @@ let isacInsumos = {};   // clave -> [[fecha, indice], ...]
 /* Insumos que no salen de la serie original sino de la sin estacionalidad:
    la distribucion 33.3 del INDEC devuelve esas columnas vacias. */
 let isacInsDesest = [];
+/* Meses que se estan mostrando con el dato del informe de prensa en vez del
+   de la API. Se llena solo si el cache termino ganando: si la API ya publico
+   el mes, el dato que se ve es el suyo y no corresponde ni el aviso ni usar
+   las variaciones del informe. */
+let isacDelInforme = [];
 let isacChart = null, isacInsChart = null;
 
 /* 'aaaa-mm-dd' -> 'junio de 2026' */
@@ -7377,12 +7382,35 @@ async function loadIsac() {
     }
   } catch (_) {}
 
+  /* El cache NO es un simple respaldo para cuando no hay internet: lo arma
+     update_isac_cache.py y trae cosas que la API no da. Dos, hoy:
+
+       - el mes que el INDEC ya publico en el informe de prensa y todavia no
+         cargo en la API del SSPM (son varios dias de diferencia);
+       - los cuatro insumos cuya serie original viene vacia en la API y que el
+         script rescata de la serie sin estacionalidad.
+
+     Mientras esto fue "si la API no contesta, usá el cache", esas dos mejoras
+     solo se veian sin conexion: con internet el tablero pisaba el cache con
+     la respuesta de la API y mostraba el mes viejo y nueve insumos de trece.
+     Ahora gana el que llega mas lejos, que es como se resuelve en el resto
+     del tablero. */
   const cache = window.ISAC_CACHE;
-  if (!isacSerie.length && cache && cache.serie) {
-    isacSerie = cache.serie;
-    fuente = 'isac_cache.js · ' + (cache.hasta || '');
+
+  if (cache && cache.serie && cache.serie.length) {
+    const mes = s => s.length ? String(s[s.length - 1][0]).slice(0, 7) : '';
+    if (!isacSerie.length || mes(cache.serie) > mes(isacSerie)) {
+      fuente = isacSerie.length
+        ? 'isac_cache.js · ' + mes(cache.serie) + ' (la API va hasta ' + mes(isacSerie) + ')'
+        : 'isac_cache.js · ' + (cache.hasta || mes(cache.serie));
+      isacSerie = cache.serie;
+      isacDelInforme = cache.delInforme || [];
+    }
   }
-  if (!Object.keys(isacInsumos).length && cache && cache.insumos) {
+
+  const conDato = o => Object.keys(o || {})
+    .filter(k => (o[k] || []).some(f => f[1] != null)).length;
+  if (cache && cache.insumos && conDato(cache.insumos) > conDato(isacInsumos)) {
     isacInsumos = cache.insumos;
     isacInsDesest = cache.insumosDesest || [];
   }
@@ -7393,7 +7421,11 @@ async function loadIsac() {
        carga la serie en la API del SSPM. Los meses que todavia salen solo del
        informe se avisan: vienen redondeados a un decimal y se van a reescribir
        con la precision de la API en cuanto esta se actualice. */
-    const delInf = (window.ISAC_CACHE && window.ISAC_CACHE.delInforme) || [];
+    /* Solo si ese mes es el que se esta mostrando: si el tablero termino
+       dibujando la serie de la API, el aviso no corresponde. */
+    const enPantalla = isacSerie.length
+      ? String(isacSerie[isacSerie.length - 1][0]).slice(0, 7) : '';
+    const delInf = isacDelInforme.filter(ym => ym === enPantalla);
     const aviso = delInf.length
       ? ' · <span style="color:var(--ambar);">' + isacMesLargo(delInf[delInf.length - 1] + '-01')
         + ' sale del informe de prensa: la API del INDEC todavía no lo publicó</span>'
@@ -7426,7 +7458,8 @@ function pintarIsacKpis() {
      despues), se muestran las variaciones TAL CUAL las publica el INDEC. Las
      calcula sin redondear y el informe trae los niveles con un decimal: sobre
      esos niveles la cuenta da +7,9% donde el informe dice +7,8%. */
-  const vInf = (window.ISAC_CACHE && window.ISAC_CACHE.varInforme) || {};
+  const vInf = isacDelInforme.length
+    ? ((window.ISAC_CACHE && window.ISAC_CACHE.varInforme) || {}) : {};
 
   isacPintarPct('kpi-isac-ia',
     vInf[ult] && vInf[ult].ia != null ? vInf[ult].ia : isacVarIA(orig));
