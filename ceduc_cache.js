@@ -1,6 +1,6 @@
 /* ═══════════════════════════
    ceduc_cache.js  -  Grupo Elyon
-   Generado por update_ceduc_cache.py el 11/11/2026 11:04
+   Generado por update_ceduc_cache.py el 12/11/2026 11:04
    Fuente: CEDUC - Economic Trends S.A.
    Indice de Ventas de Inmuebles en Cordoba, base oct-2011 = 100.
    Mide VOLUMEN de ventas en unidades homogeneas de m2, no precios.
@@ -10,7 +10,7 @@
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.CEDUC_CACHE = {
-  updated: "2026-11-11T11:04:20",
+  updated: "2026-11-12T11:04:54",
   source: "CEDUC - Economic Trends S.A.",
   hasta: "2026-08",
   informe: "CEDUC - Indice de ventas de inmuebles 2026 08 version CEDUC.xlsx",
