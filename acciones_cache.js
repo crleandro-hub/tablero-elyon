@@ -1,6 +1,6 @@
 /* -----------------------------------------------------------------
    acciones_cache.js  -  Grupo Elyon  |  Actualizado automaticamente
-   Generado: 2026-11-12T17:07:40
+   Generado: 2026-11-12T18:03:48
    Las 3 mayores subas y las 3 mayores bajas del PANEL LIDER del
    Merval en la rueda. Fuente: data912 (panel de BYMA).
    pct = variacion % contra el cierre anterior
@@ -8,16 +8,16 @@
 ----------------------------------------------------------------- */
 window.ACCIONES_CACHE = {
   mejores: [
-    { symbol: "METR", nombre: "Metrogas", precio: 2268.0, pct: 2.85 },
-    { symbol: "CEPU", nombre: "Central Puerto", precio: 1719.0, pct: 1.53 },
-    { symbol: "BYMA", nombre: "BYMA", precio: 199.5, pct: 1.01 }
+    { symbol: "METR", nombre: "Metrogas", precio: 2340.0, pct: 6.12 },
+    { symbol: "CEPU", nombre: "Central Puerto", precio: 1716.0, pct: 1.35 },
+    { symbol: "BYMA", nombre: "BYMA", precio: 200.0, pct: 1.26 }
   ],
   peores: [
-    { symbol: "MIRG", nombre: "Mirgor", precio: 1695.0, pct: -5.04 },
-    { symbol: "IRSA", nombre: "IRSA", precio: 2030.0, pct: -3.56 },
-    { symbol: "BMA", nombre: "Banco Macro", precio: 9265.0, pct: -3.13 }
+    { symbol: "MIRG", nombre: "Mirgor", precio: 1715.0, pct: -3.92 },
+    { symbol: "IRSA", nombre: "IRSA", precio: 2025.0, pct: -3.8 },
+    { symbol: "BMA", nombre: "Banco Macro", precio: 9260.0, pct: -3.18 }
   ],
   panel: 23,
   fuente: "Panel líder · BYMA vía data912",
-  updated: "2026-11-12T17:07:40"
+  updated: "2026-11-12T18:03:48"
 };
