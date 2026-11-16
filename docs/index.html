@@ -1,4 +1,4 @@
-<!-- Version autocontenida generada por build_publicar.py el 16/11/2026 16:03 - datos embebidos, no depende de archivos externos -->
+<!-- Version autocontenida generada por build_publicar.py el 16/11/2026 19:07 - datos embebidos, no depende de archivos externos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -7741,7 +7741,8 @@ function renderCompMes() {
       + (filas.length === 1 ? ' índice' : ' índices') + ' con dato publicado'
       + (ipcRef == null ? ''
          : ' · la punteada es el <span style="color:' + COMP_SERIES.ipc.color
-           + ';">IPC</span>, lo que queda arriba le gana a la inflación');
+           + ';">IPC de ese mismo mes</span> (' + fmtN(ipcRef, 2)
+           + '%), lo que queda arriba le gana a la inflación');
   }
 
   // Etiqueta de valor sobre cada barra. Sin esto hay que leer el eje y el
@@ -7788,7 +7789,14 @@ function renderCompMes() {
       // Si la linea esta muy arriba, la etiqueta va abajo para no cortarse.
       const arriba = y - a.top > 14;
       g.textBaseline = arriba ? 'bottom' : 'top';
-      g.fillText('IPC ' + fmtN(ipcRef, 2) + '%', a.left + 5, y + (arriba ? -3 : 3));
+      /* Con el mes adelante. Sin eso la linea decia solo "IPC 1,93%" en una
+         pantalla donde la tarjeta de arriba muestra la inflacion del mes mas
+         reciente publicado, que suele ser otro: el grafico compara el ultimo
+         mes que tienen los INDICES DE COSTO, y el CAC y los dos ICC salen
+         bastante despues que el IPC. Dos numeros distintos de inflacion a la
+         vista y ninguno aclarando de que mes es. */
+      g.fillText('IPC ' + fmtMes(mesRef + '-01') + ' · ' + fmtN(ipcRef, 2) + '%',
+                 a.left + 5, y + (arriba ? -3 : 3));
       g.restore();
     },
   };
