@@ -1897,7 +1897,8 @@ body {
            la construccion". Los permisos se quedan, que es donde corresponden. -->
       <div style="margin:26px 0 10px;">
         <div class="sub-title">Permisos de edificación · total país</div>
-        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;">
+        <div style="font-size:10px;color:var(--gris-txt);margin-top:3px;line-height:1.5;"
+             id="isac-per-sub">
           Superficie autorizada para construir · un mes más de rezago que el ISAC
         </div>
       </div>
@@ -5391,8 +5392,17 @@ function _pintarIericKpis(clave) {
 
   cont.innerHTML = cards.join('');
 
+  /* Que el mes no avance no siempre es que el tablero se colgo: casi siempre
+     es que la fuente todavia no publico. Se dice cuando se reviso el archivo
+     del IERIC, asi se distingue "esto no se actualiza" de "esto es lo ultimo
+     que hay". */
   const fe = document.getElementById(spec.pref + '-fecha');
-  if (fe) fe.textContent = '· ' + fmtMes(u[0]) + (d.provisorio ? ' · dato provisorio' : '');
+  if (fe) {
+    const rev = (window.IERIC_CBA_CACHE || {}).updated;
+    fe.textContent = '· ' + fmtMes(u[0]) + (d.provisorio ? ' · dato provisorio' : '')
+      + ' · es el último que publicó el IERIC'
+      + (rev ? ' (archivo revisado el ' + fmtFecha(String(rev).slice(0, 10)) + ')' : '');
+  }
 
   const fu = document.getElementById(spec.pref + '-fuente');
   if (fu) {
@@ -7674,11 +7684,24 @@ function pintarIsacEmpleoPermisos() {
     }
   }
 
+  /* El mismo problema que en el IERIC, y aca con una causa concreta que
+     conviene decir: los cuadros 3 y 4 del informe van SIEMPRE un mes atras
+     del indice. El informe de septiembre trae el ISAC de septiembre pero
+     empleo y permisos hasta agosto. Sin esa linea, el mes que no avanza
+     parece un error del tablero. */
+  const mesDato = (c && c.empleo && c.empleo.hasta) || (c && c.permisos && c.permisos.hasta);
+  const mesIsac = c && c.hasta;
+  const nota = (mesDato && mesIsac)
+    ? 'Cuadros 3 y 4 del informe mensual del INDEC · no están en la API. '
+      + 'Van un mes atrás del índice: el informe que trae el ISAC de '
+      + isacMesLargo(mesIsac + '-01') + ' publica empleo y permisos hasta '
+      + isacMesLargo(mesDato + '-01') + '. Es el último dato disponible.'
+    : null;
+
   const sub = document.getElementById('isac-ep-sub');
-  if (sub && c && c.informe) {
-    sub.textContent = 'Cuadros 3 y 4 del informe del INDEC (' + c.informe +
-                      ') · no están en la API, se cargan con el informe mensual';
-  }
+  if (sub && nota) sub.textContent = nota;
+  const subPer = document.getElementById('isac-per-sub');
+  if (subPer && nota) subPer.textContent = nota;
 }
 
 /* ══════════════════════════════════════════
