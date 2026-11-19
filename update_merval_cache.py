@@ -279,21 +279,76 @@ def ccl_en2(ccl, fecha):
     return None
 
 
+def serie_del_cache():
+    """La serie que ya tiene merval_cache.js.
+
+    Es la memoria larga del tablero y, sobre todo, la que FIJA LA ESCALA. El
+    Merval se publica en escalas distintas segun la fuente (www.rava.com lo da
+    28,4894 veces mas chico que Yahoo) y eso no puede depender de cual fuente
+    conteste mejor ese dia."""
+    if not os.path.exists(CACHE_PATH):
+        return []
+    try:
+        txt = open(CACHE_PATH, encoding="utf-8").read()
+    except Exception:
+        return []
+    filas = re.findall(r'\["(\d{4}-\d{2}-\d{2})",([0-9.]+)', txt)
+    return sorted((f, float(v)) for f, v in filas)
+
+
+def alinear(serie, patron, nombre):
+    """serie reexpresada en la escala de patron, o None si no se puede.
+
+    La relacion se mide con la mediana y se juzga por el grueso de las ruedas,
+    no por la peor: dos fuentes distintas siempre tienen algun dia que no
+    cierra igual (un cierre corregido, una rueda a medias)."""
+    mapa = dict(patron)
+    comunes = [(v, mapa[f]) for f, v in serie if f in mapa and mapa[f] and v]
+    if len(comunes) < 10:
+        print("     [AVISO] %s comparte solo %d rueda(s) con la serie del "
+              "tablero: no se puede alinear." % (nombre, len(comunes)))
+        return None
+
+    razones = sorted(b / a for a, b in comunes)
+    n = len(razones)
+    k = razones[n // 2]
+    p10, p90 = razones[int(n * 0.10)], razones[min(n - 1, int(n * 0.90))]
+    cuerpo = max(abs(p10 / k - 1), abs(p90 / k - 1))
+    if cuerpo > 0.005:
+        print("     [AVISO] la relacion de %s con la serie del tablero no es "
+              "estable (el 80%% central se mueve %.2f%% en %d ruedas): se descarta."
+              % (nombre, cuerpo * 100, n))
+        return None
+
+    if abs(k - 1) > 0.005:
+        print("     %-18s se reexpresa por %.6f (publica el indice en otra escala)"
+              % (nombre, k))
+    return [(f, v * k) for f, v in serie]
+
+
 def elegir_serie():
-    """Prueba las cuatro fuentes y se queda con la que llega MAS LEJOS.
+    """Devuelve la serie del Merval, en la escala historica del tablero.
 
-    Antes era una cascada: la primera que contestara ganaba. El problema es
-    que una fuente puede contestar perfecto y estar vieja, y entonces nunca se
-    llegaba a las de atras. Paso en octubre de 2026: Yahoo dejo de actualizar
-    el ^MERV el 16/10 pero seguia respondiendo con la serie hasta esa fecha,
-    asi que el tablero se quedo una semana clavado mientras el mercado
-    operaba. Responder no es lo mismo que estar al dia.
+    Como se llego a esto. Primero era una cascada y ganaba la primera fuente
+    que contestara: en octubre de 2026 Yahoo dejo de actualizar el ^MERV pero
+    seguia respondiendo, y el tablero se quedo una semana clavado. Se cambio a
+    "gana la que llega mas lejos", con la mas LARGA de base y las demas
+    empalmadas encima, reexpresadas si venian en otra escala.
 
-    Se las prueba a todas, que son pedidos livianos una vez por hora. La serie
-    larga la pone la fuente con mas ruedas; si otra llega a dias mas nuevos, se
-    le empalman esos dias, pero solo despues de comprobar que las dos miden lo
-    mismo en las ruedas que comparten. Sin ese control, una fuente en otra
-    escala meteria un salto inventado en el grafico."""
+    Eso fallo el 7 de noviembre de 2026 y hay que dejarlo escrito. Yahoo se
+    degrado del todo: paso de devolver 1.216 ruedas a devolver 64. La serie
+    mas larga paso a ser la de www.rava.com, que se volvio la BASE, y una base
+    no se reexpresa contra nada: el tablero se quedo con la escala de Rava.
+    El Merval paso de 2.394.592 a 81.932 puntos, el valor en dolares de 1.700
+    a 48, y el grafico perdio cinco años de historia de un dia para el otro.
+    Doce dias asi.
+
+    El error de fondo era tomar la escala y la historia de una fuente que
+    puede cambiar. Ahora las dos salen del cache: la serie que ya esta en
+    merval_cache.js es el patron, toda fuente se reexpresa contra ella antes
+    de tocar nada, y lo unico que las fuentes aportan son las ruedas nuevas.
+    Asi el tablero no puede cambiar de escala ni perder historia porque una
+    fuente se rompa."""
     candidatas = [
         ("Yahoo Finance", serie_yahoo),
         ("Rava (API)", serie_rava_api),
@@ -313,66 +368,67 @@ def elegir_serie():
         print("     %-18s hasta %s (%d ruedas)" % (nombre, serie[-1][0], len(serie)))
         vivas.append((nombre, serie))
 
+    historico = serie_del_cache()
+
+    if not historico:
+        # Primera corrida: no hay patron, manda la mas larga y se avisa.
+        if not vivas:
+            return None
+        nombre, serie = max(vivas, key=lambda x: len(x[1]))
+        print("   No hay cache previo: se arranca con %s (%d ruedas). La escala "
+              "de esta corrida queda como patron." % (nombre, len(serie)))
+        return serie
+
     if not vivas:
-        return None
+        print("   Ninguna fuente contesto: se conserva la serie del cache "
+              "(%d ruedas, hasta %s)." % (len(historico), historico[-1][0]))
+        return historico
 
-    # Base: la serie mas larga, que es la que da el historico del grafico.
-    base_nombre, base = max(vivas, key=lambda x: len(x[1]))
-    fresca_nombre, fresca = max(vivas, key=lambda x: x[1][-1][0])
+    ultimo = historico[-1][0]
+    mejor = None
+    for nombre, serie in vivas:
+        alineada = alinear(serie, historico, nombre)
+        if not alineada:
+            continue
+        nuevas = [f for f in alineada if f[0] > ultimo]
+        if nuevas and (mejor is None or nuevas[-1][0] > mejor[1][-1][0]):
+            mejor = (nombre, nuevas)
 
-    if fresca[-1][0] <= base[-1][0]:
-        print("   Se usa %s (%d ruedas, hasta %s)."
-              % (base_nombre, len(base), base[-1][0]))
-        return base
+    if not mejor:
+        print("   Ninguna fuente aporta ruedas nuevas: la serie queda en %s "
+              "(%d ruedas)." % (ultimo, len(historico)))
+        return historico
 
-    # Hay una fuente que llega mas lejos. Antes de empalmar hay que ver si
-    # miden lo mismo, y en que escala. www.rava.com publica el Merval en una
-    # escala propia: en octubre de 2026 daba 100.000 el mismo dia que Yahoo
-    # daba 2.848.945, exactamente 28,4895 veces mas. Es el mismo indice con
-    # otra unidad, asi que se puede encadenar, pero reexpresandolo primero.
-    mapa_base = dict(base)
-    comunes = [(v, mapa_base[f]) for f, v in fresca if f in mapa_base and mapa_base[f]]
-    if len(comunes) < 10:
-        print("   [AVISO] %s llega hasta %s pero comparte solo %d rueda(s) con "
-              "%s: no se empalma." % (fresca_nombre, fresca[-1][0], len(comunes),
-                                      base_nombre))
-        return base
-
-    # La relacion se mide con la mediana y se juzga por el grueso de las
-    # ruedas, no por la peor. Dos fuentes distintas siempre tienen algun dia
-    # que no cierra igual (un cierre corregido, una rueda a medias), y con el
-    # maximo alcanzaba un solo dia raro en 240 para bloquear el empalme.
-    razones = sorted(b / a for a, b in comunes if a)
-    n = len(razones)
-    k = razones[n // 2]                                 # mediana
-    p10, p90 = razones[int(n * 0.10)], razones[min(n - 1, int(n * 0.90))]
-    cuerpo = max(abs(p10 / k - 1), abs(p90 / k - 1))    # dispersion del 80% central
-    peores = sum(1 for r in razones if abs(r / k - 1) > 0.005)
-
-    if cuerpo > 0.005:
-        print("   [AVISO] la relacion entre %s y %s no es estable "
-              "(el 80%% central se mueve %.2f%% en %d ruedas en comun): no se empalma."
-              % (fresca_nombre, base_nombre, cuerpo * 100, n))
-        return base
-
-    nuevas = [(f, v * k) for f, v in fresca if f > base[-1][0]]
-    escala = ("" if abs(k - 1) < 0.005
-              else " reexpresadas por %.6f (la fuente publica el indice en otra escala)" % k)
-    print("   Se usa %s (%d ruedas) y se le empalman %d rueda(s) de %s%s, "
-          "hasta %s. En las %d ruedas en comun el 80%% central se mueve %.3f%%%s."
-          % (base_nombre, len(base), len(nuevas), fresca_nombre, escala,
-             fresca[-1][0], n, cuerpo * 100,
-             "" if not peores else " (%d rueda(s) sueltas se van mas de 0,5%%)" % peores))
-    return base + nuevas
+    nombre, nuevas = mejor
+    print("   Se agregan %d rueda(s) de %s, hasta %s. La escala y los %d dias "
+          "de historia los pone el cache."
+          % (len(nuevas), nombre, nuevas[-1][0], len(historico)))
+    return historico + nuevas
 
 
 def main():
     print("Actualizando merval_cache.js ...")
 
+    previo = serie_del_cache()
     serie = elegir_serie()
     if not serie:
         raise SystemExit("[ERROR] Ninguna fuente devolvio el Merval. "
                          "Se conserva el cache anterior.")
+
+    # Doble llave sobre lo que fallo el 7 de noviembre de 2026: el cache no
+    # puede encoger ni cambiar de escala de una corrida a la otra. elegir_serie
+    # ya lo garantiza, pero esto queda por si alguien la toca mas adelante.
+    if previo:
+        if len(serie) < len(previo):
+            raise SystemExit(
+                "[ERROR] la serie nueva tiene %d ruedas y el cache tenia %d. "
+                "No se escribe: algo perdio historia." % (len(serie), len(previo)))
+        nuevo = dict(serie).get(previo[-1][0])
+        if nuevo and previo[-1][1] and abs(nuevo / previo[-1][1] - 1) > 0.02:
+            raise SystemExit(
+                "[ERROR] el %s el cache decia %.1f y ahora da %.1f. No se "
+                "escribe: parece un cambio de escala, no una revision."
+                % (previo[-1][0], previo[-1][1], nuevo))
 
     corte = str(datetime.now().year - ANIOS_SERIE) + "-01-01"
     serie = [(f, v) for f, v in serie if f >= corte]
