@@ -177,6 +177,44 @@ body {
 .res-vars .rot { color: var(--gris-txt); letter-spacing: .3px; }
 .res-vars .val { font-size: 14px; font-weight: 700; }
 
+/* ─── KPI PRENDIDO FUEGO ──────────────────────────────────
+   Cuando una cotizacion se mueve fuerte en el dia, la tarjeta se enciende.
+   Son seis precios que se miran varias veces por dia (los cinco dolares y el
+   riesgo pais) y el numero solo no alcanza para que salte a la vista: entre
+   doce tarjetas iguales, un 1,4% se lee igual que un 0,1%.
+
+   Dos capas: el borde late como una brasa y abajo se mueven dos lenguas de
+   fuego. Las dos son gradientes, no imagenes, asi no pesa nada. */
+@keyframes brasa {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(255,120,20,.50), 0 0 13px -3px rgba(255,90,10,.45); }
+  50%      { box-shadow: 0 0 0 1px rgba(255,170,45,.85), 0 0 26px  1px rgba(255,110,20,.70); }
+}
+@keyframes lenguas {
+  from { background-position: 10% 115%, 75% 125%; }
+  to   { background-position: 75% 120%, 15% 115%; }
+}
+.card.en-llamas {
+  position: relative; overflow: hidden;
+  border-color: rgba(255,140,30,.7);
+  animation: brasa 1.7s ease-in-out infinite;
+}
+.card.en-llamas::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 55%;
+  pointer-events: none; opacity: .45;
+  background:
+    radial-gradient(60% 115% at 30% 120%, rgba(255,85,0,.95)  0%, rgba(255,85,0,0)  72%),
+    radial-gradient(52% 110% at 70% 125%, rgba(255,185,30,.8) 0%, rgba(255,185,30,0) 70%);
+  background-repeat: no-repeat;
+  background-size: 150% 150%, 130% 130%;
+  animation: lenguas 2.3s ease-in-out infinite alternate;
+}
+/* El contenido de la tarjeta queda por encima de las llamas */
+.card.en-llamas > * { position: relative; z-index: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .card.en-llamas, .card.en-llamas::after { animation: none; }
+}
+
 /* ─── NAVEGACIÓN A LAS PANTALLAS DE DETALLE ─────────────────
    El tablero quedo largo: cada seccion pesada muestra el resumen y manda el
    detalle (aperturas, graficos, buscador historico, lectura del dato) a su
@@ -2347,6 +2385,22 @@ async function loadEuro() {
    VARIACIONES DÓLAR — ArgentinaDatos
    Variación diaria e interanual de las cuatro cotizaciones.
 ═══════════════════════════════════════ */
+/* ── Tarjetas que se prenden fuego ──
+   Se enciende por el TAMAÑO del movimiento, no por su signo: un salto de
+   1,5% para abajo importa tanto como uno para arriba, y la direccion ya la
+   dice el color del numero. Solo la usan los seis KPI de precio que se miran
+   varias veces por dia. */
+const LLAMAS_UMBRAL = 1;   // % de variacion diaria
+
+function marcarLlamas(cardId, pct) {
+  const el = document.getElementById(cardId);
+  if (!el) return;
+  const arde = pct != null && !isNaN(pct) && Math.abs(pct) >= LLAMAS_UMBRAL;
+  el.classList.toggle('en-llamas', arde);
+  if (arde) el.title = 'Se movió ' + fmtN(Math.abs(pct), 2) + '% en el día';
+  else el.removeAttribute('title');
+}
+
 function setVarBadge(id, pct, label) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -2387,15 +2441,16 @@ async function loadDolarVariaciones() {
     if (!serie.length) {
       setVarBadge(`var-${id}-dia`, null, 'día —');
       setVarBadge(`var-${id}-ia`,  null, 'año —');
+      marcarLlamas('dolar-' + id, null);
       return;
     }
 
     const hoy  = serie[0];    // la serie viene descendente
     const ayer = serie[1];
 
-    setVarBadge(`var-${id}-dia`,
-      (ayer && ayer.venta) ? (hoy.venta / ayer.venta - 1) * 100 : null,
-      ayer ? 'día' : 'día —');
+    const varDia = (ayer && ayer.venta) ? (hoy.venta / ayer.venta - 1) * 100 : null;
+    setVarBadge(`var-${id}-dia`, varDia, ayer ? 'día' : 'día —');
+    marcarLlamas('dolar-' + id, varDia);
 
     const ref = buscarUsd(casa, uvaDesplazar(hoy.fecha, { anios: 1 }));
     setVarBadge(`var-${id}-ia`,
@@ -2606,6 +2661,10 @@ async function loadRiesgo() {
     fmtN(mejor.valor, 0) + ' pb',
     fmtFecha(mejor.fecha) + ' · ' + mejor.fuente + varTxt,
     '#f59e0b');
+
+  /* Solo arde si sabemos cuanto se movio: argentinadatos da el nivel pero no
+     la variacion del dia, esa sale del cache de Rava. */
+  marcarLlamas('card-riesgo', mejor.varDia);
 }
 
 /* ── BADLAR (BCRA serie 7 — TNA bancos privados) ── */
