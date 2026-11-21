@@ -1,6 +1,6 @@
 /* ═══════════════════════════
    construya_cache.js  -  Grupo Elyon
-   Generado por update_construya_cache.py el 20/11/2026 12:18
+   Generado por update_construya_cache.py el 21/11/2026 10:20
    Fuente: Grupo Construya (indice_construya)
    Columnas: fecha, indice con estacionalidad, indice desestacionalizado,
              var. interanual, var. acumulada del año y var. mensual
@@ -8,7 +8,9 @@
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.CONSTRUYA_CACHE = {
-  updated: "2026-11-20T12:18:17",
+  chequeado: "2026-11-21T10:20:02",
+  aviso: null,
+  updated: "2026-11-21T10:20:02",
   source: "Grupo Construya (indice_construya)",
   hasta: "2026-10",
   informe: "",
