@@ -14,3 +14,4 @@
 # Scripts de Windows: siempre CRLF, cmd.exe lo necesita
 *.bat  text eol=crlf
 *.ps1  text eol=crlf
+*.vbs  text eol=crlf

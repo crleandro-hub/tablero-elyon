@@ -37,6 +37,7 @@ Uso tipico, al final del script:
 """
 
 import os
+import time
 import re
 from datetime import datetime
 
@@ -69,14 +70,32 @@ def marcar(cache_path, aviso=None):
         marca += "\n  aviso: null,"
 
     txt = txt.replace(m.group(1), m.group(1) + marca, 1)
+
+    # El reemplazo atomico falla cada tanto en esta carpeta: esta dentro de
+    # Dropbox y, si justo esta sincronizando el cache, Windows no deja
+    # reemplazarlo (WinError 5). Antes eso se tragaba en silencio y dejaba un
+    # .tmp tirado: en noviembre de 2026 habia tres en la carpeta y la marca
+    # nunca se habia escrito. Se reintenta un par de veces, y pase lo que
+    # pase el .tmp no queda.
+    tmp = cache_path + ".tmp"
+    ultimo = None
+    for intento in range(3):
+        try:
+            with open(tmp, "w", encoding="utf-8", newline="\n") as f:
+                f.write(txt)
+            os.replace(tmp, cache_path)  # atomico: nunca queda un cache a medias
+            return True
+        except Exception as e:
+            ultimo = e
+            time.sleep(0.4 * (intento + 1))
     try:
-        tmp = cache_path + ".tmp"
-        with open(tmp, "w", encoding="utf-8", newline="\n") as f:
-            f.write(txt)
-        os.replace(tmp, cache_path)     # atomico: nunca queda un cache a medias
-        return True
+        if os.path.exists(tmp):
+            os.remove(tmp)
     except Exception:
-        return False
+        pass
+    print("   [AVISO] no se pudo estampar la marca en %s: %s"
+          % (os.path.basename(cache_path), ultimo))
+    return False
 
 
 def limpiar_diagnostico(base_dir, nombre, *extensiones):

@@ -17,7 +17,20 @@ if (-not (Test-Path $bat)) {
 }
 
 try {
-    $accion = New-ScheduledTaskAction -Execute $bat -WorkingDirectory $carpeta
+    # La tarea NO llama al .bat directamente: lo lanza _silencioso.vbs, que lo
+    # corre sin ventana. Si se ejecuta el .bat derecho, cmd.exe abre su ventana
+    # negra en primer plano cada dos horas, arriba de lo que uno este haciendo.
+    # Si por politica de la PC no se pueden correr .vbs, se cae al metodo de
+    # antes: mejor una ventana molesta que una tarea que no corre.
+    $lanzador = Join-Path $carpeta "_silencioso.vbs"
+    if (Test-Path $lanzador) {
+        $accion = New-ScheduledTaskAction -Execute "wscript.exe" `
+            -Argument ('//B //Nologo "{0}"' -f $lanzador) -WorkingDirectory $carpeta
+        $modo = "sin ventana (via _silencioso.vbs)"
+    } else {
+        $accion = New-ScheduledTaskAction -Execute $bat -WorkingDirectory $carpeta
+        $modo = "con ventana (falta _silencioso.vbs)"
+    }
 
     # Una corrida cada 2 horas, de 11 a 17. Un trigger no admite varias horas,
     # asi que se arma uno por horario y se registran todos juntos: es una sola
@@ -47,6 +60,7 @@ try {
     Write-Host "[OK] Tarea creada: '$nombre'" -ForegroundColor Green
     Write-Host ""
     Write-Host ("  Cuando  : lunes a viernes, cada 2 horas de {0} a {1}" -f $horarios[0], $horarios[-1]) -ForegroundColor Gray
+    Write-Host ("  Como    : {0}" -f $modo) -ForegroundColor Gray
     Write-Host "  Si la PC estaba apagada, corre apenas la prendas." -ForegroundColor Gray
     Write-Host ("  Corridas por dia: {0}" -f $horarios.Count) -ForegroundColor Gray
     Write-Host "  Si se solapan dos corridas, la segunda se descarta." -ForegroundColor Gray
