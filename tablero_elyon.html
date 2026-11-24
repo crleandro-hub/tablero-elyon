@@ -177,14 +177,19 @@ body {
 .res-vars .rot { color: var(--gris-txt); letter-spacing: .3px; }
 .res-vars .val { font-size: 14px; font-weight: 700; }
 
-/* ─── KPI PRENDIDO FUEGO ──────────────────────────────────
-   Cuando una cotizacion se mueve fuerte en el dia, la tarjeta se enciende.
+/* ─── KPI QUE SE MUEVE FUERTE: FUEGO Y AGUA ───────────────
+   Cuando una cotizacion se mueve mas de 1% en el dia, la tarjeta reacciona.
    Son seis precios que se miran varias veces por dia (los cinco dolares y el
    riesgo pais) y el numero solo no alcanza para que salte a la vista: entre
    doce tarjetas iguales, un 1,4% se lee igual que un 0,1%.
 
-   Dos capas: el borde late como una brasa y abajo se mueven dos lenguas de
-   fuego. Las dos son gradientes, no imagenes, asi no pesa nada. */
+   Sube fuerte -> se prende fuego. Baja fuerte -> se inunda. La direccion se
+   lee de lejos, sin leer el numero, y el signo ya no depende solo del color
+   del porcentaje.
+
+   Las dos son dos capas de gradiente, sin imagenes: un resplandor que late en
+   el borde y, abajo, dos manchas que se desplazan. Cambia el ritmo ademas del
+   color: el fuego titila rapido y nervioso, el agua se mueve lento y parejo. */
 @keyframes brasa {
   0%, 100% { box-shadow: 0 0 0 1px rgba(255,120,20,.50), 0 0 13px -3px rgba(255,90,10,.45); }
   50%      { box-shadow: 0 0 0 1px rgba(255,170,45,.85), 0 0 26px  1px rgba(255,110,20,.70); }
@@ -211,8 +216,35 @@ body {
 /* El contenido de la tarjeta queda por encima de las llamas */
 .card.en-llamas > * { position: relative; z-index: 1; }
 
+/* Agua: el mismo armado que el fuego, en frio y mas lento. */
+@keyframes marea {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(40,150,255,.45), 0 0 13px -3px rgba(20,120,255,.40); }
+  50%      { box-shadow: 0 0 0 1px rgba(70,190,255,.80), 0 0 26px  1px rgba(30,140,255,.65); }
+}
+@keyframes olas {
+  from { background-position: 12% 118%, 72% 126%; }
+  to   { background-position: 72% 122%, 18% 118%; }
+}
+.card.en-agua {
+  position: relative; overflow: hidden;
+  border-color: rgba(60,170,255,.65);
+  animation: marea 3.2s ease-in-out infinite;
+}
+.card.en-agua::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 55%;
+  pointer-events: none; opacity: .42;
+  background:
+    radial-gradient(62% 115% at 32% 122%, rgba(0,130,255,.90) 0%, rgba(0,130,255,0) 72%),
+    radial-gradient(54% 110% at 68% 126%, rgba(60,220,255,.75) 0%, rgba(60,220,255,0) 70%);
+  background-repeat: no-repeat;
+  background-size: 150% 150%, 130% 130%;
+  animation: olas 4.6s ease-in-out infinite alternate;
+}
+.card.en-agua > * { position: relative; z-index: 1; }
+
 @media (prefers-reduced-motion: reduce) {
-  .card.en-llamas, .card.en-llamas::after { animation: none; }
+  .card.en-llamas, .card.en-llamas::after,
+  .card.en-agua,   .card.en-agua::after { animation: none; }
 }
 
 /* ─── NAVEGACIÓN A LAS PANTALLAS DE DETALLE ─────────────────
@@ -2385,20 +2417,25 @@ async function loadEuro() {
    VARIACIONES DÓLAR — ArgentinaDatos
    Variación diaria e interanual de las cuatro cotizaciones.
 ═══════════════════════════════════════ */
-/* ── Tarjetas que se prenden fuego ──
-   Se enciende por el TAMAÑO del movimiento, no por su signo: un salto de
-   1,5% para abajo importa tanto como uno para arriba, y la direccion ya la
-   dice el color del numero. Solo la usan los seis KPI de precio que se miran
-   varias veces por dia. */
-const LLAMAS_UMBRAL = 1;   // % de variacion diaria
+/* ── Tarjetas que reaccionan al movimiento del dia ──
+   Arriba de +1% la tarjeta se prende fuego; abajo de -1% se inunda. Asi la
+   direccion se ve de lejos, sin leer el numero. Solo la usan los seis KPI de
+   precio que se miran varias veces por dia. */
+const PULSO_UMBRAL = 1;   // % de variacion diaria
 
-function marcarLlamas(cardId, pct) {
+function marcarPulso(cardId, pct) {
   const el = document.getElementById(cardId);
   if (!el) return;
-  const arde = pct != null && !isNaN(pct) && Math.abs(pct) >= LLAMAS_UMBRAL;
+  const v = (pct == null || isNaN(pct)) ? null : pct;
+  const arde   = v != null && v >=  PULSO_UMBRAL;
+  const moja   = v != null && v <= -PULSO_UMBRAL;
   el.classList.toggle('en-llamas', arde);
-  if (arde) el.title = 'Se movió ' + fmtN(Math.abs(pct), 2) + '% en el día';
-  else el.removeAttribute('title');
+  el.classList.toggle('en-agua',   moja);
+  if (arde || moja) {
+    el.title = (arde ? 'Subió ' : 'Bajó ') + fmtN(Math.abs(v), 2) + '% en el día';
+  } else {
+    el.removeAttribute('title');
+  }
 }
 
 function setVarBadge(id, pct, label) {
@@ -2441,7 +2478,7 @@ async function loadDolarVariaciones() {
     if (!serie.length) {
       setVarBadge(`var-${id}-dia`, null, 'día —');
       setVarBadge(`var-${id}-ia`,  null, 'año —');
-      marcarLlamas('dolar-' + id, null);
+      marcarPulso('dolar-' + id, null);
       return;
     }
 
@@ -2450,7 +2487,7 @@ async function loadDolarVariaciones() {
 
     const varDia = (ayer && ayer.venta) ? (hoy.venta / ayer.venta - 1) * 100 : null;
     setVarBadge(`var-${id}-dia`, varDia, ayer ? 'día' : 'día —');
-    marcarLlamas('dolar-' + id, varDia);
+    marcarPulso('dolar-' + id, varDia);
 
     const ref = buscarUsd(casa, uvaDesplazar(hoy.fecha, { anios: 1 }));
     setVarBadge(`var-${id}-ia`,
@@ -2662,9 +2699,9 @@ async function loadRiesgo() {
     fmtFecha(mejor.fecha) + ' · ' + mejor.fuente + varTxt,
     '#f59e0b');
 
-  /* Solo arde si sabemos cuanto se movio: argentinadatos da el nivel pero no
-     la variacion del dia, esa sale del cache de Rava. */
-  marcarLlamas('card-riesgo', mejor.varDia);
+  /* Solo reacciona si sabemos cuanto se movio: argentinadatos da el nivel
+     pero no la variacion del dia, esa sale del cache de Rava. */
+  marcarPulso('card-riesgo', mejor.varDia);
 }
 
 /* ── BADLAR (BCRA serie 7 — TNA bancos privados) ── */
