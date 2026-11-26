@@ -1260,12 +1260,22 @@ body {
         <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="zp-fecha"></span>
       </div>
       <div style="font-size:10px;color:var(--gris-txt);margin:3px 0 10px;line-height:1.5;">
-        ZPIndex de Zonaprop · precio de <strong style="color:#bbb;">oferta</strong> en dólares
-        por m², no de escritura. Es a cuánto se pide, no a cuánto se cierra.
+        Precio de <strong style="color:#bbb;">oferta</strong> en dólares por m², no de
+        escritura: es a cuánto se pide, no a cuánto se cierra. Roomix y Mudafy se
+        actualizan todos los meses; Zonaprop quedó congelado y va como ancla histórica.
       </div>
       <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));"
            id="zp-kpis"></div>
-      <div id="zp-titular" style="font-size:10.5px;color:var(--gris-txt);margin-top:10px;
+      <div id="zp-serie-wrap" style="display:none;">
+        <div class="chart-wrap" style="height:210px;">
+          <canvas id="chart-precio-cba" role="img"
+                  aria-label="Precio de oferta por m2 en Córdoba capital, serie mensual"></canvas>
+        </div>
+        <div style="font-size:9.5px;color:var(--gris-txt);margin-top:6px;line-height:1.5;"
+             id="zp-serie-nota"></div>
+      </div>
+      <div id="zp-barrios" style="display:none;margin-top:16px;"></div>
+      <div id="zp-titular" style="font-size:10.5px;color:var(--gris-txt);margin-top:12px;
            line-height:1.65;"></div>
     </div>
 
@@ -2101,6 +2111,7 @@ body {
 <script src="salarios_cache.js"></script>  <!-- escalas UOCRA / UECARA, se edita a mano -->
 <script src="ieric_cba_cache.js"></script>  <!-- generado por update_ieric_cba_cache.py -->
 <script src="zpindex_cache.js"></script>  <!-- generado por update_zpindex_cache.py -->
+<script src="precio_cba_cache.js"></script>  <!-- generado por update_precio_cba_cache.py -->
 <!-- ══════════════════════════════════════
      JAVASCRIPT
 ══════════════════════════════════════ -->
@@ -2136,7 +2147,7 @@ function showScreen(id) {
     initIccCba();     // ICC de Córdoba (dato local, pinta al toque)
     initIccIndec();   // ICC del INDEC · Gran Buenos Aires (dato local)
     initRgp();        // Registro General de Córdoba (dato local)
-    pintarZpIndex();  // precio de venta USD/m² · ZPIndex (dato local)
+    pintarPrecioVenta();  // precio de venta USD/m² · Roomix + Mudafy + ZPIndex (dato local)
     initCeduc();      // ventas de desarrollistas · CEDUC (dato local)
     loadConstruya();  // Índice Construya (dato local, no tiene API)
     initApymeco();    // costo del m² · APYMECO (dato local; el gráfico en
@@ -7354,67 +7365,222 @@ function renderCeducChart() {
 }
 
 /* ══════════════════════════════════════════
-   PRECIO DE VENTA — ZPINDEX DE ZONAPROP
+   PRECIO DE VENTA · DEPARTAMENTOS EN CÓRDOBA
 
    El tablero medía el costo de construir con cuatro índices y no tenía nada
    del otro lado: a cuánto se vende. Sin eso no se lee el margen, que es la
    pregunta de fondo: cuando el costo corre más rápido que el precio, el
    negocio se cierra aunque los dos estén subiendo.
 
+   Tres fuentes, en este orden:
+
+     · Roomix    serie mensual propia bajada en CSV (15 meses al 26/11/2026),
+                 con el valor de departamentos aparte del total de mercado y
+                 la apertura por barrio. Es la fuente viva principal.
+     · Mudafy    monitor que se actualiza todos los días. No publica serie,
+                 así que sirve de control cruzado del nivel de Roomix.
+     · Zonaprop  el ZPIndex, congelado en marzo de 2026 para Córdoba. Queda
+                 como ancla histórica, con el atraso dicho en la tarjeta.
+                 CABA va al lado porque sí se sigue publicando.
+
    Dos advertencias que la sección tiene que dejar dichas, porque el número
    solo se malinterpreta:
 
      · es precio de OFERTA (lo que se pide en el aviso), no de escritura;
-     · Zonaprox dejó de publicar Córdoba en marzo de 2026. El dato se muestra
-       con su mes y, si quedó viejo, se avisa. CABA va al lado justamente
-       porque sí se publica: sirve para ver si el mercado se movió desde
-       entonces, aunque sea otra plaza.
+     · el CSV de Roomix mezcla casas y departamentos, por eso su serie corre
+       más abajo que el valor de departamentos. Los niveles comparables entre
+       fuentes son los de departamentos, no el de la serie.
 ══════════════════════════════════════════ */
-function pintarZpIndex() {
-  const c = window.ZPINDEX_CACHE;
+let precioCbaChart = null;
+
+function pintarPrecioVenta() {
+  const zp = window.ZPINDEX_CACHE;
+  const pc = window.PRECIO_CBA_CACHE;
   const bloque = document.getElementById('zp-bloque');
-  const cont = document.getElementById('zp-kpis');
-  if (!bloque || !cont || !c || !c.plazas) return;
+  const cont   = document.getElementById('zp-kpis');
+  if (!bloque || !cont) return;
 
-  const claves = Object.keys(c.plazas);
-  if (!claves.length) return;
-  bloque.style.display = '';
-
-  const meses = ym => {
+  // Meses de atraso de un dato mensual, contra hoy.
+  const atrasoDe = ym => {
+    if (!ym) return 0;
     const [a, m] = ym.split('-').map(Number);
     const hoy = new Date();
     return (hoy.getFullYear() - a) * 12 + (hoy.getMonth() + 1 - m);
   };
+  const pct = (v, suf) => v == null ? ''
+    : ' · <span style="color:' + (v >= 0 ? 'var(--verde)' : 'var(--ambar)')
+      + ';font-weight:700;">' + (v >= 0 ? '+' : '') + fmtN(v, 1) + '%</span> ' + suf;
 
-  cont.innerHTML = claves.map((k, i) => {
-    const d = c.plazas[k];
-    const atraso = meses(d.mes);
-    const viejo  = atraso >= 3;
-    const col = d.varMes == null ? '' : (d.varMes >= 0 ? 'var(--verde)' : 'var(--ambar)');
-    return '<div class="card' + (i === 0 ? ' destacada' : '') + '">'
-      +   '<div class="kpi-label">' + d.nombre + '</div>'
-      +   '<div class="kpi-value">US$ ' + fmtN(d.usdM2, 0) + '<span style="font-size:13px;'
-      +     'color:var(--gris-txt);font-weight:600;"> /m²</span></div>'
-      +   '<div class="kpi-sub">' + isacMesLargo(d.mes + '-01')
-      +     (d.varMes == null ? ''
-          : ' · <span style="color:' + col + ';font-weight:700;">'
-            + (d.varMes >= 0 ? '+' : '') + fmtN(d.varMes, 1) + '%</span> en el mes')
-      +   '</div>'
-      +   (viejo
-          ? '<div style="font-size:10px;color:var(--ambar);margin-top:7px;line-height:1.5;">'
-            + '⚠ Zonaprop no publica esta plaza desde ' + isacMesLargo(d.mes + '-01')
-            + ' (' + atraso + ' meses). Es el último dato que hay.</div>'
-          : '')
-      + '</div>';
-  }).join('');
+  const tarjeta = o =>
+    '<div class="card' + (o.destacada ? ' destacada' : '') + '">'
+    + '<div class="kpi-label">' + o.titulo + '</div>'
+    + '<div class="kpi-value">US$ ' + fmtN(o.usd, 0)
+    +   '<span style="font-size:13px;color:var(--gris-txt);font-weight:600;"> /m²</span></div>'
+    + '<div class="kpi-sub">' + o.sub + '</div>'
+    + (o.aviso ? '<div style="font-size:10px;color:var(--ambar);margin-top:7px;'
+                 + 'line-height:1.5;">⚠ ' + o.aviso + '</div>' : '')
+    + '</div>';
 
+  const cards = [];
+
+  if (pc && pc.roomix && pc.roomix.deptosUsdM2) {
+    const r = pc.roomix;
+    cards.push(tarjeta({
+      titulo: 'Córdoba capital · Roomix', usd: r.deptosUsdM2, destacada: true,
+      sub: isacMesLargo(r.mes + '-01') + ' · departamentos' + pct(r.varIa, 'i.a.'),
+      aviso: atrasoDe(r.mes) >= 3
+        ? 'Roomix no actualiza desde ' + isacMesLargo(r.mes + '-01') + '.' : '',
+    }));
+  }
+
+  if (pc && pc.mudafy && pc.mudafy.deptosUsdM2) {
+    const m = pc.mudafy;
+    cards.push(tarjeta({
+      titulo: 'Córdoba capital · Mudafy', usd: m.deptosUsdM2,
+      sub: 'al ' + (m.fecha || isacMesLargo(m.mes + '-01')) + ' · contraste'
+         + (m.tipico ? ' · típico US$ ' + fmtN(m.tipico, 0) : ''),
+      aviso: atrasoDe(m.mes) >= 3
+        ? 'Mudafy no actualiza desde ' + isacMesLargo(m.mes + '-01') + '.' : '',
+    }));
+  }
+
+  if (zp && zp.plazas) {
+    Object.keys(zp.plazas).forEach(k => {
+      const d = zp.plazas[k];
+      const atraso = atrasoDe(d.mes);
+      cards.push(tarjeta({
+        titulo: d.nombre + ' · Zonaprop', usd: d.usdM2,
+        sub: isacMesLargo(d.mes + '-01') + pct(d.varMes, 'en el mes'),
+        aviso: atraso >= 3
+          ? 'Zonaprop no publica esta plaza desde ' + isacMesLargo(d.mes + '-01')
+            + ' (' + atraso + ' meses). Es el último dato que hay.' : '',
+      }));
+    });
+  }
+
+  if (!cards.length) return;
+  bloque.style.display = '';
+  cont.innerHTML = cards.join('');
+
+  // Fecha del encabezado: la del dato más fresco que haya en pantalla.
+  const fechaEl = document.getElementById('zp-fecha');
+  if (fechaEl) {
+    const meses = [];
+    if (pc && pc.roomix) meses.push(pc.roomix.mes);
+    if (pc && pc.mudafy) meses.push(pc.mudafy.mes);
+    if (zp && zp.plazas) Object.keys(zp.plazas).forEach(k => meses.push(zp.plazas[k].mes));
+    const ult = meses.filter(Boolean).sort().pop();
+    fechaEl.textContent = ult ? '· último dato ' + isacMesLargo(ult + '-01') : '';
+  }
+
+  pintarBarriosPrecio();
+  renderPrecioCbaChart();
+
+  // El titular de Zonaprop se mantiene: explica de dónde sale el ancla.
   const tit = document.getElementById('zp-titular');
-  const primera = c.plazas[claves[0]];
+  const claves = zp && zp.plazas ? Object.keys(zp.plazas) : [];
+  const primera = claves.length ? zp.plazas[claves[0]] : null;
   if (tit && primera && primera.titular) {
     tit.innerHTML = '<strong style="color:#ccc;">' + primera.nombre + ':</strong> '
       + primera.titular
       + ' <span style="color:var(--gris-txt);">(Zonaprop, informe '
       + isacMesLargo(primera.mes + '-01') + ')</span>';
+  }
+}
+
+/* Apertura por barrio. Es lo más útil de Roomix para el que desarrolla en
+   Córdoba: Nueva Córdoba y Villa Belgrano corren al doble que Los Boulevares,
+   y esa brecha es la que define dónde cierra un proyecto. */
+function pintarBarriosPrecio() {
+  const pc = window.PRECIO_CBA_CACHE;
+  const cont = document.getElementById('zp-barrios');
+  if (!cont || !pc || !pc.roomix || !pc.roomix.barrios || !pc.roomix.barrios.length) return;
+
+  const b = pc.roomix.barrios;
+  const max = Math.max.apply(null, b.map(x => x[1])) || 1;
+
+  cont.style.display = '';
+  cont.innerHTML =
+    '<div class="sub-title" style="font-size:11px;margin-bottom:8px;">'
+    + 'Por barrio · Córdoba capital</div>'
+    + '<div class="ins-grid">'
+    + b.map(x =>
+        '<div class="ins-card" style="padding:9px 11px;">'
+        + '<div class="ins-nombre" style="min-height:0;margin:0 0 5px;">' + x[0] + '</div>'
+        + '<div style="font-size:14px;font-weight:700;">US$ ' + fmtN(x[1], 0)
+        +   '<span style="font-size:9.5px;color:var(--gris-txt);font-weight:600;">'
+        +   ' /m²</span></div>'
+        + '<div style="height:3px;border-radius:2px;margin-top:7px;background:var(--gris-brd);">'
+        +   '<div style="height:3px;border-radius:2px;width:' + (x[1] / max * 100).toFixed(0)
+        +     '%;background:var(--rojo);"></div></div>'
+        + '</div>').join('')
+    + '</div>'
+    + '<div style="font-size:9.5px;color:var(--gris-txt);margin-top:8px;line-height:1.5;">'
+    + 'Roomix · ' + isacMesLargo(pc.roomix.mes + '-01')
+    + ' · precio de oferta de todas las tipologías del barrio, no solo departamentos.'
+    + '</div>';
+}
+
+function renderPrecioCbaChart() {
+  const pc = window.PRECIO_CBA_CACHE;
+  const wrap = document.getElementById('zp-serie-wrap');
+  const el = document.getElementById('chart-precio-cba');
+  if (!wrap || !el || !pc || !pc.roomix || !pc.roomix.serie || pc.roomix.serie.length < 3) return;
+
+  const s = pc.roomix.serie;
+  wrap.style.display = '';
+  if (precioCbaChart) precioCbaChart.destroy();
+
+  // Los puntos de departamentos que venimos acumulando nosotros, alineados
+  // contra la misma grilla de meses. Al principio va a ser uno solo.
+  // Solo se dibuja si alguno de esos meses cae dentro de la grilla del CSV:
+  // si no, la leyenda aparece sin linea y confunde.
+  const sd = {};
+  (pc.roomix.serieDeptos || []).forEach(r => { sd[r[0]] = r[1]; });
+  const hayDeptos = s.some(r => sd[r[0]] != null);
+
+  precioCbaChart = new Chart(el.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: s.map(r => {
+        const m = String(r[0]).match(/^(\d{4})-(\d{2})/);
+        return m ? ISAC_MESES[+m[2] - 1].slice(0, 3) + '-' + m[1].slice(2) : r[0];
+      }),
+      datasets: [
+        { label: 'Todas las tipologías', data: s.map(r => r[1]),
+          borderColor: '#FF5F5F', backgroundColor: 'rgba(255,95,95,0.10)',
+          borderWidth: 2, pointRadius: 0, tension: 0.3, fill: true },
+      ].concat(hayDeptos ? [
+        { label: 'Departamentos', data: s.map(r => sd[r[0]] != null ? sd[r[0]] : null),
+          borderColor: '#60a5fa', backgroundColor: 'transparent',
+          borderWidth: 1.5, pointRadius: 3, tension: 0.3, fill: false, spanGaps: true },
+      ] : []),
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#aaa', font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: '#1C1C1C', borderColor: '#383838', borderWidth: 1,
+          titleColor: '#fff', bodyColor: '#aaa',
+          callbacks: { label: x => ' ' + x.dataset.label + ': US$ ' + fmtN(x.parsed.y, 0) + '/m²' },
+        },
+      },
+      scales: {
+        x: { ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 12 }, grid: { color: '#222' } },
+        y: { ticks: { color: '#555', font: { size: 9 }, callback: v => 'US$ ' + fmtN(v, 0) },
+             grid: { color: '#222' } },
+      },
+    },
+  });
+
+  const nota = document.getElementById('zp-serie-nota');
+  if (nota) {
+    nota.innerHTML = 'Roomix · Córdoba capital · ' + s.length + ' meses. '
+      + 'La línea roja mezcla casas y departamentos, por eso corre por debajo del '
+      + 'valor de departamentos de la tarjeta. La azul es el corte de departamentos, '
+      + 'que se va armando mes a mes desde que se cargó esta sección.';
   }
 }
 

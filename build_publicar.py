@@ -49,6 +49,7 @@ CEDUC_JS = os.path.join(BASE_DIR, "ceduc_cache.js")
 APYMECO_JS = os.path.join(BASE_DIR, "apymeco_cache.js")
 IERIC_CBA_JS = os.path.join(BASE_DIR, "ieric_cba_cache.js")
 ZPINDEX_JS = os.path.join(BASE_DIR, "zpindex_cache.js")
+PRECIO_CBA_JS = os.path.join(BASE_DIR, "precio_cba_cache.js")
 
 DOCS_DIR = os.path.join(BASE_DIR, "docs")
 OUT_PAGES = os.path.join(DOCS_DIR, "index.html")
@@ -122,6 +123,7 @@ def main():
     apymeco = leer(APYMECO_JS, obligatorio=False)
     ieric_cba = leer(IERIC_CBA_JS, obligatorio=False)
     zpindex = leer(ZPINDEX_JS, obligatorio=False)
+    precio_cba = leer(PRECIO_CBA_JS, obligatorio=False)
 
     html = inline(html, "bcra_cache.js", bcra, "BCRA_CACHE")
     html = inline(html, "cac_cache.js", cac, "CAC_CACHE")
@@ -143,6 +145,7 @@ def main():
     html = inline(html, "apymeco_cache.js", apymeco, "APYMECO_CACHE")
     html = inline(html, "ieric_cba_cache.js", ieric_cba, "IERIC_CBA_CACHE")
     html = inline(html, "zpindex_cache.js", zpindex, "ZPINDEX_CACHE")
+    html = inline(html, "precio_cba_cache.js", precio_cba, "PRECIO_CBA_CACHE")
 
     ts = datetime.now().strftime("%d/%m/%Y %H:%M")
     sello = (

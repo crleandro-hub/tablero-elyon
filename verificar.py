@@ -96,6 +96,12 @@ FRESCURA = {
     # ambar, con los meses de atraso. Lo que si cuida aca es que el script
     # siga corriendo: si deja de leer la pagina, el cache deja de regenerarse.
     "zpindex_cache.js":   ("mensual", 70,  6),
+    # Precio de venta de Cordoba (Roomix + Mudafy). Las dos fuentes son
+    # de catalogo propio y se mueven todos los meses, asi que un cache
+    # de mas de 45 dias significa que el script dejo de leer, no que la
+    # fuente se atraso. El contraste entre las dos lo hace el propio
+    # update_precio_cba_cache.py y avisa por "aviso".
+    "precio_cba_cache.js": ("mensual", 45, 6),
     # El Indice Construya sale alrededor del dia 10 del mes siguiente, mas
     # rapido que cualquier fuente oficial. Aun asi el peor caso son 70 dias:
     # la vispera de que salga el mes M, el dato mas nuevo es M-1 y ya tiene
