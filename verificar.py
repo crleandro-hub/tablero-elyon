@@ -90,6 +90,12 @@ FRESCURA = {
     # empresas sigue, esto no lo detecta. Es una limitacion del control
     # generico, no algo que este mal configurado aca.
     "ieric_cba_cache.js": ("mensual", 100, 6),
+    # ZPIndex: el control mira la fecha mas nueva del cache, que es la de
+    # CABA, y CABA sale todos los meses. Cordoba esta congelado en 2026-03 y
+    # eso NO lo ve este control; lo avisa la propia seccion del tablero, en
+    # ambar, con los meses de atraso. Lo que si cuida aca es que el script
+    # siga corriendo: si deja de leer la pagina, el cache deja de regenerarse.
+    "zpindex_cache.js":   ("mensual", 70,  6),
     # El Indice Construya sale alrededor del dia 10 del mes siguiente, mas
     # rapido que cualquier fuente oficial. Aun asi el peor caso son 70 dias:
     # la vispera de que salga el mes M, el dato mas nuevo es M-1 y ya tiene

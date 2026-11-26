@@ -1251,6 +1251,24 @@ body {
       <span style="display:block;margin-top:5px;font-size:10px;" id="rgp-datasource"></span>
     </div>
 
+    <!-- ─── PRECIO DE VENTA · ZPINDEX ───
+         Lo unico del tablero que mide el lado del PRECIO. Todo lo demas de
+         la obra mide costo; sin esto no se puede leer el margen. -->
+    <div id="zp-bloque" style="display:none;margin-bottom:26px;">
+      <div class="sub-title" style="margin-bottom:3px;">
+        Precio de venta · departamentos
+        <span style="font-weight:400;font-size:10px;color:var(--gris-txt);" id="zp-fecha"></span>
+      </div>
+      <div style="font-size:10px;color:var(--gris-txt);margin:3px 0 10px;line-height:1.5;">
+        ZPIndex de Zonaprop · precio de <strong style="color:#bbb;">oferta</strong> en dólares
+        por m², no de escritura. Es a cuánto se pide, no a cuánto se cierra.
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));"
+           id="zp-kpis"></div>
+      <div id="zp-titular" style="font-size:10.5px;color:var(--gris-txt);margin-top:10px;
+           line-height:1.65;"></div>
+    </div>
+
     <div id="rgp-section">
       <div class="sub-title" style="margin-bottom:10px;">Registro General de Córdoba</div>
       <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(165px,1fr));">
@@ -2082,6 +2100,7 @@ body {
 <script src="apymeco_cache.js"></script>  <!-- generado por update_apymeco_cache.py -->
 <script src="salarios_cache.js"></script>  <!-- escalas UOCRA / UECARA, se edita a mano -->
 <script src="ieric_cba_cache.js"></script>  <!-- generado por update_ieric_cba_cache.py -->
+<script src="zpindex_cache.js"></script>  <!-- generado por update_zpindex_cache.py -->
 <!-- ══════════════════════════════════════
      JAVASCRIPT
 ══════════════════════════════════════ -->
@@ -2117,6 +2136,7 @@ function showScreen(id) {
     initIccCba();     // ICC de Córdoba (dato local, pinta al toque)
     initIccIndec();   // ICC del INDEC · Gran Buenos Aires (dato local)
     initRgp();        // Registro General de Córdoba (dato local)
+    pintarZpIndex();  // precio de venta USD/m² · ZPIndex (dato local)
     initCeduc();      // ventas de desarrollistas · CEDUC (dato local)
     loadConstruya();  // Índice Construya (dato local, no tiene API)
     initApymeco();    // costo del m² · APYMECO (dato local; el gráfico en
@@ -7331,6 +7351,71 @@ function renderCeducChart() {
       },
     },
   });
+}
+
+/* ══════════════════════════════════════════
+   PRECIO DE VENTA — ZPINDEX DE ZONAPROP
+
+   El tablero medía el costo de construir con cuatro índices y no tenía nada
+   del otro lado: a cuánto se vende. Sin eso no se lee el margen, que es la
+   pregunta de fondo: cuando el costo corre más rápido que el precio, el
+   negocio se cierra aunque los dos estén subiendo.
+
+   Dos advertencias que la sección tiene que dejar dichas, porque el número
+   solo se malinterpreta:
+
+     · es precio de OFERTA (lo que se pide en el aviso), no de escritura;
+     · Zonaprox dejó de publicar Córdoba en marzo de 2026. El dato se muestra
+       con su mes y, si quedó viejo, se avisa. CABA va al lado justamente
+       porque sí se publica: sirve para ver si el mercado se movió desde
+       entonces, aunque sea otra plaza.
+══════════════════════════════════════════ */
+function pintarZpIndex() {
+  const c = window.ZPINDEX_CACHE;
+  const bloque = document.getElementById('zp-bloque');
+  const cont = document.getElementById('zp-kpis');
+  if (!bloque || !cont || !c || !c.plazas) return;
+
+  const claves = Object.keys(c.plazas);
+  if (!claves.length) return;
+  bloque.style.display = '';
+
+  const meses = ym => {
+    const [a, m] = ym.split('-').map(Number);
+    const hoy = new Date();
+    return (hoy.getFullYear() - a) * 12 + (hoy.getMonth() + 1 - m);
+  };
+
+  cont.innerHTML = claves.map((k, i) => {
+    const d = c.plazas[k];
+    const atraso = meses(d.mes);
+    const viejo  = atraso >= 3;
+    const col = d.varMes == null ? '' : (d.varMes >= 0 ? 'var(--verde)' : 'var(--ambar)');
+    return '<div class="card' + (i === 0 ? ' destacada' : '') + '">'
+      +   '<div class="kpi-label">' + d.nombre + '</div>'
+      +   '<div class="kpi-value">US$ ' + fmtN(d.usdM2, 0) + '<span style="font-size:13px;'
+      +     'color:var(--gris-txt);font-weight:600;"> /m²</span></div>'
+      +   '<div class="kpi-sub">' + isacMesLargo(d.mes + '-01')
+      +     (d.varMes == null ? ''
+          : ' · <span style="color:' + col + ';font-weight:700;">'
+            + (d.varMes >= 0 ? '+' : '') + fmtN(d.varMes, 1) + '%</span> en el mes')
+      +   '</div>'
+      +   (viejo
+          ? '<div style="font-size:10px;color:var(--ambar);margin-top:7px;line-height:1.5;">'
+            + '⚠ Zonaprop no publica esta plaza desde ' + isacMesLargo(d.mes + '-01')
+            + ' (' + atraso + ' meses). Es el último dato que hay.</div>'
+          : '')
+      + '</div>';
+  }).join('');
+
+  const tit = document.getElementById('zp-titular');
+  const primera = c.plazas[claves[0]];
+  if (tit && primera && primera.titular) {
+    tit.innerHTML = '<strong style="color:#ccc;">' + primera.nombre + ':</strong> '
+      + primera.titular
+      + ' <span style="color:var(--gris-txt);">(Zonaprop, informe '
+      + isacMesLargo(primera.mes + '-01') + ')</span>';
+  }
 }
 
 /* ── Crédito hipotecario del sistema (BCRA vía datos.gob.ar) ── */
