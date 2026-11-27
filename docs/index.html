@@ -1,4 +1,4 @@
-<!-- Version autocontenida generada por build_publicar.py el 27/11/2026 15:03 - datos embebidos, no depende de archivos externos -->
+<!-- Version autocontenida generada por build_publicar.py el 27/11/2026 19:11 - datos embebidos, no depende de archivos externos -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -205,7 +205,8 @@ body {
   animation: brasa 1.7s ease-in-out infinite;
 }
 .card.en-llamas::after {
-  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 55%;
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0;
+  height: 55%; max-height: 92px;
   pointer-events: none; opacity: .45;
   background:
     radial-gradient(60% 115% at 30% 120%, rgba(255,85,0,.95)  0%, rgba(255,85,0,0)  72%),
@@ -232,7 +233,8 @@ body {
   animation: marea 3.2s ease-in-out infinite;
 }
 .card.en-agua::after {
-  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 55%;
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0;
+  height: 55%; max-height: 92px;
   pointer-events: none; opacity: .42;
   background:
     radial-gradient(62% 115% at 32% 122%, rgba(0,130,255,.90) 0%, rgba(0,130,255,0) 72%),
@@ -243,9 +245,71 @@ body {
 }
 .card.en-agua > * { position: relative; z-index: 1; }
 
+/* ─── Los dos extremos de la escala ───────────────────────
+   Con un solo umbral, un 1,1% y un 4% se veian igual. Ahora son cuatro
+   niveles: a partir de 1% fuego o agua, a partir de 2% incendio o hielo.
+   El salto tiene que notarse sin comparar dos tarjetas: el incendio late
+   casi al doble de velocidad y las llamas llegan mas arriba; el hielo, al
+   reves, se queda casi quieto y suma escarcha en el borde de arriba.
+
+   El alto de la llama va en % pero con tope en pixeles: las tarjetas de
+   los indices de construccion son el doble de altas que las del dolar y
+   sin el tope el fuego tapaba los numeros. */
+@keyframes brasa-fuerte {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(255,90,10,.75),  0 0 20px -2px rgba(255,70,0,.70); }
+  50%      { box-shadow: 0 0 0 2px rgba(255,200,60,.95), 0 0 40px  3px rgba(255,100,10,.90); }
+}
+.card.en-incendio {
+  position: relative; overflow: hidden;
+  border-color: rgba(255,110,10,.95);
+  animation: brasa-fuerte 1.05s ease-in-out infinite;
+}
+.card.en-incendio::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0;
+  height: 78%; max-height: 124px;
+  pointer-events: none; opacity: .55;
+  background:
+    radial-gradient(55% 120% at 22% 125%, rgba(255,40,0,.98)   0%, rgba(255,40,0,0)   70%),
+    radial-gradient(48% 115% at 55% 130%, rgba(255,140,10,.95) 0%, rgba(255,140,10,0) 68%),
+    radial-gradient(45% 110% at 82% 128%, rgba(255,215,70,.90) 0%, rgba(255,215,70,0) 66%);
+  background-repeat: no-repeat;
+  background-size: 150% 150%, 135% 140%, 125% 135%;
+  animation: lenguas 1.25s ease-in-out infinite alternate;
+}
+.card.en-incendio > * { position: relative; z-index: 1; }
+
+/* Hielo: el agua congelada. Casi sin movimiento y con escarcha arriba. */
+@keyframes escarcha {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(150,225,255,.55), 0 0 16px -4px rgba(120,210,255,.45); }
+  50%      { box-shadow: 0 0 0 1px rgba(205,245,255,.90), 0 0 26px -1px rgba(150,230,255,.60); }
+}
+@keyframes deriva {
+  from { background-position: 8% 118%, 70% 124%, 50% 0%; }
+  to   { background-position: 70% 122%, 14% 120%, 50% 0%; }
+}
+.card.en-hielo {
+  position: relative; overflow: hidden;
+  border-color: rgba(170,232,255,.80);
+  animation: escarcha 5.5s ease-in-out infinite;
+}
+.card.en-hielo::after {
+  content: ''; position: absolute; inset: 0;
+  pointer-events: none; opacity: .44;
+  background:
+    radial-gradient(60% 110% at 30% 125%, rgba(0,110,220,.90)  0%, rgba(0,110,220,0)  72%),
+    radial-gradient(52% 105% at 70% 128%, rgba(90,215,255,.80) 0%, rgba(90,215,255,0) 70%),
+    linear-gradient(180deg, rgba(220,247,255,.40) 0%, rgba(220,247,255,0) 34%);
+  background-repeat: no-repeat;
+  background-size: 150% 150%, 130% 130%, 100% 100%;
+  animation: deriva 9s ease-in-out infinite alternate;
+}
+.card.en-hielo > * { position: relative; z-index: 1; }
+
 @media (prefers-reduced-motion: reduce) {
-  .card.en-llamas, .card.en-llamas::after,
-  .card.en-agua,   .card.en-agua::after { animation: none; }
+  .card.en-llamas,   .card.en-llamas::after,
+  .card.en-incendio, .card.en-incendio::after,
+  .card.en-agua,     .card.en-agua::after,
+  .card.en-hielo,    .card.en-hielo::after { animation: none; }
 }
 
 /* ─── NAVEGACIÓN A LAS PANTALLAS DE DETALLE ─────────────────
@@ -6549,6 +6613,25 @@ function _pintarEuro(id, compra, venta) {
   card.querySelector('[data-f="venta"]').textContent  = venta  != null ? fmtARS(venta)  : 'N/D';
 }
 
+/* La diaria del euro sale del cache: bluelytics publica el ultimo valor pero
+   no el historico (evolution.json trae solo dolar oficial y blue), asi que
+   update_dolar_cache.py arrastra el cierre anterior entre corridas. Hasta que
+   haya dos dias distintos en el cache, varDia es null y la tarjeta no
+   reacciona, que es lo correcto: no se sabe cuanto se movio. */
+function _pulsoEuro(cardId, clave) {
+  const d = window.DOLAR_CACHE && window.DOLAR_CACHE[clave];
+  marcarPulso(cardId, d ? d.varDia : null);
+  const sub = document.getElementById('src-' + cardId);
+  if (!sub) return;
+  // Se saca un prefijo anterior, si lo hubiera, para no encadenarlos cuando
+  // esto se llama mas de una vez. El pie que escribe setFuente nunca empieza
+  // con la flecha, asi que el corte es inequivoco.
+  const base = sub.textContent.replace(/^[▲▼][^·]*·\s*/, '');
+  sub.textContent = (d && d.varDia != null)
+    ? (d.varDia >= 0 ? '▲ +' : '▼ ') + fmtN(d.varDia, 2) + '% en el día · ' + base
+    : base;
+}
+
 function _pintarCruceEuro(spanId, eurVenta, usdCasa) {
   const el = document.getElementById(spanId);
   if (!el) return;
@@ -6605,28 +6688,68 @@ async function loadEuro() {
   setFuente('src-euro-oficial', ofV ? fISO : null, fuente || 'sin conexión');
   setFuente('src-euro-blue',    blV ? fISO : null,
             blV ? (fuente || '') : 'sin dato de euro blue');
+
+  /* Despues de setFuente, que es quien escribe el pie: si fuera antes, el
+     porcentaje del dia se perderia al pisarse el texto. */
+  _pulsoEuro('euro-oficial', 'euroOficial');
+  _pulsoEuro('euro-blue',    'euroBlue');
 }
 
 /* ═══════════════════════════════════════
    VARIACIONES DÓLAR — ArgentinaDatos
    Variación diaria e interanual de las cuatro cotizaciones.
 ═══════════════════════════════════════ */
-/* ── Tarjetas que reaccionan al movimiento del dia ──
-   Arriba de +1% la tarjeta se prende fuego; abajo de -1% se inunda. Asi la
-   direccion se ve de lejos, sin leer el numero. Solo la usan los seis KPI de
-   precio que se miran varias veces por dia. */
-const PULSO_UMBRAL = 1;   // % de variacion diaria
+/* ── Tarjetas que reaccionan al movimiento ──
+   Cuatro niveles, no dos. El umbral unico de 1% dejaba igual a un 1,1% que a
+   un 4%, y en una jornada mala eso es justo lo que hay que distinguir.
 
-function marcarPulso(cardId, pct) {
+       sube  >= 2%   incendio   (fuego rapido y alto)
+       sube  >= 1%   fuego
+       baja  >= 1%   agua
+       baja  >= 2%   hielo
+
+   Y dos lecturas distintas, porque no todos los KPI quieren decir lo mismo:
+
+   'dia'   (por defecto) — precios que se miran varias veces por dia: los
+           cinco dolares, los dos euros, riesgo pais y reservas. La escala es
+           simetrica y neutra: marca cuanto se movio, para cada lado.
+
+   'costo' — indices de costo y de inflacion: IPC mensual, CAC, los dos ICC y
+           la UVA. Aca subir NO es neutro, es la mala noticia, y quedarse
+           quieto es la buena. Por eso no hay tramo tibio: abajo de 1% la
+           tarjeta se congela aunque el numero sea positivo. Un CAC de +0,6%
+           mensual es, para una obra en curso, una buena noticia. */
+const PULSO = { fuerte: 2, normal: 1 };   // % de variacion
+const PULSO_CLASES = ['en-llamas', 'en-incendio', 'en-agua', 'en-hielo'];
+
+function marcarPulso(cardId, pct, escala) {
   const el = document.getElementById(cardId);
   if (!el) return;
   const v = (pct == null || isNaN(pct)) ? null : pct;
-  const arde   = v != null && v >=  PULSO_UMBRAL;
-  const moja   = v != null && v <= -PULSO_UMBRAL;
-  el.classList.toggle('en-llamas', arde);
-  el.classList.toggle('en-agua',   moja);
-  if (arde || moja) {
-    el.title = (arde ? 'Subió ' : 'Bajó ') + fmtN(Math.abs(v), 2) + '% en el día';
+
+  let clase = null;
+  if (v != null) {
+    if (escala === 'costo') {
+      clase = v >= PULSO.fuerte ? 'en-incendio'
+            : v >= PULSO.normal ? 'en-llamas'
+            : 'en-hielo';
+    } else {
+      clase = v >=  PULSO.fuerte ? 'en-incendio'
+            : v >=  PULSO.normal ? 'en-llamas'
+            : v <= -PULSO.fuerte ? 'en-hielo'
+            : v <= -PULSO.normal ? 'en-agua'
+            : null;
+    }
+  }
+
+  PULSO_CLASES.forEach(c => el.classList.toggle(c, c === clase));
+
+  if (clase) {
+    const periodo = escala === 'costo' ? ' en el mes' : ' en el día';
+    const tibio = escala === 'costo' && v >= 0 && v < PULSO.normal
+      ? ' (por debajo del 1%)' : '';
+    el.title = (v >= 0 ? 'Subió ' : 'Bajó ') + fmtN(Math.abs(v), 2) + '%'
+             + periodo + tibio;
   } else {
     el.removeAttribute('title');
   }
@@ -6729,6 +6852,7 @@ async function loadInflacion() {
         fmtN(pctM, 1) + '%',
         fmtMes(data[0][0]) + sello,
         'var(--ambar)');
+      marcarPulso('card-inf-m', pctM, 'costo');
     }
     if (data.length >= 13) {
       const pctIA = (data[0][1] / data[12][1] - 1) * 100;
@@ -6755,6 +6879,7 @@ async function loadInflacion() {
     }
   } catch (e) {
     setMacro('val-inf-m',    'src-inf-m',    'N/D', 'Sin conexión', '');
+    marcarPulso('card-inf-m', null);
     setMacro('val-inf-ia',   'src-inf-ia',   'N/D', 'Sin conexión', '');
     setMacro('val-inf-acum', 'src-inf-acum', 'N/D', 'Sin conexión', '');
   }
@@ -7136,6 +7261,12 @@ function loadReservas() {
     color = ref.var30 >= 0 ? 'var(--verde)' : 'var(--ambar)';
   }
   setMacro('val-reservas', 'src-reservas', texto, pie, color);
+
+  /* El efecto va con la variacion DIARIA, no con la del mes: la del mes casi
+     siempre supera el 1% (las reservas se mueven fuerte por pagos de deuda y
+     liquidacion del agro) y la tarjeta quedaria encendida de forma
+     permanente, que es lo mismo que no marcar nada. */
+  marcarPulso('card-reservas', ref.varDia);
 }
 
 /* ══════════════════════════════════════════
@@ -11086,8 +11217,8 @@ function renderResumenConstruccion() {
     return;
   }
 
-  cont.innerHTML = tarjetas.map(t =>
-      '<div class="card">'
+  cont.innerHTML = tarjetas.map((t, i) =>
+      '<div class="card" id="res-card-' + i + '">'
     +   '<div class="res-nombre">' + t.nombre + '</div>'
     +   '<div class="kpi-value">' + (t.pesos ? '$ ' : '') + fmtN(t.d.valor, t.dec) + '</div>'
     +   '<div class="kpi-sub">'
@@ -11104,6 +11235,11 @@ function renderResumenConstruccion() {
     +   (t.det ? '<button class="btn btn-rojo res-btn" onclick="abrirDetalle(\'' + t.det + '\')">'
                  + 'VER DETALLE &rsaquo;</button>' : '')
     + '</div>').join('');
+
+  /* Escala de costo: arriba de 2% mensual incendio, entre 1 y 2 fuego, y
+     abajo de 1% hielo aunque el numero sea positivo. Para el que construye,
+     que el indice casi no se mueva es la buena noticia. */
+  tarjetas.forEach((t, i) => marcarPulso('res-card-' + i, t.d.mensual, 'costo'));
 }
 
 /* ══════════════════════════════════════════

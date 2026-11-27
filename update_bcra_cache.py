@@ -116,15 +116,27 @@ def fetch_serie(var_id):
 
 
 def fetch_var30(var_id):
-    """(valor, fecha, var % contra ~30 dias atras) de la serie.
+    """(valor, fecha, var % a ~30 dias, var % contra el dia habil anterior).
 
     Se pide una ventana de 50 dias y se busca el dato publicado mas cercano a
-    30 dias antes del ultimo: si ese dia fue feriado, sirve el habil previo."""
+    30 dias antes del ultimo: si ese dia fue feriado, sirve el habil previo.
+    La diaria sale de los dos ultimos datos publicados, que es lo que usa el
+    tablero para decidir si la tarjeta reacciona: la del mes casi siempre
+    pasa el 1% y dejaria el efecto encendido siempre."""
     detalle = fetch_detalle(var_id, 50)
     if not detalle:
-        return None, None, None
+        return None, None, None, None
     ult = detalle[0]
     valor, fecha = float(ult["valor"]), ult["fecha"]
+
+    var_dia = None
+    if len(detalle) > 1:
+        try:
+            ant = float(detalle[1]["valor"])
+            if ant:
+                var_dia = round((valor / ant - 1) * 100, 2)
+        except (TypeError, ValueError, KeyError):
+            var_dia = None
 
     objetivo = datetime.strptime(fecha, "%Y-%m-%d").date() - timedelta(days=30)
     ref = None
@@ -138,7 +150,7 @@ def fetch_var30(var_id):
         ref = float(detalle[-1]["valor"])
 
     var = round((valor / ref - 1) * 100, 2) if ref else None
-    return valor, fecha, var
+    return valor, fecha, var, var_dia
 
 
 def write_cache(data):
@@ -152,7 +164,8 @@ def write_cache(data):
         "   pasiva = serie 12 (TNA, depositos a 30 dias)",
         "   personales = serie 14 (TNA, prestamos personales)",
         "   uva = serie 31",
-        "   reservas = serie 1 (millones de US$); var30 = % contra ~30 dias atras",
+        "   reservas = serie 1 (millones de US$); var30 = % contra ~30 dias atras,",
+        "              varDia = % contra el dia habil anterior",
         "----------------------------------------------------------------- */",
         "window.BCRA_CACHE = {",
     ]
@@ -165,6 +178,8 @@ def write_cache(data):
             extra = ""
             if info.get("var30") is not None:
                 extra = f', var30: {info["var30"]}'
+            if info.get("varDia") is not None:
+                extra += f', varDia: {info["varDia"]}'
             lines.append(
                 f'  {key}: {{ valor: {valor}, fecha: "{info["fecha"]}"{extra} }},')
         else:
@@ -186,10 +201,10 @@ def main():
     data = {}
     ok = 0
     for key, cfg in VARS.items():
-        var30 = None
+        var30 = var_dia = None
         try:
             if cfg.get("var30"):
-                valor, fecha, var30 = fetch_var30(cfg["id"])
+                valor, fecha, var30, var_dia = fetch_var30(cfg["id"])
             else:
                 valor, fecha = fetch_serie(cfg["id"])
         except Exception as e:
@@ -199,7 +214,8 @@ def main():
             print(f"[WARN] Sin dato para {key} - {cfg['desc']}")
         else:
             ok += 1
-        data[key] = {"valor": valor, "fecha": fecha, "var30": var30}
+        data[key] = {"valor": valor, "fecha": fecha, "var30": var30,
+                     "varDia": var_dia}
 
     if ok == 0:
         print("[ABORTA] Ninguna serie pudo obtenerse. Se conserva el cache anterior.")

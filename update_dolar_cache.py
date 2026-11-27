@@ -26,6 +26,7 @@ Ejecutar en cada corrida de la tarea programada.
 
 import json
 import os
+import re
 import ssl
 import urllib.request as req
 from datetime import datetime
@@ -112,6 +113,55 @@ def euros():
     return out
 
 
+def _cache_previo():
+    """Lo que quedo escrito en dolar_cache.js en la corrida anterior."""
+    if not os.path.exists(CACHE_PATH):
+        return {}
+    try:
+        txt = open(CACHE_PATH, encoding="utf-8").read()
+    except Exception:
+        return {}
+    out = {}
+    for m in re.finditer(r"(\w+):\s*\{([^}]*)\}", txt):
+        campos = {}
+        for k, v in re.findall(r'(\w+):\s*("[^"]*"|-?[\d.]+)', m.group(2)):
+            campos[k] = v.strip('"') if v.startswith('"') else float(v)
+        out[m.group(1)] = campos
+    return out
+
+
+def rollear_euro(datos):
+    """Deja el cierre anterior del euro en el cache para poder medir la diaria.
+
+    bluelytics publica el ultimo valor del euro pero no su historico
+    (evolution.json trae solo dolar oficial y blue), asi que la unica forma de
+    tener una variacion diaria es arrastrarla entre corridas. Como esto corre
+    cada dos horas, el arrastre se hace SOLO cuando cambia la fecha del dato:
+    si no, a la segunda corrida del dia la variacion daria cero."""
+    prev = _cache_previo()
+    for clave in ("euroOficial", "euroBlue"):
+        v = datos.get(clave)
+        if not v:
+            continue
+        p = prev.get(clave) or {}
+        if p.get("fecha") and p.get("venta") and p["fecha"] != v["fecha"]:
+            v["ventaAnt"], v["fechaAnt"] = p["venta"], p["fecha"]
+        elif p.get("ventaAnt"):
+            v["ventaAnt"], v["fechaAnt"] = p["ventaAnt"], p.get("fechaAnt")
+        if v.get("ventaAnt"):
+            v["varDia"] = round((v["venta"] / v["ventaAnt"] - 1) * 100, 2)
+
+
+def fila(clave, v):
+    txt = '  %s: { compra: %s, venta: %s, fecha: "%s"' % (
+        clave, v["compra"], v["venta"], v["fecha"])
+    if v.get("ventaAnt") is not None:
+        txt += ', ventaAnt: %s, fechaAnt: "%s"' % (v["ventaAnt"], v.get("fechaAnt") or "")
+    if v.get("varDia") is not None:
+        txt += ", varDia: %s" % v["varDia"]
+    return txt + " }"
+
+
 def main():
     print("Actualizando dolar_cache.js ...")
 
@@ -122,16 +172,14 @@ def main():
                          "Se conserva el cache anterior." % e)
 
     datos.update(euros())
+    rollear_euro(datos)
 
     faltan = sorted(set(CASAS.values()) - set(datos))
     if faltan:
         print("[AVISO] Sin dato para: " + ", ".join(faltan))
 
     ts = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-    filas = ",\n".join(
-        '  %s: { compra: %s, venta: %s, fecha: "%s" }'
-        % (k, v["compra"], v["venta"], v["fecha"])
-        for k, v in sorted(datos.items()))
+    filas = ",\n".join(fila(k, v) for k, v in sorted(datos.items()))
 
     js = (
         "/* -----------------------------------------------------------------\n"
