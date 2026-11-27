@@ -1,6 +1,6 @@
 /* ═══════════════════════════
    ieric_cba_cache.js  -  Grupo Elyon
-   Generado por update_ieric_cba_cache.py el 27/11/2026 11:04
+   Generado por update_ieric_cba_cache.py el 27/11/2026 16:31
    Fuente: IERIC - series estadisticas de la provincia de Cordoba
    https://www.ieric.org.ar/series_estadisticas/cordoba/
 
@@ -14,7 +14,7 @@
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.IERIC_CBA_CACHE = {
-  updated: "2026-11-27T11:04:19",
+  updated: "2026-11-27T16:31:23",
   source: "IERIC - Instituto de Estadistica y Registro de la Industria de la Construccion",
   pagina: "https://www.ieric.org.ar/series_estadisticas/cordoba/",
   puestos: {
@@ -504,10 +504,10 @@ window.IERIC_CBA_CACHE = {
   empresas: {
     titulo: "Cantidad de empresas en Actividad. Desde Enero de 2005 en adelante. Provincia de Córdoba y Total País.",
     unidad: "empresas",
-    hasta: "2026-09",
+    hasta: "2026-10",
     provisorio: false,
     fuente: "IERIC",
-    archivo: "https://www.ieric.org.ar/wp-content/uploads/2026/10/Empresas-al-dia-Cordoba.xls",
+    archivo: "https://www.ieric.org.ar/wp-content/uploads/2026/11/Empresas-al-dia-Cordoba.xls",
     notas: ["A partir del año 2024 el vencimiento de la renovación anual de aranceles será el último día hábil del mes de febrero.", "El 30 de abril de cada año se produce el vencimiento del arancel anual, por tal motivo en el mes de mayo disminuye la cantidad de empresas con arancel al día, situación que se regulariza en el transcurso del año."],
     serie: [
       ["2005-01-01",1084,16074,null,null],
@@ -770,7 +770,8 @@ window.IERIC_CBA_CACHE = {
       ["2026-06-01",1345,17113,5.325,0.641],
       ["2026-07-01",1371,17512,4.1002,0.3036],
       ["2026-08-01",1387,17919,2.0603,0.2798],
-      ["2026-09-01",1417,18330,1.5043,0.4989]
+      ["2026-09-01",1417,18330,1.5043,0.4989],
+      ["2026-10-01",1454,18745,2.5388,0.6011]
     ]
   }
 };

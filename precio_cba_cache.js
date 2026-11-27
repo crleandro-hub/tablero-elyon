@@ -1,6 +1,6 @@
 /* ═══════════════════════════
    precio_cba_cache.js  -  Grupo Elyon
-   Generado por update_precio_cba_cache.py el 27/11/2026 11:04
+   Generado por update_precio_cba_cache.py el 27/11/2026 16:31
    Precio de OFERTA de departamentos en venta en Cordoba capital,
    en dolares por m2. Es precio PEDIDO, no escriturado.
    Roomix: serie mensual propia (CSV) + valor de departamentos.
@@ -8,9 +8,9 @@
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.PRECIO_CBA_CACHE = {
-  chequeado: "2026-11-27T11:04:29",
+  chequeado: "2026-11-27T16:31:33",
   aviso: null,
-  updated: "2026-11-27T11:04:29",
+  updated: "2026-11-27T16:31:33",
   source: "Roomix + Mudafy · precio de oferta",
   roomix: {
     nombre: "Roomix",
