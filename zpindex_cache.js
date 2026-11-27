@@ -1,14 +1,14 @@
 /* ═══════════════════════════
    zpindex_cache.js  -  Grupo Elyon
-   Generado por update_zpindex_cache.py el 26/11/2026 15:49
+   Generado por update_zpindex_cache.py el 27/11/2026 11:04
    Fuente: ZPIndex de Zonaprop · precio de OFERTA de departamentos
    en venta, en dolares por m2. Es precio PEDIDO, no escriturado.
    NO editar a mano: se pisa en cada corrida.
 ═══════════════════════════ */
 window.ZPINDEX_CACHE = {
-  chequeado: "2026-11-26T15:49:34",
+  chequeado: "2026-11-27T11:04:26",
   aviso: "Zonaprop no publica el index de Córdoba capital desde 2026-03",
-  updated: "2026-11-26T15:49:34",
+  updated: "2026-11-27T11:04:26",
   source: "Zonaprop · ZPIndex",
   plazas: {
     "cordoba": {
