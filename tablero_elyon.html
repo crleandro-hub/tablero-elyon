@@ -533,6 +533,43 @@ body {
 .acc-izq    { display: flex; align-items: baseline; min-width: 0; }
 .acc-pct    { font-size: 13px; font-weight: 700; white-space: nowrap; }
 
+/* RANKING COMPLETO DEL PANEL LÍDER
+   La tarjeta muestra solo tres papeles, que es lo que entra sin que deje de
+   ser un KPI. Pero tres de veintitrés es poco para saber si fue un día de
+   mercado o de un papel suelto, asi que cada tarjeta abre el panel entero
+   abajo, a lo ancho. Se abre desde subas (de mayor a menor) o desde bajas
+   (al reves): es la misma lista dada vuelta, no dos listas distintas. */
+.acc-btn    { width: 100%; margin-top: 10px; padding: 5px 8px;
+              font-size: 9.5px; letter-spacing: .8px; }
+.acc-rank   { background: var(--gris-osc); border: 1px solid var(--gris-brd);
+              border-radius: 10px; padding: 14px 16px; margin: 12px 0 6px; }
+.acc-rank[hidden] { display: none; }
+.acc-rank-head { display: flex; align-items: center; justify-content: space-between;
+                 gap: 12px; margin-bottom: 11px; }
+.acc-rank-tit  { font-size: 11px; font-weight: 700; letter-spacing: .9px;
+                 text-transform: uppercase; color: #fff; display: flex;
+                 align-items: center; gap: 8px; }
+.acc-rank-tit::before { content: ''; width: 3px; height: 13px; border-radius: 2px;
+                        background: var(--rojo); flex: 0 0 auto; }
+.acc-rank-cerrar { padding: 4px 10px; font-size: 9.5px; letter-spacing: .8px; }
+.acc-rank-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+                 gap: 1px 22px; }
+.acc-rank-fila { display: grid; grid-template-columns: 20px 52px 1fr auto 62px;
+                 align-items: baseline; gap: 8px; padding: 4px 0;
+                 border-bottom: 1px solid rgba(255,255,255,.04); }
+.acc-rank-pos  { font-size: 9.5px; color: #6a6a6a; text-align: right; }
+.acc-rank-tkr  { font-size: 11.5px; font-weight: 700; color: #fff; letter-spacing: .3px; }
+.acc-rank-nom  { font-size: 9.5px; color: #8f8f8f; overflow: hidden;
+                 text-overflow: ellipsis; white-space: nowrap; }
+.acc-rank-pre  { font-size: 10px; color: #a8a8a8; white-space: nowrap; }
+.acc-rank-pct  { font-size: 12px; font-weight: 700; text-align: right; white-space: nowrap; }
+.acc-rank-pie  { font-size: 9.5px; color: var(--gris-txt); margin-top: 10px; line-height: 1.5; }
+@media (max-width: 560px) {
+  .acc-rank-fila { grid-template-columns: 18px 50px 1fr 58px; }
+  .acc-rank-nom, .acc-rank-pre { display: none; }
+  .acc-rank-fila > .acc-rank-nom { display: block; }
+}
+
 /* VARIACIONES DÓLAR */
 .dolar-vars { display:flex; align-items:center; gap:6px; margin-top:8px; font-size:10px; }
 .var-badge   { font-weight:700; color:var(--gris-txt); }
@@ -869,14 +906,31 @@ body {
         <div class="kpi-label">Mayores subas · panel líder</div>
         <div class="acc-lista" id="lista-acc-suben"></div>
         <div class="kpi-sub" id="src-acc-suben">Panel líder · BYMA</div>
+        <button class="btn btn-ghost acc-btn" id="btn-acc-suben" type="button"
+                aria-expanded="false" aria-controls="acc-ranking"
+                onclick="toggleRankingAcciones('desc')">VER TODAS &#9662;</button>
       </div>
 
       <div class="card" id="card-acc-bajan">
         <div class="kpi-label">Mayores bajas · panel líder</div>
         <div class="acc-lista" id="lista-acc-bajan"></div>
         <div class="kpi-sub" id="src-acc-bajan">Panel líder · BYMA</div>
+        <button class="btn btn-ghost acc-btn" id="btn-acc-bajan" type="button"
+                aria-expanded="false" aria-controls="acc-ranking"
+                onclick="toggleRankingAcciones('asc')">VER TODAS &#9662;</button>
       </div>
 
+    </div>
+
+    <!-- Ranking completo del panel líder. Lo abren los dos botones de arriba. -->
+    <div class="acc-rank" id="acc-ranking" hidden>
+      <div class="acc-rank-head">
+        <span class="acc-rank-tit" id="acc-rank-tit">Panel líder</span>
+        <button class="btn btn-ghost acc-rank-cerrar" type="button"
+                onclick="toggleRankingAcciones(null)">CERRAR &#10005;</button>
+      </div>
+      <div class="acc-rank-grid" id="acc-rank-grid"></div>
+      <div class="acc-rank-pie" id="acc-rank-pie"></div>
     </div>
 
     <!-- Aviso de fuentes desactualizadas. Vacío cuando está todo al día. -->
@@ -3006,6 +3060,120 @@ function loadAcciones() {
   const c = window.ACCIONES_CACHE;
   _pintarAcciones('lista-acc-suben', 'src-acc-suben', c && c.mejores, c && c.panel);
   _pintarAcciones('lista-acc-bajan', 'src-acc-bajan', c && c.peores, c && c.panel);
+
+  // El boton dice cuantos papeles hay para que se sepa que no son tres.
+  const papeles = _accTodas().length;
+  ['btn-acc-suben', 'btn-acc-bajan'].forEach(id => {
+    const b = document.getElementById(id);
+    if (!b) return;
+    if (!papeles) { b.style.display = 'none'; return; }
+    b.style.display = '';
+    // La flecha tiene que respetar el estado: esto puede correr con el panel
+    // ya abierto (al refrescarse el cache) y si no, se daria vuelta sola.
+    const abierto = (id === 'btn-acc-suben' && accRankOrden === 'desc')
+                 || (id === 'btn-acc-bajan' && accRankOrden === 'asc');
+    b.innerHTML = 'VER LAS ' + papeles + (abierto ? ' \u25B4' : ' \u25BE');
+  });
+  if (accRankOrden) pintarRankingAcciones();   // si estaba abierto, se refresca
+}
+
+/* ══════════════════════════════════════════
+   RANKING COMPLETO DEL PANEL LÍDER
+
+   La tarjeta de subas y la de bajas muestran tres papeles cada una. Con tres
+   de veintitrés no se distingue un día de mercado de un día de un papel
+   suelto: si suben tres y bajan veinte, el KPI de "mayores subas" engaña.
+   Por eso cada tarjeta abre la lista entera, a lo ancho, debajo de la grilla.
+
+   Es UNA sola lista: desde subas se lee de mayor a menor y desde bajas al
+   revés. Tocar el mismo botón otra vez la cierra.
+
+   todas[] lo escribe update_acciones_cache.py. Si el cache todavía es de una
+   corrida vieja y no lo trae, se arma con las seis que sí están y el pie lo
+   aclara, en vez de dejar el botón muerto.
+══════════════════════════════════════════ */
+let accRankOrden = null;
+
+function _accTodas() {
+  const c = window.ACCIONES_CACHE;
+  if (!c) return [];
+  if (Array.isArray(c.todas) && c.todas.length) return c.todas.slice();
+  const parcial = [].concat(c.mejores || [], c.peores || []);
+  const vistos = new Set();
+  return parcial.filter(p => p && !vistos.has(p.symbol) && vistos.add(p.symbol));
+}
+
+function toggleRankingAcciones(orden) {
+  const box = document.getElementById('acc-ranking');
+  if (!box) return;
+
+  accRankOrden = (orden == null || orden === accRankOrden) ? null : orden;
+  box.hidden = !accRankOrden;
+
+  const marcar = (id, activo) => {
+    const b = document.getElementById(id);
+    if (!b) return;
+    b.setAttribute('aria-expanded', activo ? 'true' : 'false');
+    // La flecha se da vuelta en el boton que abrio el panel.
+    b.innerHTML = b.innerHTML.replace(/[\u25BE\u25B4]/, activo ? '\u25B4' : '\u25BE');
+  };
+  marcar('btn-acc-suben', accRankOrden === 'desc');
+  marcar('btn-acc-bajan', accRankOrden === 'asc');
+
+  if (accRankOrden) {
+    pintarRankingAcciones();
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function pintarRankingAcciones() {
+  const grid = document.getElementById('acc-rank-grid');
+  const tit  = document.getElementById('acc-rank-tit');
+  const pie  = document.getElementById('acc-rank-pie');
+  if (!grid || !accRankOrden) return;
+
+  const c = window.ACCIONES_CACHE;
+  const lista = _accTodas()
+    .sort((a, b) => accRankOrden === 'desc' ? b.pct - a.pct : a.pct - b.pct);
+
+  if (!lista.length) {
+    grid.innerHTML = '<div class="acc-rank-pie">Sin datos del panel.</div>';
+    return;
+  }
+
+  if (tit) tit.textContent = 'Panel líder · '
+    + (accRankOrden === 'desc' ? 'de la que más subió a la que más bajó'
+                               : 'de la que más bajó a la que más subió');
+
+  grid.innerHTML = lista.map((a, i) => {
+    const col = a.pct > 0 ? 'var(--verde)' : a.pct < 0 ? 'var(--ambar)' : '#777';
+    const signo = a.pct > 0 ? '+' : '';
+    return '<div class="acc-rank-fila">'
+      + '<span class="acc-rank-pos">' + (i + 1) + '</span>'
+      + '<span class="acc-rank-tkr">' + a.symbol + '</span>'
+      + '<span class="acc-rank-nom">' + a.nombre + '</span>'
+      + '<span class="acc-rank-pre">$ ' + fmtN(a.precio, 2) + '</span>'
+      + '<span class="acc-rank-pct" style="color:' + col + '">'
+      +   signo + fmtN(a.pct, 2) + '%</span>'
+      + '</div>';
+  }).join('');
+
+  if (pie) {
+    const suben = lista.filter(a => a.pct > 0).length;
+    const bajan = lista.filter(a => a.pct < 0).length;
+    const quietas = lista.length - suben - bajan;
+    const parcial = !(c && Array.isArray(c.todas) && c.todas.length);
+    pie.innerHTML =
+      '<strong style="color:#bbb;">' + suben + '</strong> en alza · '
+      + '<strong style="color:#bbb;">' + bajan + '</strong> en baja'
+      + (quietas ? ' · ' + quietas + ' sin cambios' : '')
+      + ' · ' + (c && c.fuente ? c.fuente : 'BYMA')
+      + (parcial
+          ? '<br><span style="color:var(--ambar);">Solo las 6 del top: el panel '
+            + 'completo aparece después de la próxima actualización.</span>'
+          : '<br>Variación contra el cierre anterior. Los papeles que no operaron '
+            + 'quedan en 0,00%.');
+  }
 }
 
 /* ══════════════════════════════════════════

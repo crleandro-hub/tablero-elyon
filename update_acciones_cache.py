@@ -4,7 +4,8 @@
 update_acciones_cache.py - Tablero Gestion Grupo Elyon
 =======================================================
 Genera acciones_cache.js con las 3 acciones que mas subieron y las 3 que mas
-bajaron del PANEL LIDER del Merval en la rueda.
+bajaron del PANEL LIDER del Merval en la rueda, mas el panel completo
+ordenado (todas[]), que el tablero despliega desde la propia tarjeta.
 
 Por que solo el panel lider:
     Es donde esta el volumen. En el panel general aparecen todos los dias
@@ -133,6 +134,12 @@ def main():
     mejores = ordenados[:TOP]
     peores = list(reversed(ordenados[-TOP:])) if len(ordenados) >= TOP else []
 
+    # El panel COMPLETO, para el ranking que se despliega desde la tarjeta.
+    # Aca si entran los papeles que no operaron: no ensucian nada porque el
+    # ranking se lee entero, y que falte un papel del panel confunde mas que
+    # verlo en 0,00%.
+    todas = sorted(papeles, key=lambda p: p["pct"], reverse=True)
+
     def bloque(lista):
         if not lista:
             return "[]"
@@ -149,11 +156,14 @@ def main():
         "   Las 3 mayores subas y las 3 mayores bajas del PANEL LIDER del\n"
         "   Merval en la rueda. Fuente: data912 (panel de BYMA).\n"
         "   pct = variacion % contra el cierre anterior\n"
-        "   Los papeles que no operaron (0,00%) quedan fuera del ranking.\n"
+        "   Los papeles que no operaron (0,00%) quedan fuera del top 3,\n"
+        "   pero si entran en todas[], que es el panel completo ordenado\n"
+        "   de mayor a menor variacion.\n"
         "----------------------------------------------------------------- */\n"
         "window.ACCIONES_CACHE = {\n"
         "  mejores: " + bloque(mejores) + ",\n"
         "  peores: " + bloque(peores) + ",\n"
+        "  todas: " + bloque(todas) + ",\n"
         "  panel: " + str(len(papeles)) + ",\n"
         '  fuente: "Panel líder · BYMA vía data912",\n'
         '  updated: "' + ts + '"\n'
